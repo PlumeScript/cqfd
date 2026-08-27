@@ -165,6 +165,7 @@ ref QuestionFactoryTree: macro()
 			set self.nodeMap = $self.createNodeMap()
 			set self.callCache = $Table()
 			set self.questionCache = $Table()
+			set self.questionMap = $Table()
 		end
 
 		if not self.callCache[seed]?
@@ -201,13 +202,20 @@ ref QuestionFactoryTree: macro()
 			end
 		end
 
+		if not self.questionMap[selection.question]?
+			set self.questionMap[selection.question] = (counter: 0)
+		end
+		let questionInfos = $self.questionMap[selection.question]
+		
+
 		// Reject a cached question id if it would repeat too soon after its
 		// original position, then retry with a nearby index.
 		let result
 		let try = -1
 		while not result
 			set try += 1
-			set result = $ selection.question.get(n+try, seed: seed)
+			set questionInfos.counter += 1
+			set result = $ selection.question.get(questionInfos.counter, seed: seed)
 			if result == empty
 				if try > selection.question.size
 					raise No valid exercise was found among the `$selection.question.size` existing parameter combinations.
@@ -215,7 +223,8 @@ ref QuestionFactoryTree: macro()
 			else
 				let existing = $ self.questionCache[result.field]? and self.questionCache[result.field][result.id]?
 				if existing
-					if n+try - existing.n < selection.question.size
+					// n move way faster than selection.question.size, no very precise
+					if n+try - existing.n < 2*selection.question.size
 						set result = $empty
 					end
 				end
