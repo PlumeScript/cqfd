@@ -166,6 +166,7 @@ ref QuestionFactoryTree: macro()
 			set self.callCache = $Table()
 			set self.questionCache = $Table()
 			set self.questionMap = $Table()
+			set self.questionId = 0
 		end
 
 		if not self.callCache[seed]?
@@ -184,7 +185,7 @@ ref QuestionFactoryTree: macro()
 		let selection = $self
 		while true
 			let infos = $ self.nodeMap[selection]
-			let selectionSeed = $ FeistelWalker(self.nodeMap._size, seed)(infos.id)
+			let selectionSeed = $ FeistelWalker(self.nodeMap._size*2, seed)(infos.id)
 			let index = $ PermutationWalker(infos.weight, seed+selectionSeed)(n)
 
 			for elem in selection.questionFactoryList
@@ -203,10 +204,11 @@ ref QuestionFactoryTree: macro()
 		end
 
 		if not self.questionMap[selection.question]?
-			set self.questionMap[selection.question] = (counter: 0)
+			set self.questionId += 1
+			set self.questionMap[selection.question] = (counter: 0, id: $self.questionId)
 		end
 		let questionInfos = $self.questionMap[selection.question]
-		
+		let questionSeed  = $ FeistelWalker(self.nodeMap._size*2, self.nodeMap._size+seed)(questionInfos.id)
 
 		// Reject a cached question id if it would repeat too soon after its
 		// original position, then retry with a nearby index.
@@ -215,7 +217,7 @@ ref QuestionFactoryTree: macro()
 		while not result
 			set try += 1
 			set questionInfos.counter += 1
-			set result = $ selection.question.get(questionInfos.counter, seed: seed)
+			set result = $ selection.question.get(questionInfos.counter, seed: questionSeed)
 			if result == empty
 				if try > selection.question.size
 					raise No valid exercise was found among the `$selection.question.size` existing parameter combinations.
