@@ -25,6 +25,7 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 	end
 	size: $size
 	memory: $Table()
+	idhash: $Table()
 	
 	// Decode n into mixed-radix digits: first parameter is most significant,
 	// each digit turned into one argument value via parameter.get.
@@ -77,14 +78,16 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 				end
 			else
 				set validSeen = $true
-				let existing = $ cache and cache[result.field]? and cache[result.field][result.id]?
+				let existing = $self.idhash[result.id]?
 				if existing
-					if n+try - existing.n < self.size
+					if n+try - existing < self.size
 						set result = $empty
 					end
 				end
 			end
 		end
+
+		set self.idhash[result.id] = $(n+try)
 		return (result: $result, try: $try)
 	end
 

@@ -213,14 +213,10 @@ ref QuestionFactoryTree: macro()
 		let result, try from @selection.question.get
 			- $questionInfos.counter
 			seed: $questionSeed
-			cache: $self.questionCache
 		end
 
 		set questionInfos.counter += $try
-
 		set self.callCache[seed][n+1] = $result
-		set self.questionCache[result.field] = $ self.questionCache[result.field]? or Table()
-		set self.questionCache[result.field][result.id] = (result: $result, n: $n)
 
 		return $result
 	end
