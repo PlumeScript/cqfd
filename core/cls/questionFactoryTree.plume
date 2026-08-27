@@ -34,9 +34,7 @@ ref QuestionFactoryTree: macro()
 		end
 		if len(tree.questionFactoryList) == 1
 			let leaf = $tree.questionFactoryList[1]
-			if leaf.type == "QuestionFactoryList"
-				$ self.addSubTree(leaf.tree, leaf.weight * weight)
-			elseif leaf.type == "QuestionFactorySubTree"
+			if leaf.type == "QuestionFactorySubTree"
 				@Table.append($self.questionFactoryList)
 					- do
 						type: QuestionFactorySubTree
