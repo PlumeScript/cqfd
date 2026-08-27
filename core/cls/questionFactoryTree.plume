@@ -149,6 +149,7 @@ ref QuestionFactoryTree: macro()
 
 			for child in elem.questionFactoryList
 				set weight += $child.weight
+				set count += 1
 				if child.type == "QuestionFactorySubTree"
 					run $ Table.append(tovisit, child.tree)
 				end
