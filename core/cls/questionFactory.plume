@@ -62,22 +62,23 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 		return $self.memory[n]
 	end
 
+	validSeen:
 	// Try until first valid solution
 	// Reject a cached question id if it would repeat too soon after its
 	// original position, then retry with a nearby index.
 	get: macro(Number n, Number seed: 0, cache:)
 		let result
 		let try = -1
-		let validSeen
+		
 		while not result
 			set try += 1
 			set result = $ self._get(n+try, seed: seed)
 			if result == empty
-				if try > self.size and not validSeen
+				if try > self.size and not self.validSeen
 					raise No valid exercise was found among the `$self.size` existing parameter combinations.
 				end
 			else
-				set validSeen = $true
+				set self.validSeen = $true
 				let existing = $self.idhash[result.id]?
 				if existing
 					if n+try - existing < self.size
