@@ -1,0 +1,12 @@
+plumeVersion: b65 (Raven Edition)
+name: CQFD
+author: Erwan Barbedor
+description: Exercices generator library for Plume
+version: 0.1.0
+source: $("https://github.com/PlumeScript/cqfd")
+required: do
+	pages: do
+		version: ^0.6.0
+		source: $("https://github.com/PlumeScript/pages")
+	end
+end
