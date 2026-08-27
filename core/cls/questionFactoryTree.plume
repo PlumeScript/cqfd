@@ -210,28 +210,13 @@ ref QuestionFactoryTree: macro()
 		let questionInfos = $self.questionMap[selection.question]
 		let questionSeed  = $ FeistelWalker(self.nodeMap._size*2, self.nodeMap._size+seed)(questionInfos.id)
 
-		// Reject a cached question id if it would repeat too soon after its
-		// original position, then retry with a nearby index.
-		let result
-		let try = -1
-		while not result
-			set try += 1
-			set questionInfos.counter += 1
-			set result = $ selection.question.get(questionInfos.counter, seed: questionSeed)
-			if result == empty
-				if try > selection.question.size
-					raise No valid exercise was found among the `$selection.question.size` existing parameter combinations.
-				end
-			else
-				let existing = $ self.questionCache[result.field]? and self.questionCache[result.field][result.id]?
-				if existing
-					// n move way faster than selection.question.size, no very precise
-					if n+try - existing.n < 2*selection.question.size
-						set result = $empty
-					end
-				end
-			end
+		let result, try from @selection.question.get
+			- $questionInfos.counter
+			seed: $questionSeed
+			cache: $self.questionCache
 		end
+
+		set questionInfos.counter += $try
 
 		set self.callCache[seed][n+1] = $result
 		set self.questionCache[result.field] = $ self.questionCache[result.field]? or Table()

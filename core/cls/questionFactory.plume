@@ -44,7 +44,7 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 
 	// Bijectively shuffle n within its block so questions look random while
 	// staying stable per seed; memoize on first demand, discarding invalid args.
-	get: macro(Number n, Number seed: 0)
+	_get: macro(Number n, Number seed: 0)
 		let block = $ Number.floor(n / size)
 		set n = $ n % size
 		set n = $ FeistelWalker(size, seed+block)(n)
@@ -59,6 +59,33 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 			$get(...args)
 		end
 		return $self.memory[n]
+	end
+
+	// Try until first valid solution
+	// Reject a cached question id if it would repeat too soon after its
+	// original position, then retry with a nearby index.
+	get: macro(Number n, Number seed: 0, cache:)
+		let result
+		let try = -1
+		let validSeen
+		while not result
+			set try += 1
+			set result = $ self._get(n+try, seed: seed)
+			if result == empty
+				if try > self.size and not validSeen
+					raise No valid exercise was found among the `$self.size` existing parameter combinations.
+				end
+			else
+				set validSeen = $true
+				let existing = $ cache and cache[result.field]? and cache[result.field][result.id]?
+				if existing
+					if n+try - existing.n < self.size
+						set result = $empty
+					end
+				end
+			end
+		end
+		return (result: $result, try: $try)
 	end
 
 	meta addr: macro(x)
