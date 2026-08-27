@@ -81,7 +81,12 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 		run $ t.addLeaf(self, 1)
 		return $ x*t
 	end
-	meta powr: macro(r)
+	meta powr: macro(Number r)
+		if r <= 0
+			raise Exposant must be greater than zero.
+		elseif r != Number.floor(r)
+			raise r must an integer.
+		end
 		let t = $QuestionFactoryTree()
 		run $ t.addLeaf(self, r)
 		return $ t

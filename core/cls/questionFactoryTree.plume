@@ -107,7 +107,12 @@ ref QuestionFactoryTree: macro()
 		return $result
 	end
 
-	meta powr: macro(r)
+	meta powr: macro(Number r)
+		if r <= 0
+			raise Exposant must be greater than zero.
+		elseif r != Number.floor(r)
+			raise r must an integer.
+		end
 		let t = $QuestionFactoryTree()
 		run $ t.addSubTree(self, r)
 		return $ t
