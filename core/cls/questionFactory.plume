@@ -66,7 +66,7 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 	// Try until first valid solution
 	// Reject a cached question id if it would repeat too soon after its
 	// original position, then retry with a nearby index.
-	get: macro(Number n, Number seed: 0, cache:)
+	get: macro(Number n, Number seed: 0)
 		let result
 		let try = 0
 		
