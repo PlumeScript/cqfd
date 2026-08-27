@@ -10,5 +10,5 @@ Licensed under the MIT License — see LICENSE for details.
 Question: macro(content:, id:, field:)
 	content: $content
 	id: $(id or String(content))
-	field: $field
+	field: $(field or String(content))
 end
