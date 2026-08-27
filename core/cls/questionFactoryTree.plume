@@ -174,9 +174,9 @@ ref QuestionFactoryTree: macro()
 		end
 
 		if n+1 <= len(self.callCache[seed])
-			return $self.callCache[seed][n].result
+			return $self.callCache[seed][n+1]
 		else
-			for i in seq(len(self.callCache[seed])+1, n-1)
+			for i in seq(len(self.callCache[seed]), n-1)
 				run $ self.get(i, seed: seed)
 			end
 		end
