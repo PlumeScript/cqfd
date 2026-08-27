@@ -8,7 +8,10 @@ Licensed under the MIT License — see LICENSE for details.
 let Parameter from $import(../cls/parameter)
 
 // Parameter spanning the contiguous integers [start..stop].
-Range: macro(start, stop)
+Range: macro(Number start, Number stop)
+	if start > stop
+		raise Start (`$start`) must be greater than stop (`$stop`)
+	end
 	@Parameter
 		size: $ stop-start+1
 		get: macro(i)
