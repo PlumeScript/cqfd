@@ -1,0 +1,89 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let QuestionFactoryTree from $import(./QuestionFactoryTree)
+let FeistelWalker from $import(../utils/walkers)
+
+let qfid = 0
+// Wraps named Parameters into a deterministic question generator. `size` is
+// the product of all parameter sizes (argument combinations); get(n, seed)
+// returns the n-th question, stable per seed.
+QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, validate:)
+	set qfid += 1
+	type: QuestionFactory
+	id: QuestionFactory<$qfid>
+	parameters: $parameters
+	hyperParameters: $hyperParameters
+	validate: $validate
+	let size = 1
+	for _, parameter in items(parameters)
+		set size *= $parameter.size
+	end
+	size: $size
+	memory: $Table()
+	
+	// Decode n into mixed-radix digits: first parameter is most significant,
+	// each digit turned into one argument value via parameter.get.
+	macro makeArgs(Number n)
+		let args = $Table()
+		let basei = $size
+		set n = $ n % size
+		for name, parameter in items(parameters)
+			set basei = $ basei / parameter.size
+			let argn = $ Number.floor(n / basei)
+			set args[name] = $ parameter.get(argn)
+			set n = $ n % basei
+			
+		end
+		return $args
+	end
+
+	// Bijectively shuffle n within its block so questions look random while
+	// staying stable per seed; memoize on first demand, discarding invalid args.
+	get: macro(Number n, Number seed: 0)
+		let block = $ Number.floor(n / size)
+		set n = $ n % size
+		set n = $ FeistelWalker(size, seed+block)(n)
+		if self.memory[n]?
+			return $self.memory[n]
+		end
+
+		let args = $ makeArgs(n)
+		set self.memory[n] = if validate and not validate(...args)
+			$empty
+		else
+			$get(...args)
+		end
+		return $self.memory[n]
+	end
+
+	meta addr: macro(x)
+		let t = $QuestionFactoryTree()
+		run $ t.addLeaf(self, 1)
+		return $ t+x
+	end
+	meta addl: macro(x)
+		let t = $QuestionFactoryTree()
+		run $ t.addLeaf(self, 1)
+		return $ x+t
+	end
+	meta mulr: macro(x)
+		let t = $QuestionFactoryTree()
+		run $ t.addLeaf(self, 1)
+		return $ t*x
+	end
+	meta mull: macro(x)
+		let t = $QuestionFactoryTree()
+		run $ t.addLeaf(self, 1)
+		return $ x*t
+	end
+	meta powr: macro(r)
+		let t = $QuestionFactoryTree()
+		run $ t.addLeaf(self, r)
+		return $ t
+	end
+end
