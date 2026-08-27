@@ -68,11 +68,11 @@ QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, va
 	// original position, then retry with a nearby index.
 	get: macro(Number n, Number seed: 0, cache:)
 		let result
-		let try = -1
+		let try = 0
 		
 		while not result
-			set try += 1
 			set result = $ self._get(n+try, seed: seed)
+			set try += 1
 			if result == empty
 				if try > self.size and not self.validSeen
 					raise No valid exercise was found among the `$self.size` existing parameter combinations.
