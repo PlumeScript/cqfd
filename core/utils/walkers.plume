@@ -1,0 +1,98 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Mixer: blends x, seed and round index r into a pseudo-random 31-bit value.
+// 2147483647 = 2^31-1 (Mersenne prime); 2654435761 = Knuth's multiplicative constant.
+macro derive(x, seed, r)
+	let z = $ (x + seed + r * 2654435761) % 2147483647
+	set z = $ (z * z + z) % 2147483647
+	set z = $ (z * z + seed) % 2147483647
+	$ z
+end
+
+// Bijective index->index permuter: treats indices as cells of a sqrt-sized grid
+// and repeatedly applies 5 Feistel rounds until the cell lies within [0, size).
+ref FeistelWalker: macro(size, seed)
+	// grid side, ensures dim^2 >= size
+	let dim = $ (1 + Number.floor(size^0.5))
+	macro (i)
+		// normalize the index
+		set i = $ i % size
+		// linear index -> grid coords
+		let u, v = $ (Number.floor(i / dim), i % dim)
+		while true
+			// 5 Feistel rounds
+			for r in seq(0, 4)
+				set u, v = $ (v, (u+derive(v, seed, r)) % dim)
+			end
+			// stop once the cell is valid
+			if u * dim + v < size
+				break
+			end
+		end
+		// grid coords -> linear index
+		return $ u * dim + v
+	end
+end
+
+// Memoized factorial, stored 1-based so that mfact[n+1] == n!
+let mfact = $Table(1, 1)
+ref fact: macro(n)
+	// extend the cache if needed
+	if n >= len(mfact)
+		for i in seq(len(mfact)+1, n+1)
+			run $ Table.append(mfact, mfact[i-1] * (i-1))
+		end
+	end
+	return $mfact[n+1] // first index is 1
+end
+
+// Convert rank k to the permutation of [0..size-1] via the factoradic / Lehmer code.
+// Results are memoized in mpfr[size][k].
+let mpfr = $Table()
+ref PermFromRank: macro(size, k)
+	set k = $ k % fact(size)
+	let key = $k
+	if mpfr[size]?
+		if mpfr[size][key]?
+			return $mpfr[size][key]
+		end
+	else
+		set mpfr[size] = $Table()
+	end
+	let elems = for i in seq(0, size-1)
+		- $i
+	end
+	
+	let perm = $Table()
+	// decode factoradic digits, most significant first
+	for n in seq(size, 1, -1)
+		let f = $ fact(n - 1)
+		let idx = $ Number.floor(k / f)
+		set k = $ k % f
+		// pick & remove chosen element
+		run $ Table.append(perm, Table.remove(elems, idx+1))
+	end
+	set mpfr[size][key] = $perm
+	return $ perm
+end
+
+// Map a global index i to a value: permute the permutation ids with a seed-shifted
+// Feistel walker, decode that rank to a permutation, then take the requested position.
+PermutationWalker: macro(size, seed)
+	let block = $ fact(size) * size
+	macro(i)
+		let j = $ i % block
+		// which super-permutation block
+		let blockId = $ Number.floor(i / block)
+		// which permutation inside the block
+		let permuId  = $ Number.floor(j / size)
+		// which position inside the permutation
+		let permuPos = $ j % size
+		$ PermFromRank(size, FeistelWalker(fact(size), seed+blockId)(permuId))[permuPos+1]
+	end
+end

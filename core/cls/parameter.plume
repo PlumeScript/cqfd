@@ -1,0 +1,13 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// A value domain of `size` elements indexed 0..size-1, accessed via get(i).
+Parameter: macro(Number size: 1, get:)
+	type: Parameter
+	size: $size
+	get: $get
+end
