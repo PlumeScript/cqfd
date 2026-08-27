@@ -9,7 +9,7 @@ let Parameter from $import(../cls/parameter)
 
 // Parameter spanning the contiguous integers [start..stop].
 Range: macro(Number start, Number stop)
-	if start >= stop
+	if start > stop
 		raise Stop (`$stop`) must be greater than start (`$start`).
 	end
 	@Parameter
