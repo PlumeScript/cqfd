@@ -7,7 +7,7 @@ Licensed under the MIT License — see LICENSE for details.
 
 // A generated question: `content` text, `field` the answer slot, and `id`
 // a stable key used to dedupe across argument combinations.
-Question: macro(content:, id:, field:)
+Question: macro(content:, id:)
 	content: $content
 	id: $(id or String(content))
 end

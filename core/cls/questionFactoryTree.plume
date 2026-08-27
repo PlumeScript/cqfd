@@ -186,7 +186,7 @@ ref QuestionFactoryTree: macro()
 		let selection = $self
 		while true
 			let infos = $ self.nodeMap[selection]
-			let selectionSeed = $ FeistelWalker(self.nodeMap._size*2, seed)(infos.id)
+			let selectionSeed = $ FeistelWalker(self.nodeMap._size, seed)(infos.id)
 			let index = $ PermutationWalker(infos.weight, seed+selectionSeed)(n)
 
 			for elem in selection.questionFactoryList
@@ -209,7 +209,7 @@ ref QuestionFactoryTree: macro()
 			set self.questionMap[selection.question] = (counter: 0, id: $self.questionId)
 		end
 		let questionInfos = $self.questionMap[selection.question]
-		let questionSeed  = $ FeistelWalker(self.nodeMap._size*2, self.nodeMap._size+seed)(questionInfos.id)
+		let questionSeed  = $ FeistelWalker(self.nodeMap._size, self.nodeMap._size+seed)(questionInfos.id)
 
 		let result, try from @selection.question.get
 			- $questionInfos.counter
