@@ -24,3 +24,12 @@ Constant: macro(value)
 		end
 	end
 end
+
+Choice: macro(...values)
+	@Parameter
+		size: $ len(values)
+		get: macro(i)
+			$values[i]
+		end
+	end
+end
