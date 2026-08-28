@@ -15,21 +15,22 @@ ref Range: macro(Number start, Number stop)
 		raise Stop (`$stop`) must be greater than start (`$start`).
 	end
 	@Parameter
+		type: integer
 		size: $ stop-start+1
 		get: macro(i)
 			$ start + i
 		end
-		type: integer
 	end
 end
 
 // Range based on integer length
+// Same number of value per length
 ref Integer: macro (...args)
 	let smin, smax
 	if len(args) == 0
 		raise To few arguments
 	elseif len(args) == 1
-		set smin = 1
+		set smin = $ Number(args[1])
 		set smax = $ Number(args[1])
 	elseif len(args) == 2
 		set smin = $ Number(args[1])
@@ -38,11 +39,32 @@ ref Integer: macro (...args)
 		raise To many arguments.
 	end
 
-	$ Range(10^(smin-1), 10^smax-1)
+	if smax < smin
+		raise The larger value cannot be less than the smaller one.
+	end
+
+	let size = 0
+	for i in seq(smin, smax)
+		set size += $ 10^i * (smax-i+1)
+	end
+	@Parameter
+		type: integer
+		size: $size
+		get: macro(i)
+			let slot = $ i % (smax-smin+1)
+			let pos  = $ (i / (smax-smin+1)).floor()
+			let base = $ 10^(smin+slot-1)
+			if base == 1
+				$ pos % 10
+			else
+				$ base + pos % (base*9)
+			end
+		end
+	end
 end
 
-// Decimal(5) -> Integer(1), Integer(5)
-// Decimal(3, 5) -> Integer(1), Integer(3, 5)
+// Decimal(5) -> Integer(0), Integer(5)
+// Decimal(3, 5) -> Integer(0), Integer(3, 5)
 // Decimal(6, 3, 5) -> Integer(6), Integer(3, 5)
 // Decimal(2, 6, 3, 5) -> Integer(2, 6), Integer(3, 5)
 Decimal: macro (...args)
@@ -52,7 +74,7 @@ Decimal: macro (...args)
 	elseif len(args) == 1
 		set sintmin = 0
 		set sintmax = 0
-		set sdecmin = 1
+		set sdecmin = $ Number(args[1])
 		set sdecmax = $ Number(args[1])
 	elseif len(args) == 2
 		set sintmin = 0
@@ -60,7 +82,7 @@ Decimal: macro (...args)
 		set sdecmin = $ Number(args[1])
 		set sdecmax = $ Number(args[2])
 	elseif len(args) == 3
-		set sintmin = 0
+		set sintmin = $ Number(args[1])
 		set sintmax = $ Number(args[1])
 		set sdecmin = $ Number(args[2])
 		set sdecmax = $ Number(args[3])
@@ -74,12 +96,12 @@ Decimal: macro (...args)
 	end
 
 	let inpart  = if sintmin>0 and sintmin>0
-		$ Range(10^(sintmin-1), 10^sintmax-1)
+		$ Integer(sintmin, sintmax)
 	else
 		$ Constant(0)
 	end
 	let decpart = if sdecmin>0 and sdecmax>0
-		$ Range(10^(sdecmin-1), 10^sdecmax-1)
+		$ Integer(sdecmin, sdecmax)
 	else
 		$ Constant(0)
 	end
