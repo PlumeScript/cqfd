@@ -1,0 +1,23 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let QuestionFactory from $import(../cls/questionfactory)
+let Choice from $import(./set)
+
+Relative: macro(parameter)
+	@QuestionFactory
+		type: $parameter.type
+		parameters: ($parameter, $Choice(+, -))
+		get: macro(value, sign)
+			if sign=="-"
+				$ -1 * value
+			else
+				$value
+			end
+		end
+	end
+end
