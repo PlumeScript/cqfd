@@ -29,7 +29,7 @@ Choice: macro(...values)
 	@Parameter
 		size: $ len(values)
 		get: macro(i)
-			$values[i]
+			$values[i+1]
 		end
 	end
 end
