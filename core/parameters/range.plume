@@ -19,11 +19,12 @@ ref Range: macro(Number start, Number stop)
 		get: macro(i)
 			$ start + i
 		end
+		type: integer
 	end
 end
 
 // Range based on integer length
-	: macro (...args)
+ref Integer: macro (...args)
 	let smin, smax
 	if len(args) == 0
 		raise To few arguments
@@ -96,5 +97,6 @@ Decimal: macro (...args)
 		get: macro(incpart, decpart)
 			$incpart\0.$decpart
 		end
+		type: number
 	end
 end
