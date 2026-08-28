@@ -117,7 +117,11 @@ Decimal: macro (...args)
 			return $true
 		end
 		get: macro(incpart, decpart)
-			$incpart\0.$decpart
+			if decpart == 0
+				$incpart
+			else
+				$incpart\0.$decpart
+			end
 		end
 		type: number
 	end
