@@ -1,0 +1,117 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+let Decimal from $import(../../core/parameters/range)
+let DecimalRepresentation from $import(./utils)
+
+addN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Number maxDecSize:0, minCarry:, maxCarry:, carry:, intSize:, decSize:)
+	if carry
+		set minCarry = $carry
+		set maxCarry = $carry
+	end
+	if intSize
+		set minIntSize = $intSize
+		set maxIntSize = $intSize
+	end
+	if decSize
+		set minDecSize = $decSize
+		set maxDecSize = $decSize
+	end
+	// TODO: check carry values against number size
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+		end
+		type: astNumber
+		validate: macro(x, y)
+			if not minCarry and not maxCarry
+				return $true
+			end
+
+			let dx = $ DecimalRepresentation(x)
+			let dy = $ DecimalRepresentation(y)
+
+			let carryCount = 0
+			let carry = 0
+			for fx, fy in dx.getFiguresAlong(dy)
+				let sum = $ fx + fy + carry
+				if sum >= 10
+					set carry = 1
+					set carryCount += 1
+				else
+					set carry = 0
+				end
+			end
+
+			return $ (not minCarry or minCarry <= carryCount) and (not maxCarry or maxCarry >= carryCount)
+		end
+		get: macro(x, y)
+			instruction: $ Node("+", x, y)
+			solution: $(x+y)
+			id: $max($x, $y)+$min($x, $y)
+		end
+		renderClass: calcul
+	end
+end
+
+subN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Number maxDecSize:0, minCarry:, maxCarry:, carry:, intSize:, decSize:)
+	if carry
+		set minCarry = $carry
+		set maxCarry = $carry
+	end
+	if intSize
+		set minIntSize = $intSize
+		set maxIntSize = $intSize
+	end
+	if decSize
+		set minDecSize = $decSize
+		set maxDecSize = $decSize
+	end
+	// TODO: check carry values against number size
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+		end
+		type: astNumber
+		validate: macro(x, y)
+			if x<y
+				return $false
+			end
+			if not minCarry and not maxCarry
+				return $true
+			end
+
+			let dx = $ DecimalRepresentation(x)
+			let dy = $ DecimalRepresentation(y)
+
+			let carryCount = 0
+			let carry = 0
+			for fx, fy in dx.getFiguresAlong(dy)
+				let dif = $ fx - fy - carry
+				if dif < 0
+					set carry = 1
+					set carryCount += 1
+				else
+					set carry = 0
+				end
+			end
+			
+			return $ (not minCarry or minCarry <= carryCount) and (not maxCarry or maxCarry >= carryCount)
+		end
+		get: macro(x, y)
+			instruction: $ Node("-", x, y)
+			solution: $(x-y)
+			id: $x-$y
+		end
+		renderClass: calcul
+	end
+end

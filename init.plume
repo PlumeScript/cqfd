@@ -34,7 +34,7 @@ parameter: for parm in os.Path("./core/parameters").walk()
 	end
 end
 
-exos: for parm in os.Path("./core/exos").walk()
+exos: for parm in os.Path("./exos").walk()
 	if parm.getName() == "init.plume"
 		...parm.import()
 	end
