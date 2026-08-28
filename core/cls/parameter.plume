@@ -12,5 +12,10 @@ Parameter: macro(Number size: 1, get:)
 	end
 	type: Parameter
 	size: $size
-	get: $get
+	get: macro(i)
+		if i > size
+			raise Parameter size exceeded ($i > $size).
+		end
+		return $ get(i)
+	end
 end
