@@ -15,3 +15,12 @@ Map: macro(parameter, transform)
 		end
 	end
 end
+
+Constant: macro(value)
+	@Parameter
+		size: 1
+		get: macro(i)
+			$value
+		end
+	end
+end
