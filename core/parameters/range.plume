@@ -6,13 +6,14 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let Parameter from $import(../cls/parameter)
+let QuestionFactory from $import(../cls/questionfactory)
+let Constant from $import(./set)
 
 // Parameter spanning the contiguous integers [start..stop].
 ref Range: macro(Number start, Number stop)
 	if start > stop
 		raise Stop (`$stop`) must be greater than start (`$start`).
 	end
-	run $ print(start, stop)
 	@Parameter
 		size: $ stop-start+1
 		get: macro(i)
@@ -22,9 +23,11 @@ ref Range: macro(Number start, Number stop)
 end
 
 // Range based on integer length
-Integer: macro (...args)
+	: macro (...args)
 	let smin, smax
-	if len(args) == 1
+	if len(args) == 0
+		raise To few arguments
+	elseif len(args) == 1
 		set smin = 1
 		set smax = $ Number(args[1])
 	elseif len(args) == 2
@@ -35,4 +38,63 @@ Integer: macro (...args)
 	end
 
 	$ Range(10^(smin-1), 10^smax-1)
+end
+
+// Decimal(5) -> Integer(1), Integer(5)
+// Decimal(3, 5) -> Integer(1), Integer(3, 5)
+// Decimal(6, 3, 5) -> Integer(6), Integer(3, 5)
+// Decimal(2, 6, 3, 5) -> Integer(2, 6), Integer(3, 5)
+Decimal: macro (...args)
+	let sintmin, sintmax, sdecmin, sdecmax
+	if len(args) == 0
+		raise To few arguments
+	elseif len(args) == 1
+		set sintmin = 0
+		set sintmax = 0
+		set sdecmin = 1
+		set sdecmax = $ Number(args[1])
+	elseif len(args) == 2
+		set sintmin = 0
+		set sintmax = 1
+		set sdecmin = $ Number(args[1])
+		set sdecmax = $ Number(args[2])
+	elseif len(args) == 3
+		set sintmin = 0
+		set sintmax = $ Number(args[1])
+		set sdecmin = $ Number(args[2])
+		set sdecmax = $ Number(args[3])
+	elseif len(args) == 4
+		set sintmin = $ Number(args[1])
+		set sintmax = $ Number(args[2])
+		set sdecmin = $ Number(args[3])
+		set sdecmax = $ Number(args[4])
+	else
+		raise To many arguments.
+	end
+
+	let inpart  = if sintmin>0 and sintmin>0
+		$ Range(10^(sintmin-1), 10^sintmax-1)
+	else
+		$ Constant(0)
+	end
+	let decpart = if sdecmin>0 and sdecmax>0
+		$ Range(10^(sdecmin-1), 10^sdecmax-1)
+	else
+		$ Constant(0)
+	end
+
+	@QuestionFactory
+		parameters: ($inpart, $decpart)
+		validate: macro(incpart, decpart)
+			if sdecmax>0
+				if (decpart/10).floor()*10 == decpart
+					return $false
+				end
+			end
+			return $true
+		end
+		get: macro(incpart, decpart)
+			$incpart\0.$decpart
+		end
+	end
 end
