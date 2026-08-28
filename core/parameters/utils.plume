@@ -1,0 +1,17 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Parameter from $import(../cls/parameter)
+
+Map: macro(parameter, transform)
+	@Parameter
+		size: $parameter.size
+		get: macro(i)
+			$ transform(parameter.get(i))
+		end
+	end
+end
