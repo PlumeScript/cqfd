@@ -8,14 +8,31 @@ Licensed under the MIT License — see LICENSE for details.
 let Parameter from $import(../cls/parameter)
 
 // Parameter spanning the contiguous integers [start..stop].
-Range: macro(Number start, Number stop)
+ref Range: macro(Number start, Number stop)
 	if start > stop
 		raise Stop (`$stop`) must be greater than start (`$start`).
 	end
+	run $ print(start, stop)
 	@Parameter
 		size: $ stop-start+1
 		get: macro(i)
 			$ start + i
 		end
 	end
+end
+
+// Range based on integer length
+Integer: macro (...args)
+	let smin, smax
+	if len(args) == 1
+		set smin = 1
+		set smax = $ Number(args[1])
+	elseif len(args) == 2
+		set smin = $ Number(args[1])
+		set smax = $ Number(args[2])
+	else
+		raise To many arguments.
+	end
+
+	$ Range(10^(smin-1), 10^smax-1)
 end
