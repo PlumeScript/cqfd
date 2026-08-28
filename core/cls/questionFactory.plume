@@ -12,9 +12,10 @@ let qfid = 0
 // Wraps named Parameters into a deterministic question generator. `size` is
 // the product of all parameter sizes (argument combinations); get(n, seed)
 // returns the n-th question, stable per seed.
-QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, validate:, type: any)
+QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:, validate:, type: any, renderClass:)
 	set qfid += 1
 	type: QuestionFactory
+	renderClass: $renderClass
 	id: QuestionFactory<$qfid>
 	parameters: $parameters
 	hyperParameters: $hyperParameters

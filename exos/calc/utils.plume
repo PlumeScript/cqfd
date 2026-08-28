@@ -1,0 +1,51 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+macro decomposition(n, b: 10)
+	let result = $Table()
+	while n>0
+		run $ Table.append(result, n % b)
+		set n = $ (n/b).floor()
+	end
+	return $result
+end
+
+ref DecimalRepresentation: macro(Number x, b: 10)
+	let intPart = $x.floor()
+	let decPart = $(x - intPart)
+	set decPart *= $ 10^(len(String(decPart))-2)
+	let intFigures = $ decomposition(intPart, b: b)
+	let decFigures = $ decomposition(decPart, b: b)
+	let sizeIntPart = $ len(intFigures)
+	let sizeDecPart = $ len(decFigures)
+
+	intPart: $intPart
+	decPart: $decPart
+	intFigures: $intFigures
+	decFigures: $decFigures
+	sizeIntPart: $sizeIntPart
+	sizeDecPart: $sizeDecPart
+
+	get: macro(i)
+		if i>0
+			$intFigures[i]
+		else
+			$decFigures[-i+1]
+		end
+	end
+
+	getFiguresAlong: macro(x)
+		let size = $ max(self.sizeDecPart, x.sizeDecPart)
+		for i in seq(size, 1, -1)
+			- $ (self.decFigures[i]? or 0, x.decFigures[i]? or 0)
+		end
+		set size = $ max(self.sizeIntPart, x.sizeIntPart)
+		for i in seq(size)
+			- $ (self.intFigures[i]? or 0, x.intFigures[i]? or 0)
+		end
+	end
+end
