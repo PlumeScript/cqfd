@@ -5,7 +5,8 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-Renderer: macro(name, ...classMethod)
+ref Renderer: macro(name, ...classMethod)
+	cls: $Renderer
 	name: $name
 	type: renderer
 	...classMethod

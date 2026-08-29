@@ -9,7 +9,8 @@ let global = $import(../../global)
 
 // A generated question: `content` text, `field` the answer slot, and `id`
 // a stable key used to dedupe across argument combinations.
-Question: macro(renderClass, id:, ...content)
+ref Question: macro(renderClass, id:, ...content)
+	cls: $Question
 	renderClass: $renderClass
 	id: $(id or String(content))
 	...content
