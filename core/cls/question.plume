@@ -20,9 +20,9 @@ ref Question: macro(renderClass, id:, ...content)
 		if not renderer[renderClass]?
 			raise Renderer "$renderer.name" doesn't handle renderClass "$renderClass".
 		end
-		let method = renderer[renderClass][mode]?
+		let method = $renderer[renderClass][mode]?
 		if not method and (mode == "solutionLong" or mode == "solutionShort")
-			set method = renderer[renderClass].solution?
+			set method = $renderer[renderClass].solution?
 		end
 		if not method
 			raise Renderer "$renderer.name\0.$renderClass" doesn't handle render mode "$mode".
