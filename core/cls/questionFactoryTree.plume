@@ -10,6 +10,7 @@ let PermutationWalker, FeistelWalker from $import(../utils/walkers)
 // Weighted tree of QuestionFactory leaves. get(n, seed) walks the tree with
 // deterministic weighted selection and returns the n-th question.
 ref QuestionFactoryTree: macro()
+	cls: $QuestionFactoryTree
 	lock: $false
 	type: QuestionFactoryTree
 	questionFactoryList: $Table()
