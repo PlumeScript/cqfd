@@ -54,11 +54,12 @@ addN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Numb
 			return $ (not minCarry or minCarry <= carryCount) and (not maxCarry or maxCarry >= carryCount)
 		end
 		get: macro(x, y)
-			instruction: $ Node("+", x, y)
-			solution: $(x+y)
-			id: $max($x, $y)+$min($x, $y)
+			@Question(calcul)
+				instruction: $ Node("+", x, y)
+				solution: $(x+y)
+				id: $max($x, $y)+$min($x, $y)
+			end
 		end
-		renderClass: calcul
 	end
 end
 
@@ -108,10 +109,11 @@ subN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Numb
 			return $ (not minCarry or minCarry <= carryCount) and (not maxCarry or maxCarry >= carryCount)
 		end
 		get: macro(x, y)
-			instruction: $ Node("-", x, y)
-			solution: $(x-y)
-			id: $x-$y
+			@Question(calcul)
+				instruction: $ Node("-", x, y)
+				solution: $(x-y)
+				id: $x-$y
+			end
 		end
-		renderClass: calcul
 	end
 end

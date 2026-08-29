@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+let global = $import(./global)
+
 for cls in os.Path("./core/cls").walk()
 	if cls.getExtension() == "plume"
 		...cls.import()
@@ -39,3 +41,13 @@ exos: for parm in os.Path("./exos").walk()
 		...parm.import()
 	end
 end
+
+ref renderer: for folder in os.Path("./render").walk()
+	let init = $ folder / "init.plume"
+	if init.exists()
+		$(folder.getName()): $init.import()
+	end
+end
+
+
+set global.renderer = $renderer.pages

@@ -1,0 +1,12 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+Renderer: macro(name, ...classMethod)
+	name: $name
+	type: renderer
+	...classMethod
+end
