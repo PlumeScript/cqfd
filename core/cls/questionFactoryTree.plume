@@ -5,6 +5,7 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+let Question from $import(./Question)
 let PermutationWalker, FeistelWalker from $import(../utils/walkers)
 
 // Weighted tree of QuestionFactory leaves. get(n, seed) walks the tree with
@@ -13,7 +14,21 @@ ref QuestionFactoryTree: macro()
 	cls: $QuestionFactoryTree
 	lock: $false
 	type: QuestionFactoryTree
+	_batch: $empty
 	questionFactoryList: $Table()
+	copy: macro()
+		let result = $QuestionFactoryTree()
+		for q in self.questionFactoryList
+			if q.type == "QuestionFactoryLeaf"
+				run $ result.addLeaf(q.question, q.weight)
+			else
+				run $ result.addSubTree(q.tree.copy(), q.weight)
+			end
+		end
+
+		return $result
+	end
+
 	addLeaf: macro(question, weight)
 		if self.lock
 			raise Cannot edit a tree after first generation.
@@ -162,6 +177,22 @@ ref QuestionFactoryTree: macro()
 	end
 
 	get: macro(Number n, Number seed: 0)
+		if self._batch
+			let batch = for i in seq(self._batch.count)
+				- $ self._get(n*self._batch.count + i - 1, seed)
+			end
+			return @Question(batch)
+				id: $batch[1].id
+				items: $batch
+				styleOptn: $self._batch.styleOptn
+				instruction: $self._batch.instruction
+			end
+		else
+			return $ self._get(n, seed)
+		end
+	end
+
+	_get: macro(n, seed)
 		if not self.lock
 			set self.lock = $true
 			set self.nodeMap = $self.createNodeMap()
@@ -179,7 +210,7 @@ ref QuestionFactoryTree: macro()
 			return $self.callCache[seed][n+1]
 		else
 			for i in seq(len(self.callCache[seed]), n-1)
-				run $ self.get(i, seed: seed)
+				run $ self._get(i, seed)
 			end
 		end
 
@@ -229,5 +260,14 @@ ref QuestionFactoryTree: macro()
 		end
 		set self.counter += 1
 		return $ self.get(self.counter-1, seed: seed)
+	end
+
+	batch: macro(count, instruction:, ...args)
+		if self._batch
+			raise This tree is already a batch.
+		end
+		let result = $self.copy()
+		set result._batch = (count: $count, styleOptn: $args, instruction: $instruction)
+		return $result
 	end
 end

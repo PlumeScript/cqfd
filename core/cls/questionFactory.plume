@@ -99,6 +99,18 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 		return (result: $result, try: $try)
 	end
 
+	tree: macro()
+		let t = $QuestionFactoryTree()
+		run $ t.addLeaf(self, 1)
+		return $t
+	end
+
+	batch: macro(...args)
+		let t = $QuestionFactoryTree()
+		run $ t.addLeaf(self, 1)
+		return $t.batch(...args)
+	end
+
 	meta addr: macro(x)
 		let t = $QuestionFactoryTree()
 		run $ t.addLeaf(self, 1)
