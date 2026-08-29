@@ -5,9 +5,27 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+let global = $import(../../global)
+
 // A generated question: `content` text, `field` the answer slot, and `id`
 // a stable key used to dedupe across argument combinations.
-Question: macro(content:, id:)
-	content: $content
+Question: macro(renderClass, id:, ...content)
+	renderClass: $renderClass
 	id: $(id or String(content))
+	...content
+
+	render: macro(mode, renderer:)
+		set renderer = $ renderer or global.renderer
+		if not renderer[renderClass]?
+			raise Renderer "$renderer.name" doesn't handle renderClass "$renderClass".
+		end
+		let method = renderer[renderClass][mode]?
+		if not method and (mode == "solutionLong" or mode == "solutionShort")
+			set method = renderer[renderClass].solution?
+		end
+		if not method
+			raise Renderer "$renderer.name\0.$renderClass" doesn't handle render mode "$mode".
+		end
+		$method($self)
+	end
 end

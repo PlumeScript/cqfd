@@ -1,0 +1,28 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let pages = $import(pages)
+let Renderer from $import(../../core/cls/renderer)
+let renderLatexAST from $import(./utils)
+
+@Renderer(pages)
+	calcul: do
+		instruction:macro(question)
+			$ pages.formula(renderLatexAST(question.instruction))
+		end
+		solutionShort: macro(question)
+			$ pages.formula(renderLatexAST(question.solution))
+		end
+		solution: macro(question)
+			@pages.formula
+				$ renderLatexAST(question.instruction)
+				=
+				$ renderLatexAST(question.solution)
+			end
+		end
+	end
+end
