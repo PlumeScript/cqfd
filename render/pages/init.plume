@@ -28,7 +28,9 @@ let renderLatexAST from $import(./utils)
 
 	batch: do
 		any: macro(mode, batch, renderer)
-			$batch.instruction?
+			if mode == "instruction"
+				$batch.instruction?
+			end
 			@pages.List(...batch.styleOptn)
 				for item in batch.items
 					- $ item.render(mode, renderer: renderer)
