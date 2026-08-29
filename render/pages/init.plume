@@ -25,4 +25,15 @@ let renderLatexAST from $import(./utils)
 			end
 		end
 	end
+
+	batch: do
+		any: macro(mode, batch, renderer)
+			$batch.instruction?
+			@pages.List(...batch.styleOptn)
+				for item in batch.items
+					- $ item.render(mode, renderer: renderer)
+				end
+			end
+		end
+	end
 end

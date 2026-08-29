@@ -12,7 +12,7 @@ let global = $import(../../global)
 ref Question: macro(renderClass, id:, ...content)
 	cls: $Question
 	renderClass: $renderClass
-	id: $(id or String(content))
+	id: $(id or repr(content))
 	...content
 
 	render: macro(mode, renderer:)
@@ -23,10 +23,15 @@ ref Question: macro(renderClass, id:, ...content)
 		let method = $renderer[renderClass][mode]?
 		if not method and (mode == "solutionLong" or mode == "solutionShort")
 			set method = $renderer[renderClass].solution?
+		elseif not method
+			set method = $renderer[renderClass].any?
+			if method
+				return $ method(mode, self, renderer)
+			end
 		end
 		if not method
 			raise Renderer "$renderer.name\0.$renderClass" doesn't handle render mode "$mode".
 		end
-		$method($self)
+		return $ method(self)
 	end
 end
