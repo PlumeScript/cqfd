@@ -36,9 +36,10 @@ parameter: for parm in os.Path("./core/parameters").walk()
 	end
 end
 
-exos: for parm in os.Path("./exos").walk()
-	if parm.getName() == "init.plume"
-		...parm.import()
+exos: for folder in os.Path("./exos").walk()
+	let init = $ folder / "init.plume"
+	if init.exists()
+		$(folder.getName()): $init.import()
 	end
 end
 

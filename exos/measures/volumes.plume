@@ -17,7 +17,7 @@ let defaultUnit = $Choice(km, hm, dam, m, dm, cm, mm)
 // TODO: mixed units
 // TODO: approximation
 // TODO: better number generation
-calcVolumeCuboid: macro(unit:, ?cube)
+cuboid: macro(unit:, ?cube)
 	if not unit
 		set unit = $defaultUnit
 	end
@@ -52,7 +52,7 @@ calcVolumeCuboid: macro(unit:, ?cube)
 	end
 end
 
-calcVolumePyramidRect: macro(unit:, ?square)
+pyramidRect: macro(unit:, ?square)
 	if not unit
 		set unit = $defaultUnit
 	end
@@ -90,7 +90,7 @@ calcVolumePyramidRect: macro(unit:, ?square)
 end
 
 // TODO pi approximation
-calcVolumeCylinder: macro(unit:)
+cylinder: macro(unit:)
 	if not unit
 		set unit = $defaultUnit
 	end
@@ -112,7 +112,7 @@ calcVolumeCylinder: macro(unit:)
 	end
 end
 
-calcVolumeCone: macro(unit:)
+cone: macro(unit:)
 	if not unit
 		set unit = $defaultUnit
 	end
