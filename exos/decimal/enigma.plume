@@ -12,6 +12,7 @@ let PermFromRank from $import(../../core/utils/walkers)
 
 let figuresParam = $Range(1, 9)
 
+// TODO-FIX: for now, 2000 is treated as "zero hole"
 enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2, Number maxFigures: 3, figures:, Number minHole: 0, maxHole:, hole:)
 	if figures
 		set minFigures = $figures
