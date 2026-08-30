@@ -39,7 +39,7 @@ macro plural(name, x, locale)
 	end
 end
 
-decimalEnigma: do
+decimalEnigmaSimple: do
 	instruction: macro(question)
 		let first = $ question.instruction.firstIndex
 		let locale = $ plume.locale()

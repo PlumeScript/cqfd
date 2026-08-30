@@ -42,7 +42,7 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 			return $ (start+length) <= maxIndex and length >= hole+2
 		end
 
-		type: decimalEgnima
+		type: decimalEgnimaSimple
 		get: macro(start:, length:, hole:, permuHole:, ...rawFigures)
 			let baseFigures = do
 				for i in seq(hole)
@@ -67,11 +67,27 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 			for i in seq(length)
 				set solution += $ figures[i] * 10^(i+start)
 			end
-			@Question(decimalEnigma)
+			@Question(decimalEnigmaSimple)
 				instruction: $ Table(firstIndex: start, length: length, figures: figures)
 				solution: $solution
 				id: $start-$length
 			end
 		end
 	end
+end
+
+enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1 , Number maxSolutions: 1, solutions:, Number minIndex:-3, Number maxIndex:3, Number minFigures: 2, Number maxFigures: 3, figures:, calc:)
+	
+	if solutions
+		set minSolutions = $solutions
+		set maxSolutions = $solutions
+	end
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+	if not calc
+		set calc = (+, -, *, /)
+	end
+
 end
