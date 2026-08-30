@@ -38,4 +38,6 @@ let renderLatexAST from $import(./utils)
 			end
 		end
 	end
+
+	...import(./decimalEnigma)
 end
