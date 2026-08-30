@@ -5,6 +5,7 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+let Choice from $import(../../core/parameters/set)
 let Range from $import(../../core/parameters/range)
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
@@ -13,6 +14,7 @@ let PermFromRank from $import(../../core/utils/walkers)
 let figuresParam = $Range(1, 9)
 
 // TODO-FIX: for now, 2000 is treated as "zero hole"
+// TODO: permutation in render, shouldn't always be in ascending order.
 enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2, Number maxFigures: 3, figures:, Number minHole: 0, maxHole:, hole:)
 	if figures
 		set minFigures = $figures
@@ -76,7 +78,8 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 	end
 end
 
-enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1 , Number maxSolutions: 1, solutions:, Number minIndex:-3, Number maxIndex:3, Number minFigures: 2, Number maxFigures: 3, figures:, calc:)
+// TODO: handle minIndex
+enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1 , Number maxSolutions: 1, solutions:, Number minFigures: 2, Number maxFigures: 2, figures:, calc:)
 	
 	if solutions
 		set minSolutions = $solutions
@@ -87,7 +90,88 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 		set maxFigures = $figures
 	end
 	if not calc
-		set calc = (+, -, *, /)
+		set calc = $Table(+, -, *, /)
+	end
+
+	@QuestionFactory
+		parameters: do
+			start:     $ Range(minIndex, maxIndex)
+			length:    $ Range(minFigures, maxFigures)
+			solutions: $ Range(minSolutions, maxSolutions)
+			calc:      $ Choice(...calc)
+			target:    $ Range(1, 9)
+		end
+		validate: macro(start:, length:, solutions:, calc:, target:)
+			$ calc=="*" or calc=="+" or length==2
+		end
+
+		get: macro(start:, length:, solutions:, calc:, target:)
+			let solutionsTable = $Table((value:, vect: $Table()))
+
+			for i in seq(length)
+				set solutionsTable = for solution in solutionsTable
+					for j in seq(0, 9)
+						- do
+							value: if calc == "+"
+								$ (solution.value? or 0) + j
+							elseif calc == "*"
+								$ (solution.value? or 1) * j
+							elseif calc == "-"
+								if solution.value?
+									$ max(j - solution.value, solution.value - j)
+								else
+									$j
+								end
+							elseif calc == "/"
+								if solution.value?
+									$ max(j / solution.value, solution.value / j)
+								else
+									$j
+								end
+							end
+							vect: ($j, ...solution.vect)
+						end
+					end
+				end
+				set solutionsTable = for solution in solutionsTable
+					if (calc != "+" and calc != "*") or solution.value <= target
+						- $solution
+					end
+				end
+			end
+			set solutionsTable = for solution in solutionsTable
+				if solution.value == target
+					- $solution
+				end
+			end
+
+			if len(solutionsTable) < minSolutions
+				return
+			end
+
+			set solutionsTable = for solution in solutionsTable
+				- $ Number(Table.join(...solution.vect))
+			end
+
+			run $ Table.sort(solutionsTable)
+			
+			
+			let bottom = $ (Table.at(solutionsTable, 1)/10).floor()*10
+			let top    = $ (Table.at(solutionsTable, 1)/10).ceil()*10
+
+			while len(solutionsTable) > maxSolutions
+				if len(solutionsTable) % 2 == 0
+					set top = $ Table.remove(solutionsTable)-1
+				else
+					set bottom = $ Table.remove(solutionsTable, 1)+1
+				end
+			end
+
+			return @Question(decimalEnigmaCalc2)
+				instruction: $Table(calc: $calc, target: $target, top: $top, bottom: $bottom)
+				solution: $solutionsTable
+			end
+		end
 	end
 
 end
