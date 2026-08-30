@@ -31,7 +31,7 @@ let renderLatexAST from $import(./utils)
 			if mode == "instruction"
 				$batch.instruction?
 			end
-			@pages.List(...batch.styleOptn)
+			@pages.List(gap: 1, ...batch.styleOptn)
 				for item in batch.items
 					- $ item.render(mode, renderer: renderer)
 				end
