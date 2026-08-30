@@ -242,10 +242,9 @@ ref QuestionFactoryTree: macro()
 		end
 		let questionInfos = $self.questionMap[selection.question]
 		let questionSeed  = $ FeistelWalker(self.nodeMap._size, self.nodeMap._size+seed)(questionInfos.id)
-
 		let result, try from @selection.question.getUntilValid
 			- $questionInfos.counter
-			seed: $questionSeed
+			seed: $(questionSeed+1)
 		end
 
 		set questionInfos.counter += $try
