@@ -1,0 +1,135 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Main issue: confusion between semantics and render in the variables names.
+// TODO: fix it
+
+let Choice from $import(../../core/parameters/set)
+let Range from $import(../../core/parameters/range)
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+
+macro get3numbers()
+end
+
+let defaultUnit = $Choice(km, hm, dam, m, dm, cm, mm)
+// TODO: mixed units
+// TODO: approximation
+// TODO: better number generation
+calcVolumeCuboid: macro(unit:, ?cube)
+	if not unit
+		set unit = $defaultUnit
+	end
+
+	@QuestionFactory
+		parameters: do
+			if cube
+				- $Range(1, 5)
+				- $Range(1, 1)
+				- $Range(1, 1)
+			else
+				- $Range(1, 5)
+				- $Range(1, 5)
+				- $Range(1, 5)
+			end
+		end
+		hyperParameters: do
+			unit: $unit
+		end
+		get: macro(l, L, h, unit:)
+			if cube
+				set L = $l
+				set h = $l
+			end
+
+			@Question(applyFormula)
+				formula: volumeCuboid
+				instruction: (l: $l, L: $L, h: $h, a:$l, _unit: $unit)
+				// a: l for compute cube formula - dirty
+			end
+		end
+	end
+end
+
+calcVolumePyramidRect: macro(unit:, ?square)
+	if not unit
+		set unit = $defaultUnit
+	end
+
+	@QuestionFactory
+		parameters: do
+			if square
+				- $Range(1, 5)
+				- $Range(1, 1)
+				- $Range(1, 5)
+			else
+				- $Range(1, 5)
+				- $Range(1, 5)
+				- $Range(1, 5)
+			end
+		end
+		hyperParameters: do
+			unit: $unit
+		end
+		get: macro(l, L, h, unit:)
+			if l*L*h % 3 != 0
+				set l *= 3 // Avoid decimal
+			end
+
+			@Question(applyFormula)
+				formula: volumePyramidRect
+				instruction: (l: $l, L:$L, h: $h, c: $l, _unit: $unit)
+				// c: l for compute square formula - dirty
+			end
+		end
+	end
+end
+
+// TODO pi approximation
+calcVolumeCylinder: macro(unit:)
+	if not unit
+		set unit = $defaultUnit
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $Range(1, 5)
+			- $Range(1, 5)
+		end
+		hyperParameters: do
+			unit: $unit
+		end
+		get: macro(r, h, unit:)
+			@Question(applyFormula)
+				formula: volumeCylinder
+				instruction: (r: $r, h: $h, pi: 3, _unit: $unit)
+			end
+		end
+	end
+end
+
+calcVolumeCone: macro(unit:)
+	if not unit
+		set unit = $defaultUnit
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $Range(1, 5)
+			- $Range(1, 5)
+		end
+		hyperParameters: do
+			unit: $unit
+		end
+		get: macro(r, h, unit:)
+			@Question(applyFormula)
+				formula: volumeCone
+				instruction: (r: $r, h: $h, pi: 3, _unit: $unit)
+			end
+		end
+	end
+end

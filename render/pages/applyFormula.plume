@@ -1,0 +1,133 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let pages = $import(pages)
+
+let book = do
+	volumeCuboid: do
+		description: macro(question)
+			Un\s
+			let l, L, h, _unit as unit: $empty from $question.instruction
+			if l == L and L == h
+				cube d'arète $pages.formula($l$unit).
+			else
+				pavé droit de $pages.formula($l$unit) sur $pages.formula($L$unit) sur $pages.formula($h$unit).
+			end
+		end
+		prefix: V
+		arity: 3
+		formula: macro(question)
+			let l, L, h from $question.instruction
+			if l == L and L == h
+				a^3
+			else
+				l xx L xx h
+			end
+		end
+	end
+	volumePyramidRect: do
+		description: macro(question)
+			Une pyramide à base\s
+			let l, L, h, _unit as unit: $empty from $question.instruction
+			if l == L and L == h
+				carrée de côté $pages.formula($l$unit)
+			else
+				rectangulaire de $pages.formula($l$unit) sur $pages.formula($L$unit)
+			end
+			\set de hauteur $pages.formula($h$unit).
+		end
+		prefix: V
+		arity: 3
+		formula: macro(question)
+			let l, L, h from $question.instruction
+			if l == L and L == h
+				(c^2 xx h)/3
+			else
+				(l xx L xx h)/3
+			end
+		end
+	end
+	volumeCylinder: do
+		description: macro(question)
+			let r, h, _unit as unit: $empty from $question.instruction
+			let pi = $question.instruction.pi?
+			Un cylindre de hauteur $pages.formula($h$unit) et de rayon $pages.formula($r$unit).
+			if pi
+				\s(on prendra $pages.formula(pi ~~ $pi)
+			end
+		end
+		prefix: V
+		arity: 3
+		formula: macro(question)
+			r^2 xx h xx pi
+		end
+	end
+
+	volumeCone: do
+		description: macro(question)
+			let r, h, _unit as unit: $empty from $question.instruction
+			let pi = $question.instruction.pi?
+			Un cône de hauteur $pages.formula($h$unit) et de rayon $pages.formula($r$unit).
+			if pi
+				\s(on prendra $pages.formula(pi ~~ $pi)
+			end
+		end
+		prefix: V
+		arity: 3
+		formula: macro(question)
+			(r^2 xx h xx pi) / 3
+		end
+	end
+end
+
+macro arity(x, n)
+	if x
+		if n>1
+			$x^{$n}
+		else
+			$x
+		end
+	end
+end
+
+macro evalFormula(question)
+	let infos = $book[question.formula]
+	let base  = $infos.formula($question)
+
+	for k, v in items(question.instruction)
+		set base = $ base.replace(k, v)
+	end
+
+	let eval = $lua.eval(return $base.replace(xx, *))
+
+	return ($base, $eval)
+end
+
+macro makeFormulaSolution(question)
+	let infos = $book[question.formula]
+	let rpl, value = $evalFormula($question)
+	- $pages.formula($infos.prefix = $infos.formula($question), processor: ascii, ?display)
+	- $pages.formula($infos.prefix = $rpl, processor: ascii, ?display)
+	- $pages.Align($pages.box($pages.formula($infos.prefix = $value$(arity(question.instruction._unit?, infos.arity)), ?display)), ?center)
+end
+
+
+applyFormula: do
+	instruction: macro(question)
+		$book[question.formula].description($question)
+	end
+
+	solutionShort: macro(question)
+		$ Table.at(makeFormulaSolution(question), -1)
+	end
+
+	solution: macro(question)
+		@pages.List(indent: 0, gap: 0)
+			...makeFormulaSolution($question)
+		end
+	end
+end
