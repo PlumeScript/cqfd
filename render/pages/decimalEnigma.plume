@@ -1,0 +1,70 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let pages = $import(pages)
+
+let names = do
+	fr: do
+		$("p-3"): milième
+		$("p-2"): centième
+		$("p-1"): dixième
+		$("p0"): unité
+		$("p1"): dizaine
+		$("p2"): centaine
+		$("p3"): milier
+		$("p4"): dizaine de millier
+		$("p5"): centaine de millier
+		$("p6"): milions
+		$("p7"): dizaine de milions
+		$("p8"): centaine de milions
+		$("p9"): miliards
+		$("p10"): dizaine de miliards
+		$("p11"): centaine de miliards
+	end
+end
+
+macro plural(name, x, locale)
+	if x > 1 and locale == "fr"
+		if name.find(" ")
+			$name.replace(dizaine, dizaines).replace(centaine, centaines)s
+		else
+			$name\0s
+		end
+	else
+		$name
+	end
+end
+
+decimalEnigma: do
+	instruction: macro(question)
+		let first = $ question.instruction.firstIndex
+		let locale = $ plume.locale()
+		let localeName = $ names[locale]? or names.fr
+
+		J'ai\s
+		for i in seq(question.instruction.length)
+			let x = $question.instruction.figures[i]
+			if x != 0
+				$pages.formula($x) $ plural(localeName["p"..(i+first)], x, locale)
+				if i < question.instruction.length-1
+					,\s
+				elseif i == question.instruction.length-1
+					\set\s
+				end
+			end
+		end
+		. Qui suis-je?
+	end
+
+	solutionShort: macro(question)
+		$pages.formula($question.solution).
+	end
+
+	solution: macro(question)
+		Je suis $pages.formula($question.solution).
+	end
+end

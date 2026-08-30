@@ -1,0 +1,76 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Range from $import(../../core/parameters/range)
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let PermFromRank from $import(../../core/utils/walkers)
+
+let figuresParam = $Range(1, 9)
+
+enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2, Number maxFigures: 3, figures:, Number minHole: 0, maxHole:, hole:)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+	if hole
+		set minHole = $hole
+		set maxHole = $hole
+	end
+	if not maxHole
+		set maxHole = $ maxFigures-2
+	end
+
+	@QuestionFactory
+		parameters: do
+			start:     $ Range(minIndex, maxIndex)
+			length:    $ Range(minFigures, maxFigures)
+			hole:      $ Range(minHole, maxHole)
+		end
+		hyperParameters: do
+			permuHole: $ Range(minFigures, maxFigures)
+			for i in seq(maxFigures)
+				- $figuresParam
+			end
+		end
+		validate: macro(start:, length:, hole:, permuHole:, ...figures)
+			return $ (start+length) <= maxIndex and length >= hole+2
+		end
+
+		type: decimalEgnima
+		get: macro(start:, length:, hole:, permuHole:, ...rawFigures)
+			let baseFigures = do
+				for i in seq(hole)
+					- 0
+				end
+				for i in seq(length-hole-2)
+					- $rawFigures[i]
+				end
+			end
+
+			let permu = $ PermFromRank(length-2, permuHole)
+
+			let figures = do
+				- $rawFigures[length-hole-1]
+				for i in permu
+					- $baseFigures[i+1]
+				end
+				- $rawFigures[length-hole]
+			end
+
+			let solution=0
+			for i in seq(length)
+				set solution += $ figures[i] * 10^(i+start)
+			end
+			@Question(decimalEnigma)
+				instruction: $ Table(firstIndex: start, length: length, figures: figures)
+				solution: $solution
+				id: $start-$length
+			end
+		end
+	end
+end
