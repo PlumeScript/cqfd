@@ -10,7 +10,7 @@ let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 let enigmaSimple from $import(./enigma)
 
-decimalDecomposition: macro(...params)
+decomposition: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $enigmaSimple(...params)
