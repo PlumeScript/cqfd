@@ -111,25 +111,27 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 			for i in seq(length)
 				set solutionsTable = for solution in solutionsTable
 					for j in seq(0, 9)
-						- do
-							value: if calc == "+"
-								$ (solution.value? or 0) + j
-							elseif calc == "*"
-								$ (solution.value? or 1) * j
-							elseif calc == "-"
-								if solution.value?
-									$ max(j - solution.value, solution.value - j)
-								else
-									$j
+						if j != 0 or calc != "/"
+							- do
+								value: if calc == "+"
+									$ (solution.value? or 0) + j
+								elseif calc == "*"
+									$ (solution.value? or 1) * j
+								elseif calc == "-"
+									if solution.value?
+										$ max(j - solution.value, solution.value - j)
+									else
+										$j
+									end
+								elseif calc == "/"
+									if solution.value?
+										$ max(j / solution.value, solution.value / j)
+									else
+										$j
+									end
 								end
-							elseif calc == "/"
-								if solution.value?
-									$ max(j / solution.value, solution.value / j)
-								else
-									$j
-								end
+								vect: ($j, ...solution.vect)
 							end
-							vect: ($j, ...solution.vect)
 						end
 					end
 				end
@@ -140,7 +142,7 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 				end
 			end
 			set solutionsTable = for solution in solutionsTable
-				if solution.value == target
+				if solution.value == target and (calc != "-" or solution.vect[1] != 0)
 					- $solution
 				end
 			end
@@ -157,7 +159,7 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 			
 			
 			let bottom = $ (Table.at(solutionsTable, 1)/10).floor()*10
-			let top    = $ (Table.at(solutionsTable, 1)/10).ceil()*10
+			let top    = $ (Table.at(solutionsTable, -1)/10).ceil()*10
 
 			while len(solutionsTable) > maxSolutions
 				if len(solutionsTable) % 2 == 0

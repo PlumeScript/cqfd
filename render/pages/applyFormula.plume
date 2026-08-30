@@ -6,6 +6,11 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let pages = $import(pages)
+macro piHint(pi)
+	if pi
+		\s(on prendra $pages.formula(pi ~~ $pi))
+	end
+end
 
 let book = do
 	volumeCuboid: do
@@ -56,9 +61,7 @@ let book = do
 			let r, h, _unit as unit: $empty from $question.instruction
 			let pi = $question.instruction.pi?
 			Un cylindre de hauteur $pages.formula($h$unit) et de rayon $pages.formula($r$unit).
-			if pi
-				\s(on prendra $pages.formula(pi ~~ $pi)
-			end
+			$ piHint(pi)
 		end
 		prefix: V
 		arity: 3
@@ -72,9 +75,7 @@ let book = do
 			let r, h, _unit as unit: $empty from $question.instruction
 			let pi = $question.instruction.pi?
 			Un cône de hauteur $pages.formula($h$unit) et de rayon $pages.formula($r$unit).
-			if pi
-				\s(on prendra $pages.formula(pi ~~ $pi)
-			end
+			$ piHint(pi)
 		end
 		prefix: V
 		arity: 3
