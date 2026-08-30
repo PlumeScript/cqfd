@@ -1,0 +1,26 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+let enigmaSimple from $import(./enigma)
+
+decimalDecomposition: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $enigmaSimple(...params)
+		end
+		get: macro(ex)
+			@Question(decimalDecomposition)
+				id: $ex.id
+				instruction: $ex.solution
+				solution: $ex.instruction
+			end
+		end
+	end
+end

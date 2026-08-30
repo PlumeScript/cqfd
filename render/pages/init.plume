@@ -39,6 +39,6 @@ let renderLatexAST from $import(./utils)
 		end
 	end
 
-	...import(./decimalEnigma)
+	...import(./decimal)
 	...import(./applyFormula)
 end
