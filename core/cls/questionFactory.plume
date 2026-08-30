@@ -8,6 +8,8 @@ Licensed under the MIT License — see LICENSE for details.
 let QuestionFactoryTree from $import(./QuestionFactoryTree)
 let FeistelWalker from $import(../utils/walkers)
 
+let hyperParameterMap = $Table()
+
 let qfid = 0
 // Wraps named Parameters into a deterministic question generator. `size` is
 // the product of all parameter sizes (argument combinations); get(n, seed)
@@ -47,6 +49,24 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 			end
 			set n = $ n % basei
 		end
+		
+		return $args
+	end
+
+
+	macro makeHyperArgs(Number seed)
+		let args = $Table()
+		let count = 1
+		for name, parameter in items(hyperParameters)
+			set count += 1
+			set hyperParameterMap[parameter] = $ (hyperParameterMap[parameter]? or 0)+1
+			let index = $hyperParameterMap[parameter]
+			let rindex = $ FeistelWalker(parameter.size, seed*count)(index)
+			set args[name] = $ parameter.get(rindex)
+			if not args[name]
+				return
+			end
+		end
 		return $args
 	end
 
@@ -60,11 +80,12 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 			return $self.memory[n]
 		end
 
-		let args = $ makeArgs(n)
+		let args  = $ makeArgs(n)
+		let hargs = $ makeHyperArgs(seed)
 		set self.memory[n] = if not args or (validate and not validate(...args))
 			$empty
 		else
-			$get(...args)
+			$get(...args, ...hargs)
 		end
 		return $self.memory[n]
 	end
