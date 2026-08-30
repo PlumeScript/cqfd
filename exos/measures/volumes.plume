@@ -13,9 +13,6 @@ let Range from $import(../../core/parameters/range)
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 
-macro get3numbers()
-end
-
 let defaultUnit = $Choice(km, hm, dam, m, dm, cm, mm)
 // TODO: mixed units
 // TODO: approximation
@@ -76,6 +73,9 @@ calcVolumePyramidRect: macro(unit:, ?square)
 			unit: $unit
 		end
 		get: macro(l, L, h, unit:)
+			if square
+				set l = $L
+			end
 			if l*L*h % 3 != 0
 				set l *= 3 // Avoid decimal
 			end
