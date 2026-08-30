@@ -68,3 +68,28 @@ decimalEnigmaSimple: do
 		Je suis $pages.formula($question.solution).
 	end
 end
+
+decimalEnigmaCalc2: do
+	instruction: macro(question)
+		Je suis entre $pages.formula($question.instruction.bottom) et $pages.formula($question.instruction.top).\s
+		if question.instruction.calc == "+"
+			La somme
+		elseif question.instruction.calc == "*"
+			Le produit
+		elseif question.instruction.calc == "-"
+			La différence
+		elseif question.instruction.calc == "/"
+			Le quotient
+		end
+		\sde mes chiffres vaut $pages.formula($question.instruction.target).
+		\sQui suis-je?
+	end
+
+	solutionShort: macro(question)
+		$pages.formula($Table.join(sep:\\text{ ou }, ...question.solution))).
+	end
+
+	solution: macro(question)
+		Je suis $pages.formula($Table.join(sep:\\text{ ou }, ...question.solution)).
+	end
+end
