@@ -16,13 +16,16 @@ ref QuestionFactoryTree: macro()
 	type: QuestionFactoryTree
 	_batch: $empty
 	questionFactoryList: $Table()
-	copy: macro()
+	copy: macro(?preserveBatch)
 		let result = $QuestionFactoryTree()
+		if preserveBatch
+			set result._batch = $self._batch
+		end
 		for q in self.questionFactoryList
 			if q.type == "QuestionFactoryLeaf"
 				run $ result.addLeaf(q.question, q.weight)
 			else
-				run $ result.addSubTree(q.tree.copy(), q.weight)
+				run $ result.addSubTree(q.tree.copy(?preserveBatch), q.weight)
 			end
 		end
 
@@ -48,12 +51,20 @@ ref QuestionFactoryTree: macro()
 		if self.lock
 			raise Cannot edit a tree after first generation.
 		end
-		if len(tree.questionFactoryList) == 1
+		if len(tree.questionFactoryList) == 1 and not tree._batch?
 			let leaf = $tree.questionFactoryList[1]
 			if leaf.type == "QuestionFactorySubTree"
 				@Table.append($self.questionFactoryList)
 					- do
 						type: QuestionFactorySubTree
+						tree: $leaf.tree
+						weight: $(leaf.weight * weight)
+					end
+				end
+			elseif leaf.type == "QuestionFactoryBatchLeaf"
+				@Table.append($self.questionFactoryList)
+					- do
+						type: QuestionFactoryBatchLeaf
 						tree: $leaf.tree
 						weight: $(leaf.weight * weight)
 					end
@@ -64,7 +75,7 @@ ref QuestionFactoryTree: macro()
 		else
 			@Table.append($self.questionFactoryList)
 				- do
-					type: QuestionFactorySubTree
+					type: $ tree.batch? and "QuestionFactoryBatchLeaf" or "QuestionFactorySubTree"
 					tree: $tree
 					weight: $weight
 				end
@@ -88,6 +99,10 @@ ref QuestionFactoryTree: macro()
 			set y = $t
 		elseif ty != "QuestionFactoryTree"
 			raise Error\: cannot add "QuestionFactoryTree" and "$ty"
+		end
+
+		if x._batch or y._bach
+			raise Cannot add batch. Use "*" instead.
 		end
 
 		let result = $QuestionFactoryTree()
@@ -229,22 +244,33 @@ ref QuestionFactoryTree: macro()
 				end
 			end
 
-			if selection.type == "QuestionFactoryLeaf"
+			if selection.type != "QuestionFactorySubTree"
 				break
 			else
 				set selection = $selection.tree
 			end
 		end
 
-		if not self.questionMap[selection.question]?
+		let key = $ selection.question? or selection.tree
+		if not self.questionMap[key]?
 			set self.questionId += 1
-			set self.questionMap[selection.question] = (counter: 0, id: $self.questionId)
+			set self.questionMap[key] = (counter: 0, id: $self.questionId)
 		end
-		let questionInfos = $self.questionMap[selection.question]
+		let questionInfos = $self.questionMap[key]
 		let questionSeed  = $ FeistelWalker(self.nodeMap._size, self.nodeMap._size+seed)(questionInfos.id)
-		let result, try from @selection.question.getUntilValid
-			- $questionInfos.counter
-			seed: $(questionSeed+1)
+		
+
+
+		let result, try: 1 from if selection.type == "QuestionFactoryLeaf" 
+			...@selection.question.getUntilValid
+				- $questionInfos.counter
+				seed: $(questionSeed+1)
+			end
+		else
+			result: @selection.tree.get
+				- $questionInfos.counter
+				seed: $(questionSeed+1)
+			end
 		end
 
 		set questionInfos.counter += $try
