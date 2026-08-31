@@ -101,7 +101,7 @@ ref QuestionFactoryTree: macro()
 			raise Error\: cannot add "QuestionFactoryTree" and "$ty"
 		end
 
-		if x._batch or y._bach
+		if x._batch or y._batch
 			raise Cannot add batch. Use "*" instead.
 		end
 
@@ -215,10 +215,12 @@ ref QuestionFactoryTree: macro()
 			set self.questionCache = $Table()
 			set self.questionMap = $Table()
 			set self.questionId = 0
+			set self.nodeCounter = $Table()
 		end
 
 		if not self.callCache[seed]?
 			set self.callCache[seed] = $Table()
+			set self.nodeCounter[seed] = $Table()
 		end
 
 		if n+1 <= len(self.callCache[seed])
@@ -230,11 +232,15 @@ ref QuestionFactoryTree: macro()
 		end
 
 		// Walk down (seed-driven) until a leaf: the weighted random pick.
+		// The root is indexed on the global draw n; each deeper level is indexed
+		// on its own occurrence count (dense per seed), so a branch's inner walk
+		// stays balanced in its own draw space.
 		let selection = $self
+		let levelIndex = $n
 		while true
 			let infos = $ self.nodeMap[selection]
 			let selectionSeed = $ FeistelWalker(self.nodeMap._size, seed)(infos.id)
-			let index = $ PermutationWalker(infos.weight, seed+selectionSeed)(n)
+			let index = $ PermutationWalker(infos.weight, seed+selectionSeed)(levelIndex)
 
 			for elem in selection.questionFactoryList
 				set index -= $elem.weight
@@ -247,6 +253,13 @@ ref QuestionFactoryTree: macro()
 			if selection.type != "QuestionFactorySubTree"
 				break
 			else
+				// Descend: the child's draw is its next occurrence, counted per seed.
+				if not self.nodeCounter[seed][selection.tree]?
+					set levelIndex = 0
+				else
+					set levelIndex = $ self.nodeCounter[seed][selection.tree]
+				end
+				set self.nodeCounter[seed][selection.tree] = $levelIndex + 1
 				set selection = $selection.tree
 			end
 		end
@@ -280,16 +293,25 @@ ref QuestionFactoryTree: macro()
 	end
 
 	getNext: macro(seed: 0)
+		// Per-seed counters: each seed walks its own dense sequence from 0, so
+		// interleaved seeds don't fracture the aligned blocks.
 		if not self.counter?
-			set self.counter = 0
+			set self.counter = $Table()
 		end
-		set self.counter += 1
-		return $ self.get(self.counter-1, seed: seed)
+		let c = $ self.counter[seed]? or 0
+		set self.counter[seed] = $c + 1
+		return $ self.get(c, seed: seed)
 	end
 
 	batch: macro(count, instruction:, ...args)
 		if self._batch
 			raise This tree is already a batch.
+		end
+		if count <= 0
+			raise Batch count must be greater than zero.
+		end
+		if count != Number.floor(count)
+			raise Batch count must be an integer.
 		end
 		let result = $self.copy()
 		set result._batch = (count: $count, styleOptn: $args, instruction: $instruction)
