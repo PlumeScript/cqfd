@@ -26,12 +26,32 @@ let renderLatexAST from $import(./utils)
 		end
 	end
 
+	macro guessColumnsNumber(n)
+		if (n^0.5).floor() == n^0.5
+			return $ n^0.5
+		else
+			for m in (3, 2, 1)
+				if n%m==0
+					return $m
+				end
+			end
+		end
+	end
+
+
 	batch: do
 		any: macro(mode, batch, renderer)
 			if mode == "instruction"
 				$batch.instruction?
 			end
-			@pages.List(gap: 1, ...batch.styleOptn)
+			@pages.List
+				// Options
+				gap: 1
+				indent: 0
+				marker: $ (batch.styleOptn.m? or "%a")
+				columns: $ batch.styleOptn.c? or guessColumnsNumber(len(batch.items))
+				...batch.styleOptn
+				// Content
 				for item in batch.items
 					- $ item.render(mode, renderer: renderer)
 				end
