@@ -90,7 +90,11 @@ decimalEnigmaCalc2: do
 	end
 
 	solution: macro(question)
-		Je suis $pages.formula($Table.join(sep:\\text{ ou }, ...question.solution)).
+		Je suis @Table.join(sep:\sou\s)
+			for x in question.solution
+				- $pages.formula($x)
+			end
+		end
 	end
 end
 
