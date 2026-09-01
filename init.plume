@@ -36,7 +36,7 @@ parameter: for parm in os.Path("./core/parameters").walk()
 	end
 end
 
-exos: for folder in os.Path("./exos").walk()
+generator: for folder in os.Path("./generators").walk()
 	let init = $ folder / "init.plume"
 	if init.exists()
 		$(folder.getName()): $init.import()
