@@ -8,6 +8,7 @@ Licensed under the MIT License — see LICENSE for details.
 let pages = $import(pages)
 let Renderer from $import(../../core/cls/renderer)
 let renderLatexAST from $import(./utils)
+let ardoise = $import(ardoise) // TODO: Replace by contextual variables (#47)
 
 @Renderer(pages)
 	calcul: do
@@ -41,8 +42,8 @@ let renderLatexAST from $import(./utils)
 
 	batch: do
 		any: macro(mode, batch, renderer)
-			if mode == "instruction"
-				$batch.instruction?
+			if mode == "instruction" and batch.instruction
+				@ardoise.instruction $batch.instruction
 			end
 			@pages.List
 				// Options
