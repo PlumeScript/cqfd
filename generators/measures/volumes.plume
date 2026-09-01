@@ -17,7 +17,7 @@ let defaultUnit = $Choice(km, hm, dam, m, dm, cm, mm)
 // TODO: mixed units
 // TODO: approximation
 // TODO: better number generation
-cuboid: macro(unit:, ?cube)
+cuboid: macro(unit:, minn: 1, maxn: 5, ?cube)
 	if not unit
 		set unit = $defaultUnit
 	end
@@ -25,13 +25,13 @@ cuboid: macro(unit:, ?cube)
 	@QuestionFactory
 		parameters: do
 			if cube
-				- $Range(1, 5)
-				- $Range(1, 1)
-				- $Range(1, 1)
+				- $ Range(minn or 1, maxn)
+				- $ Range(1, 1)
+				- $ Range(1, 1)
 			else
-				- $Range(1, 5)
-				- $Range(1, 5)
-				- $Range(1, 5)
+				- $ Range(minn or 1, maxn)
+				- $ Range(minn or 1, maxn)
+				- $ Range(minn or 1, maxn)
 			end
 		end
 		hyperParameters: do
@@ -52,7 +52,7 @@ cuboid: macro(unit:, ?cube)
 	end
 end
 
-pyramidRect: macro(unit:, ?square)
+pyramidRect: macro(unit:, minn: 1, maxn: 5, ?square)
 	if not unit
 		set unit = $defaultUnit
 	end
@@ -60,13 +60,13 @@ pyramidRect: macro(unit:, ?square)
 	@QuestionFactory
 		parameters: do
 			if square
-				- $Range(1, 5)
+				- $ Range(minn or 1, maxn)
 				- $Range(1, 1)
-				- $Range(1, 5)
+				- $ Range(minn or 1, maxn)
 			else
-				- $Range(1, 5)
-				- $Range(1, 5)
-				- $Range(1, 5)
+				- $ Range(minn or 1, maxn)
+				- $ Range(minn or 1, maxn)
+				- $ Range(minn or 1, maxn)
 			end
 		end
 		hyperParameters: do
@@ -90,15 +90,15 @@ pyramidRect: macro(unit:, ?square)
 end
 
 // TODO pi approximation
-cylinder: macro(unit:)
+cylinder: macro(unit:, minn: 1, maxn: 5)
 	if not unit
 		set unit = $defaultUnit
 	end
 
 	@QuestionFactory
 		parameters: do
-			- $Range(1, 5)
-			- $Range(1, 5)
+			- $ Range(minn or 1, maxn)
+			- $ Range(minn or 1, maxn)
 		end
 		hyperParameters: do
 			unit: $unit
@@ -112,15 +112,15 @@ cylinder: macro(unit:)
 	end
 end
 
-cone: macro(unit:)
+cone: macro(unit:, minn: 1, maxn: 5)
 	if not unit
 		set unit = $defaultUnit
 	end
 
 	@QuestionFactory
 		parameters: do
-			- $Range(1, 5)
-			- $Range(1, 5)
+			- $ Range(minn or 1, maxn)
+			- $ Range(minn or 1, maxn)
 		end
 		hyperParameters: do
 			unit: $unit
