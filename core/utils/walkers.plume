@@ -7,7 +7,7 @@ Licensed under the MIT License — see LICENSE for details.
 
 // Mixer: blends x, seed and round index r into a pseudo-random 31-bit value.
 // 2147483647 = 2^31-1 (Mersenne prime); 2654435761 = Knuth's multiplicative constant.
-macro derive(x, seed, r)
+ref derive: macro(x, seed, r)
 	let z = $ (x + seed + r * 2654435761) % 2147483647
 	set z = $ (z * z + z) % 2147483647
 	set z = $ (z * z + seed) % 2147483647

@@ -6,7 +6,7 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let QuestionFactoryTree from $import(./QuestionFactoryTree)
-let FeistelWalker from $import(../utils/walkers)
+let FeistelWalker, derive from $import(../utils/walkers)
 
 let hyperParameterMap = $Table()
 
@@ -61,7 +61,11 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 			set count += 1
 			set hyperParameterMap[parameter] = $ (hyperParameterMap[parameter]? or 0)+1
 			let index = $hyperParameterMap[parameter]
-			let rindex = $ FeistelWalker(parameter.size, seed*count)(index)
+			// draw block and position within it: one Feistel permutation per
+			// block, so the sequence no longer repeats the same ordering
+			let hblock = $ Number.floor((index-1) / parameter.size)
+			let pos = $ index % parameter.size
+			let rindex = $ FeistelWalker(parameter.size, derive(seed*count, hblock, 0))(pos)
 			set args[name] = $ parameter.get(rindex)
 			if not args[name]
 				return
