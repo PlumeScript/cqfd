@@ -8,7 +8,7 @@ Licensed under the MIT License — see LICENSE for details.
 let pages = $import(pages)
 macro piHint(pi)
 	if pi
-		\s(on prendra $pages.formula(pi ~~ $pi))
+		\s(on prendra $pages.formula(\\pi \\approx $pi))
 	end
 end
 
@@ -57,6 +57,7 @@ let book = do
 		end
 	end
 	volumeCylinder: do
+		approx: $true
 		description: macro(question)
 			let r, h, _unit as unit: $empty from $question.instruction
 			let pi = $question.instruction.pi?
@@ -71,6 +72,7 @@ let book = do
 	end
 
 	volumeCone: do
+		approx: $true
 		description: macro(question)
 			let r, h, _unit as unit: $empty from $question.instruction
 			let pi = $question.instruction.pi?
@@ -111,9 +113,14 @@ end
 macro makeFormulaSolution(question)
 	let infos = $book[question.formula]
 	let rpl, value = $evalFormula($question)
+	let eq = if infos.approx?
+		\\approx
+	else
+		=
+	end
 	- $pages.formula($infos.prefix = $infos.formula($question), processor: ascii, ?display)
-	- $pages.formula($infos.prefix = $rpl, processor: ascii, ?display)
-	- $pages.Align($pages.box($pages.formula($infos.prefix = $value$(arity(question.instruction._unit?, infos.arity)), ?display)), ?center)
+	- $pages.formula($infos.prefix $eq $rpl, processor: ascii, ?display)
+	- $pages.Align($pages.box($pages.formula($infos.prefix $eq $value$(arity(question.instruction._unit?, infos.arity)), ?display)), ?center)
 end
 
 
