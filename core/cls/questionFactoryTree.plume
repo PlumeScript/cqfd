@@ -113,6 +113,27 @@ ref QuestionFactoryTree: macro()
 
 	meta mul: macro(x, y)
 		let tx = $ type(x) == "table" and x.type? or type(x)
+		let ty = $ type(y) == "table" and y.type? or type(y)
+
+		let result = $QuestionFactoryTree()
+		if tx == "number" or tx == "string" and x.isNumber()
+			if x <= 0
+				raise Exposant must be greater than zero.
+			elseif x != Number.floor(x)
+				raise x must an integer.
+			end
+			run $ result.addSubTree(y, x)
+			return $result
+		elseif ty == "number" or ty == "string" and y.isNumber()
+			if y <= 0
+				raise Exposant must be greater than zero.
+			elseif y != Number.floor(y)
+				raise y must an integer.
+			end
+			run $ result.addSubTree(x, y)
+			return $result
+		end
+
 		if tx == "QuestionFactory"
 			let t = $QuestionFactoryTree()
 			run $ t.addLeaf(x, 1)
@@ -120,7 +141,7 @@ ref QuestionFactoryTree: macro()
 		elseif tx != "QuestionFactoryTree"
 			raise Error\: cannot mul "QuestionFactoryTree" and "$tx"
 		end
-		let ty = $ type(y) == "table" and y.type? or type(y)
+		
 		if ty == "QuestionFactory"
 			let t = $QuestionFactoryTree()
 			run $ t.addLeaf(y, 1)
@@ -129,7 +150,7 @@ ref QuestionFactoryTree: macro()
 			raise Error\: cannot mul "QuestionFactoryTree" and "$ty"
 		end
 
-		let result = $QuestionFactoryTree()
+		
 
 		run $ result.addSubTree(x, 1)
 		run $ result.addSubTree(y, 1)
