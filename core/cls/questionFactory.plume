@@ -142,24 +142,35 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 		run $ t.addLeaf(self, 1)
 		return $ x+t
 	end
+
 	meta mulr: macro(x)
 		let t = $QuestionFactoryTree()
-		run $ t.addLeaf(self, 1)
+		if plume.type(x) == "number" or plume.type(x) == "string" and x.isNumber()
+			if x <= 0
+				raise Exposant must be greater than zero.
+			elseif x != Number.floor(x)
+				raise x must an integer.
+			end
+			run $ t.addLeaf(self, x)
+			return $t
+		else
+			run $ t.addLeaf(self, 1)
+		end
 		return $ t*x
 	end
 	meta mull: macro(x)
 		let t = $QuestionFactoryTree()
-		run $ t.addLeaf(self, 1)
-		return $ x*t
-	end
-	meta powr: macro(Number r)
-		if r <= 0
-			raise Exposant must be greater than zero.
-		elseif r != Number.floor(r)
-			raise r must an integer.
+		if plume.type(x) == "number" or plume.type(x) == "string" and x.isNumber()
+			if x <= 0
+				raise Exposant must be greater than zero.
+			elseif x != Number.floor(x)
+				raise x must an integer.
+			end
+			run $ t.addLeaf(self, x)
+			return $t
+		else
+			run $ t.addLeaf(self, 1)
 		end
-		let t = $QuestionFactoryTree()
-		run $ t.addLeaf(self, r)
-		return $ t
+		return $ x*t
 	end
 end
