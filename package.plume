@@ -9,4 +9,8 @@ required: do
 		version: ^0.6.0
 		source: $("https://github.com/PlumeScript/pages")
 	end
+	figures3D: do
+		version: ^0.1.0
+		source: $("https://github.com/PlumeScript/figures3D")
+	end
 end

@@ -1,0 +1,81 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Low quality exercice
+
+let figures3D = $import(figure3D)
+
+macro Canva(content)
+	<svg\s
+		viewBox="0 0 100 100"\s
+		xmlns="http\:\//www.w3.org/2000/svg"\s
+		width=100\s
+		height=100
+	>
+		$content
+	</svg>
+end
+
+drawCube: do
+	instruction: macro(question)
+		un pavé droit
+	end
+
+	solution: macro(question)
+		@Canva
+			$ figures3D.Cuboid(40, 20, 0, 40, 40, 20)
+		end
+	end
+end
+
+drawCuboid: do
+	instruction: macro(question)
+		un pavé droit
+	end
+
+	solution: macro(question)
+		@Canva
+			$ figures3D.Cuboid(40, 20, 0, 40, 60, 30)
+		end
+	end
+end
+
+drawCone: do
+	instruction: macro(question)
+		un cone
+	end
+
+	solution: macro(question)
+		@Canva
+			$ figures3D.Cone(40, 20, 0, 20, 60)
+		end
+	end
+end
+
+drawCylinder: do
+	instruction: macro(question)
+		un cylindre
+	end
+
+	solution: macro(question)
+		@Canva
+			$ figures3D.Cylinder(40, 20, 0, 40, 60)
+		end
+	end
+end
+
+drawRectPyramid: do
+	instruction: macro(question)
+		un cylindre
+	end
+
+	solution: macro(question)
+		@Canva
+			$ figures3D.RectPyramid(40, 20, 0, 30, 50, 30)
+		end
+	end
+end
