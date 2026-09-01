@@ -70,7 +70,7 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 				set solution += $ figures[i] * 10^(i+start)
 			end
 			@Question(decimalEnigmaSimple)
-				instruction: $ Table(firstIndex: start, length: length, figures: figures)
+				instruction: $ Table(firstIndex: start, length: length, figures: figures, hole: hole)
 				solution: $solution
 				id: $start-$length
 			end

@@ -122,3 +122,32 @@ decimalDecomposition: do
 		$pages.formula($question.instruction = $makeSolution($question))
 	end
 end
+
+inverseDecomposition: do
+	macro makeSolution(question)
+		@Table.join(sep: +)
+			for i in seq(question.solution.length, 1, -1)
+				let exp = $ question.solution.firstIndex + i - 1
+				if question.solution.figures[i] != 0
+					- if exp >= 0
+						$question.solution.figures[i] \\times $(10^exp)
+					else
+						\\frac {$question.solution.figures[i]} {$(10^(-exp))}
+					end
+				end
+			end
+		end
+	end
+
+	instruction: macro(question)
+		$pages.formula($makeSolution($question))
+	end
+
+	solutionShort: macro(question)
+		$pages.formula($question.instruction)
+	end
+
+	solution: macro(question)
+		$pages.formula($makeSolution($question) = $question.instruction)
+	end
+end

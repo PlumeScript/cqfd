@@ -7,8 +7,10 @@ Licensed under the MIT License — see LICENSE for details.
 
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
+let Range from $import(../../core/parameters/range)
 let Node from $import(../../core/utils/tree)
 let enigmaSimple from $import(./enigma)
+let PermFromRank from $import(../../core/utils/walkers)
 
 decomposition: macro(...params)
 	@QuestionFactory
@@ -20,6 +22,48 @@ decomposition: macro(...params)
 				id: $ex.id
 				instruction: $ex.solution
 				solution: $ex.instruction
+			end
+		end
+	end
+end
+
+inverseDecomposition: macro(Number minOverlap:1, Number maxOverlap:1, overlap:, ...params)
+	if overlap
+		set minOverlap = $overlap
+		set maxOverlap = $overlap
+	end
+	@QuestionFactory
+		parameters: do
+			- $ Range(minOverlap, maxOverlap)
+			- $ enigmaSimple(...params)
+		end
+		validate: macro(overlapLength, ex)
+			return $ overlapLength <= ex.instruction.length-2-ex.instruction.hole
+		end
+		get: macro(overlapLength, ex)
+			let permu = $ PermFromRank(ex.instruction.length, 1)
+			let figures = $Table(...ex.instruction.figures)
+			let addedOverlap = 0
+			for x in permu
+				set x += 1
+				if x > 1 and x < ex.instruction.length and figures[x] != 0 and figures[x+1] != 0
+					set addedOverlap += 1
+					set figures[x+1] = $ figures[x]*10 + figures[x+1]
+					set figures[x] = 0
+				end
+				if addedOverlap == overlapLength
+					break
+				end
+			end
+
+			if addedOverlap < overlapLength
+				return
+			end
+
+			return @Question(inverseDecomposition)
+				id: $ex.id
+				instruction: $ex.solution
+				solution: (...ex.instruction, figures: $figures)
 			end
 		end
 	end
