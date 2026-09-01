@@ -6,6 +6,7 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let pages = $import(pages)
+let ardoise = $import(ardoise) // TODO: Replace by contextual variables (#47)
 
 let names = do
 	fr: do
@@ -83,10 +84,17 @@ decimalEnigmaCalc2: do
 		end
 		\sde mes chiffres vaut $pages.formula($question.instruction.target).
 		\sQui suis-je?
+		if len(question.solution) > 1
+			\s@ardoise.hint \0(Aide: $(len(question.solution)) possibilités.)
+		end
 	end
 
 	solutionShort: macro(question)
-		$pages.formula($Table.join(sep:\\text{ ou }, ...question.solution))).
+		@Table.join(sep:\s;\s)
+			for x in question.solution
+				- $pages.formula($x)
+			end
+		end
 	end
 
 	solution: macro(question)
