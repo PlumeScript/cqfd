@@ -41,11 +41,12 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 			end
 		end
 		validate: macro(start:, length:, hole:, permuHole:, ...figures)
-			return $ (start+length) <= maxIndex and length >= hole+2
+			return $ (start+length) <= maxIndex
 		end
 
 		type: decimalEgnimaSimple
 		get: macro(start:, length:, hole:, permuHole:, ...rawFigures)
+			set length += $hole
 			let baseFigures = do
 				for i in seq(hole)
 					- 0
