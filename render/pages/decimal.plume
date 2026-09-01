@@ -110,7 +110,7 @@ decimalDecomposition: do
 	macro makeSolution(question)
 		@Table.join(sep: +)
 			for i in seq(question.solution.length, 1, -1)
-				let exp = $ question.solution.firstIndex + i - 1
+				let exp = $ question.solution.firstIndex + i
 				if question.solution.figures[i] != 0
 					- if exp >= 0
 						$question.solution.figures[i] \\times $(10^exp)
@@ -139,7 +139,7 @@ inverseDecomposition: do
 	macro makeSolution(question)
 		@Table.join(sep: +)
 			for i in seq(question.solution.length, 1, -1)
-				let exp = $ question.solution.firstIndex + i - 1
+				let exp = $ question.solution.firstIndex + i
 				if question.solution.figures[i] != 0
 					- if exp >= 0
 						$question.solution.figures[i] \\times $(10^exp)
