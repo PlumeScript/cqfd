@@ -123,8 +123,7 @@ end
 
 decimalDecomposition: do
 	instruction: macro(question)
-		// TODO: find why localize isn't called by Plume
-		$pages.formula($question.instruction.localize())
+		$pages.formula($question.instruction)
 	end
 
 	solutionShort: macro(question)
