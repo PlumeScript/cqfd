@@ -6,7 +6,7 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let Question from $import(./Question)
-let PermutationWalker, FeistelWalker from $import(../utils/walkers)
+let PermutationWalker, FeistelWalker, PermFromRank, fact from $import(../utils/walkers)
 
 // Weighted tree of QuestionFactory leaves. get(n, seed) walks the tree with
 // deterministic weighted selection and returns the n-th question.
@@ -15,12 +15,14 @@ ref QuestionFactoryTree: macro()
 	lock: $false
 	type: QuestionFactoryTree
 	_batch: $empty
+	_window: $empty
 	questionFactoryList: $Table()
 	copy: macro(?preserveBatch)
 		let result = $QuestionFactoryTree()
 		if preserveBatch
 			set result._batch = $self._batch
 		end
+		set result._window = $self._window
 		for q in self.questionFactoryList
 			if q.type == "QuestionFactoryLeaf"
 				run $ result.addLeaf(q.question, q.weight)
@@ -237,11 +239,22 @@ ref QuestionFactoryTree: macro()
 			set self.questionMap = $Table()
 			set self.questionId = 0
 			set self.nodeCounter = $Table()
+			set self.windowState = $Table()
+			// Default window: min(10, n/2) leaves, capped per node below.
+			if not self._window
+				let n = $self.leafCount()
+				let d = $ Number.floor(n / 2)
+				if d > 10
+					set d = 10
+				end
+				set self._window = $d
+			end
 		end
 
 		if not self.callCache[seed]?
 			set self.callCache[seed] = $Table()
 			set self.nodeCounter[seed] = $Table()
+			set self.windowState[seed] = $Table()
 		end
 
 		if n+1 <= len(self.callCache[seed])
@@ -261,7 +274,7 @@ ref QuestionFactoryTree: macro()
 		while true
 			let infos = $ self.nodeMap[selection]
 			let selectionSeed = $ FeistelWalker(self.nodeMap._size, seed)(infos.id)
-			let index = $ PermutationWalker(infos.weight, seed+selectionSeed)(levelIndex)
+			let index = $ self._windowedSlot(selection, levelIndex, seed, selectionSeed)
 
 			for elem in selection.questionFactoryList
 				set index -= $elem.weight
@@ -337,5 +350,150 @@ ref QuestionFactoryTree: macro()
 		let result = $self.copy()
 		set result._batch = (count: $count, styleOptn: $args, instruction: $instruction)
 		return $result
+	end
+
+	// Window: no identical child within k consecutive draws, at every level.
+	// Returns a copy with the given window (the tree itself is untouched).
+	window: macro(k)
+		if self._batch
+			raise This tree is already a batch.
+		end
+		if k < 1
+			raise Window must be greater than zero.
+		end
+		if k != Number.floor(k)
+			raise k must an integer.
+		end
+		let result = $self.copy()
+		set result._window = $k
+		return $result
+	end
+
+	// Total number of leaves (subtrees contribute their own leaves).
+	leafCount: macro()
+		let total = 0
+		for elem in self.questionFactoryList
+			if elem.type == "QuestionFactoryLeaf"
+				set total += 1
+			else
+				set total += $elem.tree.leafCount()
+			end
+		end
+		return $total
+	end
+
+	// Window-aware slot pick at a node. Mirrors PermutationWalker's block
+	// structure (blocks of W = full multiset permutations), but the block
+	// permutation is chosen by scanning the Feistel-ordered permutation ids
+	// for the first one with no repeated group within window k, inside the
+	// block and against the previous block's suffix. State per (seed, node)
+	// holds the chosen block; the sequential cache fill guarantees that
+	// blocks are visited in order.
+	_windowedSlot: macro(node, levelIndex, seed, baseSeed)
+		let W = $self.nodeMap[node].weight
+		let k = $self._window
+		let c = $ len(node.questionFactoryList)
+		// A window wider than the child count is impossible: cap it.
+		if k > c
+			set k = $c
+		end
+		if k < 2
+			return $ PermutationWalker(W, seed+baseSeed)(levelIndex)
+		end
+
+		// Block decomposition, mirrors PermutationWalker.
+		let block =      $ fact(W) * W
+		let blockId =    $ Number.floor(levelIndex / block)
+		let posInBlock = $ levelIndex % block
+		let permuId =    $ Number.floor(posInBlock / W)
+		let permuPos =   $ posInBlock % W
+
+		if not self.windowState[seed]?
+			set self.windowState[seed] = $Table()
+		end
+		let st = $self.windowState[seed][node]?
+		if st and st.blockId == blockId
+			return $st.perm[permuPos+1]
+		end
+
+		// Boundary state: the previous block's last k-1 groups, boundary-first.
+		let prevSuffix = $empty
+		if st and st.blockId == blockId - 1
+			set prevSuffix = $st.suffix
+		end
+
+		// First compatible block in Feistel order; best-effort (fewest
+		// violations) if none exists (infeasible weight structures).
+		let fw = $ FeistelWalker(fact(W), seed+baseSeed+blockId)
+		let chosen = $empty
+		let bestP = $empty
+		let bestV = -1
+		for t in seq(0, fact(W)-1)
+			let p = $ PermFromRank(W, fw(permuId+t))
+			let v = $ self._windowViolations(node, p, k, prevSuffix)
+			if v == 0
+				set chosen = $p
+				break
+			end
+			if v < bestV
+				set bestV = $v
+				set bestP = $p
+			end
+		end
+		if not chosen
+			set chosen = $bestP
+		end
+
+		set self.windowState[seed][node] = (blockId: $blockId, perm: $chosen, suffix: $(self._blockSuffix(node, chosen, k)))
+		return $chosen[permuPos+1]
+	end
+
+	// Count window-k violations of a candidate block: a group repeated within
+	// k slots inside the block, or matched with the previous block's suffix
+	// (T_i = i-th group from its end, U_j = j-th from the start; a window of
+	// k holds both when i + j <= k).
+	_windowViolations: macro(node, perm, k, prevSuffix)
+		let v = 0
+		for i in seq(1, len(perm))
+			for d in seq(1, k-1)
+				if i+d <= len(perm) and self._slotGroup(node, perm[i]) == self._slotGroup(node, perm[i+d])
+					set v += 1
+				end
+			end
+		end
+		if prevSuffix
+			for i in seq(1, len(prevSuffix))
+				for j in seq(1, k-1)
+					if i+j <= k and prevSuffix[i] == self._slotGroup(node, perm[j])
+						set v += 1
+					end
+				end
+			end
+		end
+		return $v
+	end
+
+	// A block's last k-1 groups, boundary-first (T_1 = the last group).
+	_blockSuffix: macro(node, perm, k)
+		let L = $ k - 1
+		let W = $ len(perm)
+		if L > W
+			set L = $W
+		end
+		let suffix = for d in seq(0, L-1)
+			- $ self._slotGroup(node, perm[W-d])
+		end
+		return $suffix
+	end
+
+	// Group id (1-based child position) of a slot in a node's weight range.
+	_slotGroup: macro(node, slot)
+		for i in seq(1, len(node.questionFactoryList))
+			if slot < node.questionFactoryList[i].weight
+				return $i
+			end
+			set slot -= $node.questionFactoryList[i].weight
+		end
+		return 0
 	end
 end
