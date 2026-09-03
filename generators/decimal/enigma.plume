@@ -80,7 +80,7 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 end
 
 // TODO: handle minIndex
-enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1 , Number maxSolutions: 1, solutions:, Number minFigures: 2, Number maxFigures: 2, figures:, calc:)
+enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1 , Number maxSolutions: 1, solutions:, Number minFigures: 2, Number maxFigures: 2, figures:, calc:, Number minInterval: 10)
 	
 	if solutions
 		set minSolutions = $solutions
@@ -162,12 +162,30 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 			let bottom = $ (Table.at(solutionsTable, 1)/10).floor()*10
 			let top    = $ (Table.at(solutionsTable, -1)/10).ceil()*10
 
+			// shrink down to maxSolutions, never below a window of minInterval
 			while len(solutionsTable) > maxSolutions
 				if len(solutionsTable) % 2 == 0
-					set top = $ Table.remove(solutionsTable)-1
+					if (Table.at(solutionsTable, -1) - 1 - bottom) >= minInterval
+						set top = $ Table.remove(solutionsTable)-1
+					elseif (top - (Table.at(solutionsTable, 1) + 1)) >= minInterval
+						set bottom = $ Table.remove(solutionsTable, 1)+1
+					else
+						break
+					end
 				else
-					set bottom = $ Table.remove(solutionsTable, 1)+1
+					if (top - (Table.at(solutionsTable, 1) + 1)) >= minInterval
+						set bottom = $ Table.remove(solutionsTable, 1)+1
+					elseif (Table.at(solutionsTable, -1) - 1 - bottom) >= minInterval
+						set top = $ Table.remove(solutionsTable)-1
+					else
+						break
+					end
 				end
+			end
+
+			// the window cannot shrink further while keeping minInterval
+			if len(solutionsTable) > maxSolutions
+				return $empty
 			end
 
 			// exclusive window: no solution may sit on a bound
