@@ -49,7 +49,7 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 
 	getFiguresAlong: macro(x)
 		let size = $ max(self.sizeDecPart, x.sizeDecPart)
-		for i in seq(size, 1, -1)
+		for i in seq(size)
 			- $ (self.decFigures[i]? or 0, x.decFigures[i]? or 0)
 		end
 		set size = $ max(self.sizeIntPart, x.sizeIntPart)
