@@ -38,6 +38,15 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 		end
 	end
 
+	getFigures: macro()
+		for i in seq(self.sizeDecPart, 1, -1)
+			- $self.decFigures[i]
+		end
+		for i in seq(self.sizeIntPart)
+			- $self.intFigures[i]
+		end
+	end
+
 	getFiguresAlong: macro(x)
 		let size = $ max(self.sizeDecPart, x.sizeDecPart)
 		for i in seq(size, 1, -1)

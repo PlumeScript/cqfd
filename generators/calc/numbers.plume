@@ -117,3 +117,69 @@ subN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Numb
 		end
 	end
 end
+
+// TODO: consider figureNumber
+mulN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Number maxDecSize:0, minCompute:, maxCompute:, intSize:, decSize:, compute:)
+	if intSize
+		set minIntSize = $intSize
+		set maxIntSize = $intSize
+	end
+	if decSize
+		set minDecSize = $decSize
+		set maxDecSize = $decSize
+	end
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+	// TODO: check carry values against number size
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+		end
+		type: astNumber
+		validate: macro(x, y)
+			if not minCompute and not maxCompute
+				return $true
+			end
+
+			let dx = $ DecimalRepresentation(x)
+			let dy = $ DecimalRepresentation(y)
+
+			let realCompute = 0
+			let sum = $Table()
+			for i, fx in enumerate(dx.getFigures())
+				let carry = 0
+				for j, fy in enumerate(dy.getFigures())
+					let prod = $ fx * fy + carry
+					if prod >= 10
+						set carry = $ (prod / 10).floor()
+						set realCompute += 1
+					else
+						set carry = 0
+					end
+					set sum[i] = $ sum[i]? or Table()
+					set sum[i][j] = $ prod
+
+					if sum[i-1]?[j+1]? and sum[i-1]?[j+1]? != 0 and prod != 0
+						set realCompute += 1
+					end
+
+					if fx != 0 and fy != 0 and fx != 1 and fy != 1
+						set realCompute += 1
+					end
+				end
+			end
+
+			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
+		end
+		get: macro(x, y)
+			@Question(calcul)
+				instruction: $ Node("*", x, y)
+				solution: $(x*y)
+				id: $max($x, $y)*$min($x, $y)
+			end
+		end
+	end
+end
