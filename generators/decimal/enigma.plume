@@ -194,13 +194,13 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 			if bottom >= minSol
 				set bottom = $ (minSol/10).floor()*10
 				if bottom >= minSol
-					set bottom = $bottom - 10
+					set bottom = $(bottom - 10)
 				end
 			end
 			if top <= maxSol
 				set top = $ (maxSol/10).ceil()*10
 				if top <= maxSol
-					set top = $top + 10
+					set top = $(top + 10)
 				end
 			end
 
