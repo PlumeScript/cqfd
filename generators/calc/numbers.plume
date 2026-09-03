@@ -11,47 +11,47 @@ let Node from $import(../../core/utils/tree)
 let Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation from $import(./utils)
 
-addN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Number maxDecSize:0, minCarry:, maxCarry:, carry:, intSize:, decSize:)
-	if carry
-		set minCarry = $carry
-		set maxCarry = $carry
+addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
 	end
-	if intSize
-		set minIntSize = $intSize
-		set maxIntSize = $intSize
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
 	end
-	if decSize
-		set minDecSize = $decSize
-		set maxDecSize = $decSize
-	end
-	// TODO: check carry values against number size
 	@QuestionFactory
 		parameters: do
-			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
-			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		type: astNumber
 		validate: macro(x, y)
-			if not minCarry and not maxCarry
+			if not minCompute and not maxCompute
 				return $true
 			end
 
 			let dx = $ DecimalRepresentation(x)
 			let dy = $ DecimalRepresentation(y)
 
-			let carryCount = 0
 			let carry = 0
+			let realCompute = 0
 			for fx, fy in dx.getFiguresAlong(dy)
 				let sum = $ fx + fy + carry
+				if fx*fy != 0 or fy*carry != 0 or carry*fx != 0
+					set realCompute += 1
+				end
+				if fx*fy*carry != 0
+					set realCompute += 1
+				end
 				if sum >= 10
 					set carry = 1
-					set carryCount += 1
 				else
 					set carry = 0
 				end
 			end
 
-			return $ (not minCarry or minCarry <= carryCount) and (not maxCarry or maxCarry >= carryCount)
+			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
 		end
 		get: macro(x, y)
 			@Question(calcul)
@@ -63,50 +63,50 @@ addN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Numb
 	end
 end
 
-subN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Number maxDecSize:0, minCarry:, maxCarry:, carry:, intSize:, decSize:)
-	if carry
-		set minCarry = $carry
-		set maxCarry = $carry
+subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
 	end
-	if intSize
-		set minIntSize = $intSize
-		set maxIntSize = $intSize
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
 	end
-	if decSize
-		set minDecSize = $decSize
-		set maxDecSize = $decSize
-	end
-	// TODO: check carry values against number size
 	@QuestionFactory
 		parameters: do
-			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
-			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		type: astNumber
 		validate: macro(x, y)
 			if x<y
 				return $false
 			end
-			if not minCarry and not maxCarry
+			if not minCompute and not maxCompute
 				return $true
 			end
 
 			let dx = $ DecimalRepresentation(x)
 			let dy = $ DecimalRepresentation(y)
 
-			let carryCount = 0
 			let carry = 0
+			let realCompute = 0
 			for fx, fy in dx.getFiguresAlong(dy)
 				let dif = $ fx - fy - carry
+				if fy != 0
+					set realCompute += 1
+				end
+				if carry != 0
+					set realCompute += 1
+				end
 				if dif < 0
 					set carry = 1
-					set carryCount += 1
 				else
 					set carry = 0
 				end
 			end
 			
-			return $ (not minCarry or minCarry <= carryCount) and (not maxCarry or maxCarry >= carryCount)
+			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
 		end
 		get: macro(x, y)
 			@Question(calcul)
@@ -119,14 +119,10 @@ subN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Numb
 end
 
 // TODO: consider figureNumber
-mulN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Number maxDecSize:0, minCompute:, maxCompute:, intSize:, decSize:, compute:)
-	if intSize
-		set minIntSize = $intSize
-		set maxIntSize = $intSize
-	end
-	if decSize
-		set minDecSize = $decSize
-		set maxDecSize = $decSize
+mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
 	end
 	if compute
 		set minCompute = $compute
@@ -135,8 +131,8 @@ mulN2: macro(Number minIntSize:1, Number maxIntSize:2, Number minDecSize:0, Numb
 	// TODO: check carry values against number size
 	@QuestionFactory
 		parameters: do
-			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
-			- $ Decimal(minIntSize, maxIntSize, minDecSize, maxDecSize)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		type: astNumber
 		validate: macro(x, y)
