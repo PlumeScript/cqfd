@@ -5,9 +5,13 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-ref renderLatexAST: macro(node)
+ref renderLatexAST: macro(node, ?mayPar)
+	
 	let tnode = $ type(node) == "table" and node.type? or type(node)
 	if tnode == "treeNode"
+		if mayPar and node.label != "number"
+			(
+		end
 		if node.label == "+"
 			@Table.join(sep: +)
 				for x in node.children
@@ -17,15 +21,25 @@ ref renderLatexAST: macro(node)
 		elseif node.label == "-"
 			@Table.join(sep: -)
 				for x in node.children
-					- $ renderLatexAST(x)
+					- $ renderLatexAST(x, ?mayPar)
+				end
+			end
+		elseif node.label == "*"
+			@Table.join(sep: \\times)
+				for x in node.children
+					- $ renderLatexAST(x, ?mayPar)
 				end
 			end
 		elseif node.label == "number"
 			$node.children[1]
+		end
+		if mayPar and node.label != "number"
+			)
 		end
 	elseif type(node) == "number"
 		$node
 	else
 		raise Unexpected type "$tnode" inside tree.
 	end
+	
 end
