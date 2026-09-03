@@ -63,65 +63,15 @@ ref Integer: macro (...args)
 	end
 end
 
-// Decimal(5) -> Integer(0), Integer(5)
-// Decimal(3, 5) -> Integer(0), Integer(3, 5)
-// Decimal(6, 3, 5) -> Integer(6), Integer(3, 5)
-// Decimal(2, 6, 3, 5) -> Integer(2, 6), Integer(3, 5)
-Decimal: macro (...args)
-	let sintmin, sintmax, sdecmin, sdecmax
-	if len(args) == 0
-		raise To few arguments
-	elseif len(args) == 1
-		set sintmin = 0
-		set sintmax = 0
-		set sdecmin = $ Number(args[1])
-		set sdecmax = $ Number(args[1])
-	elseif len(args) == 2
-		set sintmin = 0
-		set sintmax = 1
-		set sdecmin = $ Number(args[1])
-		set sdecmax = $ Number(args[2])
-	elseif len(args) == 3
-		set sintmin = $ Number(args[1])
-		set sintmax = $ Number(args[1])
-		set sdecmin = $ Number(args[2])
-		set sdecmax = $ Number(args[3])
-	elseif len(args) == 4
-		set sintmin = $ Number(args[1])
-		set sintmax = $ Number(args[2])
-		set sdecmin = $ Number(args[3])
-		set sdecmax = $ Number(args[4])
-	else
-		raise To many arguments.
-	end
-
-	let inpart  = if sintmin>0 and sintmin>0
-		$ Integer(sintmin, sintmax)
-	else
-		$ Constant(0)
-	end
-	let decpart = if sdecmin>0 and sdecmax>0
-		$ Integer(sdecmin, sdecmax)
-	else
-		$ Constant(0)
-	end
-
+Decimal: macro (minFigures, maxFigures, minIndex, maxIndex)
 	@QuestionFactory
-		parameters: ($inpart, $decpart)
-		validate: macro(incpart, decpart)
-			if sdecmax>0
-				if (decpart/10).floor()*10 == decpart
-					return $false
-				end
-			end
-			return $true
+		parameters: do
+			- $ Integer(minFigures, maxFigures)
+			- $ Range(minIndex, maxIndex)
 		end
-		get: macro(incpart, decpart)
-			if decpart == 0
-				$incpart
-			else
-				$incpart\0.$decpart
-			end
+		
+		get: macro(value, exposant)
+			$ value * 10^(exposant)
 		end
 		type: number
 	end

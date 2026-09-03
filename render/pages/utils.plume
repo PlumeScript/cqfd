@@ -31,13 +31,13 @@ ref renderLatexAST: macro(node, ?mayPar)
 				end
 			end
 		elseif node.label == "number"
-			$node.children[1]
+			$ Number(node.children[1]).localize()
 		end
 		if mayPar and node.label != "number"
 			)
 		end
 	elseif type(node) == "number"
-		$node
+		$ Number(node).localize()
 	else
 		raise Unexpected type "$tnode" inside tree.
 	end
