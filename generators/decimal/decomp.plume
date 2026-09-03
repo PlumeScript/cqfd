@@ -48,8 +48,8 @@ inverseDecomposition: macro(Number minOverlap:1, Number maxOverlap:1, overlap:, 
 				set x += 1
 				if x > 1 and x < ex.instruction.length and figures[x] != 0 and figures[x+1] != 0
 					set addedOverlap += 1
-					set figures[x+1] = $ figures[x] + figures[x+1]*10
-					set figures[x] = 0
+					set figures[x] = $ figures[x+1]*10 + figures[x]
+					set figures[x+1] = 0
 				end
 				if addedOverlap == overlapLength
 					break
