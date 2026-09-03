@@ -333,7 +333,7 @@ ref QuestionFactoryTree: macro()
 			set self.counter = $Table()
 		end
 		let c = $ self.counter[seed]? or 0
-		set self.counter[seed] = $c + 1
+		set self.counter[seed] = $ c + 1
 		return $ self.get(c, seed: seed)
 	end
 
