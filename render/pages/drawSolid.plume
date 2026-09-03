@@ -70,7 +70,7 @@ end
 
 drawRectPyramid: do
 	instruction: macro(question)
-		un cylindre
+		une pyramide à base rectangulaire
 	end
 
 	solution: macro(question)
