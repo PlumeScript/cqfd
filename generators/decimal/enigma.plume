@@ -94,6 +94,10 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 		set calc = $Table(+, -, *, /)
 	end
 
+	if minSolutions <= 0
+		raise Solution number must be greater than zero.
+	end
+
 	@QuestionFactory
 		parameters: do
 			start:     $ Range(minIndex, maxIndex)
