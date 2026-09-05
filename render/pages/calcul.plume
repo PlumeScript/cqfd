@@ -1,0 +1,81 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+let pages = $import(pages)
+let ardoise = $import(ardoise)
+let renderLatexAST from $import(./utils)
+
+calcul: do
+	instruction:macro(question)
+		$ pages.formula(renderLatexAST(question.instruction))
+	end
+	solutionShort: macro(question)
+		$ pages.formula(renderLatexAST(question.solution))
+	end
+	solution: macro(question)
+		@pages.formula
+			$ renderLatexAST(question.instruction)
+			=
+			$ renderLatexAST(question.solution)
+		end
+	end
+end
+
+calculHole: do
+	instruction:macro(question)
+		@pages.formula
+			$ renderLatexAST(question.instruction)
+			=
+			$ renderLatexAST(question.target)
+		end
+	end
+	solutionShort: macro(question)
+		$ pages.formula(renderLatexAST(question.solution))
+	end
+	solution: macro(question)
+		@pages.formula
+			$ renderLatexAST(question.completed)
+			=
+			$ renderLatexAST(question.target)
+		end
+	end
+	solutionLong: macro(question)
+		@pages.List(indent: 0)
+			- @ardoise.hint
+				@pages.formula
+					$ renderLatexAST(question.solutionCalc)
+					=
+					$ renderLatexAST(question.solution)
+				end
+			end
+			- @pages.formula
+				$ renderLatexAST(question.completed)
+				=
+				$ renderLatexAST(question.target)
+			end
+		end
+	end
+end
+
+calculHoleNoSolution: do
+	instruction:macro(question)
+		@pages.formula
+			$ renderLatexAST(question.instruction)
+			=
+			$ renderLatexAST(question.target)
+		end
+	end
+	solutionShort: macro(question)
+		Impossible
+	end
+	solution: macro(question)
+		Impossible car\s
+		@pages.formula
+			$ renderLatexAST(question.solution)
+		end
+		.
+	end
+end

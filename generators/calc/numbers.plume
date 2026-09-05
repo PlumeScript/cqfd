@@ -11,7 +11,7 @@ let Node from $import(../../core/utils/tree)
 let Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation from $import(./utils)
 
-addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
@@ -63,7 +63,7 @@ addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 	end
 end
 
-subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
@@ -175,6 +175,143 @@ mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 				instruction: $ Node("*", x, y)
 				solution: $(x*y)
 				id: $max($x, $y)*$min($x, $y)
+			end
+		end
+	end
+end
+
+addN2HoleFirst: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $subN2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(+, ..., $calc.instruction.children[2])
+				solution: $calc.solution
+				solutionCalc: $calc.instruction
+				completed: @Node(+)
+					- $Node(bold, $calc.solution)
+					- $calc.instruction.children[2]
+				end
+				target: $calc.instruction.children[1]
+			end
+		end
+	end
+end
+
+addN2HoleSecond: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $subN2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(+, $calc.instruction.children[2], ...)
+				solution: $calc.solution
+				solutionCalc: $calc.instruction
+				completed: @Node(+)
+					- $calc.instruction.children[2]
+					- $Node(bold, $calc.solution)
+				end
+				target: $calc.instruction.children[1]
+			end
+		end
+	end
+end
+
+subN2HoleFirst: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $addN2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(-, ..., $calc.instruction.children[1])
+				solution: $calc.solution
+				solutionCalc: $calc.instruction
+				completed: @Node(-)
+					- $Node(bold, $calc.solution)
+					- $calc.instruction.children[1]
+				end
+				target: $calc.instruction.children[2]
+			end
+		end
+	end
+end
+
+subN2HoleSecond: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $subN2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(-, $calc.instruction.children[1], ...)
+				solution: $calc.solution
+				solutionCalc: $calc.instruction
+				completed: @Node(-)
+					- $calc.instruction.children[1]
+					- $Node(bold, $calc.solution)
+				end
+				target: $calc.instruction.children[2]
+			end
+		end
+	end
+end
+
+addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		validate: macro(x, y)
+			$(x > y)
+		end
+		get: macro(x, y)
+			@Question(calculHoleNoSolution)
+				instruction: $Node(+, ..., $x)
+				target: $y
+				solution: $Node(>, $x, $y)
+			end
+		end
+	end
+end
+
+addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		validate: macro(x, y)
+			$(x > y)
+		end
+		get: macro(x, y)
+			@Question(calculHoleNoSolution)
+				instruction: $Node(+, $x, ...)
+				target: $y
+				solution: $Node(>, $x, $y)
+			end
+		end
+	end
+end
+
+subN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		validate: macro(x, y)
+			$(y > x)
+		end
+		get: macro(x, y)
+			@Question(calculHoleNoSolution)
+				instruction: $Node(-, $x, ...)
+				target: $y
+				solution: $Node(>, $y, $x)
 			end
 		end
 	end
