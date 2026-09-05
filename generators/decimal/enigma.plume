@@ -77,7 +77,11 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 			@Question(decimalEnigmaSimple)
 				instruction: $ Table(firstIndex: start, length: length, figures: figures, hole: hole)
 				solution: $solution
-				id: $start-$length
+				// Non-ambiguous string id (no arithmetic form): start, length
+				// (hole included) and the full digit sequence identify the
+				// rendered question exactly, so distinct questions are no
+				// longer deduplicated as identical.
+				id: $(start)..$(length)..$(Table.join(...figures))
 			end
 		end
 	end

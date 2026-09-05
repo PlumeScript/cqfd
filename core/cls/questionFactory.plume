@@ -35,21 +35,27 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 	idhash: $Table()
 	
 	// Decode n into mixed-radix digits: first parameter is most significant,
-	// each digit turned into one argument value via parameter.get.
-	macro makeArgs(Number n)
+	// each digit turned into one argument value via parameter.get. A nested
+	// QuestionFactory receives the outer block (so it re-draws its own
+	// hyperparameters per block); plain Parameters are positional and keep argn.
+	macro makeArgs(Number n, Number block)
 		let args = $Table()
 		let basei = $size
 		set n = $ n % size
 		for name, parameter in items(parameters)
 			set basei = $ basei / parameter.size
 			let argn = $ Number.floor(n / basei)
-			set args[name] = $ parameter.get(argn)
+			if parameter.type? == "QuestionFactory"
+				set args[name] = $ parameter.get(block * parameter.size + argn)
+			else
+				set args[name] = $ parameter.get(argn)
+			end
 			if not args[name]
 				return
 			end
 			set n = $ n % basei
 		end
-		
+
 		return $args
 	end
 
@@ -77,22 +83,30 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 
 	// Bijectively shuffle n within its block so questions look random while
 	// staying stable per seed; memoize on first demand, discarding invalid args.
+	// The cache is scoped per block: each block re-draws its hyperparameters,
+	// so documents longer than one block no longer repeat the same questions.
 	get: macro(Number n, Number seed: 0)
 		let block = $ Number.floor(n / size)
 		set n = $ n % size
 		set n = $ FeistelWalker(size, seed+block)(n)
-		if self.memory[n]?
-			return $self.memory[n]
+		let bmem = $self.memory[block]?
+		if bmem and bmem[n]?
+			return $bmem[n]
 		end
 
-		let args  = $ makeArgs(n)
+		let args  = $ makeArgs(n, block)
 		let hargs = $ makeHyperArgs(seed)
-		set self.memory[n] = if not args or (validate and not validate(...args))
+		let result = if not args or (validate and not validate(...args))
 			$empty
 		else
 			$get(...args, ...hargs)
 		end
-		return $self.memory[n]
+		if not bmem
+			set bmem = $Table()
+			set self.memory[block] = $bmem
+		end
+		set bmem[n] = $result
+		return $result
 	end
 
 	validSeen:

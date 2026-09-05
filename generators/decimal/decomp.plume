@@ -64,7 +64,9 @@ inverseDecomposition: macro(Number minOverlap:1, Number maxOverlap:1, overlap:, 
 			end
 
 			return @Question(inverseDecomposition)
-				id: $ex.id
+				// The rendered solution also depends on the overlap merge,
+				// so the id encodes it (constant suffix on fixed-overlap cells).
+				id: $(ex.id)..$(overlapLength)
 				instruction: $ex.solution
 				solution: (...ex.instruction, figures: $figures)
 			end
