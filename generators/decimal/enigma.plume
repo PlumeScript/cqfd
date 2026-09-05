@@ -193,19 +193,14 @@ enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1
 			end
 
 			// exclusive window: no solution may sit on a bound
+			// widen minimally past the extreme: a larger jump could re-include a solution removed by the shrink
 			let minSol = $ Table.at(solutionsTable, 1)
 			let maxSol = $ Table.at(solutionsTable, -1)
 			if bottom >= minSol
-				set bottom = $ (minSol/10).floor()*10
-				if bottom >= minSol
-					set bottom = $(bottom - 10)
-				end
+				set bottom = $(minSol - 1)
 			end
 			if top <= maxSol
-				set top = $ (maxSol/10).ceil()*10
-				if top <= maxSol
-					set top = $(top + 10)
-				end
+				set top = $(maxSol + 1)
 			end
 
 			return @Question(decimalEnigmaCalc2)
