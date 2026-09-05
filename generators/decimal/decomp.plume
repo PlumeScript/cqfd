@@ -32,6 +32,9 @@ inverseDecomposition: macro(Number minOverlap:1, Number maxOverlap:1, overlap:, 
 		set minOverlap = $overlap
 		set maxOverlap = $overlap
 	end
+	if minOverlap < 0
+		raise overlap must be greater than or equal to zero.
+	end
 	@QuestionFactory
 		parameters: do
 			- $ Range(minOverlap, maxOverlap)
