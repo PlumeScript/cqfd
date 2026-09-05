@@ -38,6 +38,8 @@ ref renderLatexAST: macro(node, ?mayPar)
 		end
 	elseif type(node) == "number"
 		$ Number(node).localize()
+	elseif type(node) == "string"
+		\\text{$node}
 	else
 		raise Unexpected type "$tnode" inside tree.
 	end
