@@ -39,7 +39,7 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 	end
 
 	getFigures: macro()
-		for i in seq(self.sizeDecPart, 1, -1)
+		for i in seq(self.sizeDecPart)
 			- $self.decFigures[i]
 		end
 		for i in seq(self.sizeIntPart)
