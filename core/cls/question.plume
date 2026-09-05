@@ -23,7 +23,8 @@ ref Question: macro(renderClass, id:, ...content)
 		let method = $renderer[renderClass][mode]?
 		if not method and (mode == "solutionLong" or mode == "solutionShort")
 			set method = $renderer[renderClass].solution?
-		elseif not method
+		end
+		if not method
 			set method = $renderer[renderClass].any?
 			if method
 				return $ method(mode, self, renderer)
