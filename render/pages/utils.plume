@@ -30,6 +30,18 @@ ref renderLatexAST: macro(node, ?mayPar)
 					- $ renderLatexAST(x, ?mayPar)
 				end
 			end
+		elseif node.label == "<"
+			@Table.join(sep: \\lt)
+				for x in node.children
+					- $ renderLatexAST(x)
+				end
+			end
+		elseif node.label == ">"
+			@Table.join(sep: \\gt)
+				for x in node.children
+					- $ renderLatexAST(x)
+				end
+			end
 		elseif node.label == "number"
 			$ Number(node.children[1]).localize()
 		elseif node.label == "bold"
