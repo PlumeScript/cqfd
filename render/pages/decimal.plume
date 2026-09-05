@@ -50,7 +50,12 @@ decimalEnigmaSimple: do
 		for i in seq(question.instruction.length)
 			let x = $question.instruction.figures[i]
 			if x != 0
-				$pages.formula($x) $ plural(localeName["p"..(i+first)], x, locale)
+				let place = $("p"..(i+first))
+				if not localeName[place]?
+					// place names are bounded: fail clearly instead of an unregistered-key crash
+					raise Place $place is not renderable: the name dictionary only covers p-3..p11.
+				end
+				$pages.formula($x) $ plural(localeName[place], x, locale)
 				if i < question.instruction.length-1
 					,\s
 				elseif i == question.instruction.length-1

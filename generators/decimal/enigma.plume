@@ -20,6 +20,9 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 		set minFigures = $figures
 		set maxFigures = $figures
 	end
+	if minFigures < 2
+		raise minFigures must be greater than or equal to 2.
+	end
 	if hole
 		set minHole = $hole
 		set maxHole = $hole
@@ -41,7 +44,8 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 			end
 		end
 		validate: macro(start:, length:, hole:, permuHole:, ...figures)
-			return $ (start+length) <= maxIndex
+			// the hole extends the number: top power is start+length+hole
+			return $ (start+length+hole) <= maxIndex
 		end
 
 		type: decimalEgnimaSimple
