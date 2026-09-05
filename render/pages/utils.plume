@@ -32,6 +32,8 @@ ref renderLatexAST: macro(node, ?mayPar)
 			end
 		elseif node.label == "number"
 			$ Number(node.children[1]).localize()
+		elseif node.label == "bold"
+			\\mathbf{$renderLatexAST($node.children[1])}
 		end
 		if mayPar and node.label != "number"
 			)
