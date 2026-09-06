@@ -12,6 +12,162 @@ let Choice from $import(../../../core/parameters/set)
 
 let r = $Range(2, 10)
 
+// Per-context sentence templates: one explicit string per level, so
+// elision ("d'élèves"), plural ("pépites de caramel") and the part-whole
+// verb ("Chaque wagon a") stay correct. Index = level in `voc`.
+let sentences = do
+	train: do
+		starts: do
+			- macro(n)
+				Il y a $n gares.
+			end
+			- macro(n)
+				Il y a $n trains.
+			end
+			- macro(n)
+				Il y a $n wagons.
+			end
+		end
+		trans: do
+			- macro(n)
+				Dans chaque gare, il y a $n trains.
+			end
+			- macro(n)
+				Chaque train a $n wagons.
+			end
+			- macro(n)
+				Chaque wagon a $n roues.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de trains\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de wagons\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de roues\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n trains.
+			end
+			- macro(n)
+				En tout, il y a $n wagons.
+			end
+			- macro(n)
+				En tout, il y a $n roues.
+			end
+		end
+	end
+	chocolat: do
+		starts: do
+			- macro(n)
+				Il y a $n caisses.
+			end
+			- macro(n)
+				Il y a $n boîtes.
+			end
+			- macro(n)
+				Il y a $n chocolats.
+			end
+		end
+		trans: do
+			- macro(n)
+				Dans chaque caisse, il y a $n boîtes.
+			end
+			- macro(n)
+				Dans chaque boîte, il y a $n chocolats.
+			end
+			- macro(n)
+				Dans chaque chocolat, il y a $n pépites de caramel.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de boîtes\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de chocolats\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de pépites de caramel\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n boîtes.
+			end
+			- macro(n)
+				En tout, il y a $n chocolats.
+			end
+			- macro(n)
+				En tout, il y a $n pépites de caramel.
+			end
+		end
+	end
+	$("collège"): do
+		starts: do
+			- macro(n)
+				Il y a $n collèges.
+			end
+			- macro(n)
+				Il y a $n bâtiments.
+			end
+			- macro(n)
+				Il y a $n classes.
+			end
+		end
+		trans: do
+			- macro(n)
+				Chaque collège a $n bâtiments.
+			end
+			- macro(n)
+				Dans chaque bâtiment, il y a $n classes.
+			end
+			- macro(n)
+				Dans chaque classe, il y a $n élèves.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de bâtiments\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de classes\0?
+			end
+			- macro()
+				En tout, combien y a-t-il d'élèves\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n bâtiments.
+			end
+			- macro(n)
+				En tout, il y a $n classes.
+			end
+			- macro(n)
+				En tout, il y a $n élèves.
+			end
+		end
+	end
+end
+
 matrioska: @QuestionFactory
 	parameters: do
 		- $Choice(train, chocolat, collège)
@@ -43,6 +199,7 @@ matrioska: @QuestionFactory
 			end
 			values: $values
 			start: $start
+			sentence: $sentences[context]
 		end
 	end
 end
