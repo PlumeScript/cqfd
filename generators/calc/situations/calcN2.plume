@@ -31,13 +31,14 @@ money: @QuestionFactory
 			end
 			unit: €
 			sentence: do
-				lose: macro(name, x) $cap($name.have) $lose $x.
-				qlose: macro(name) Combien  $name.qhave $lose?
-				get: macro(name, x) $cap($name.have) $get $x.
-				qget: macro(name) Combien  $name.qhave $get?
-				total: macro(name, x) $cap($name.have) $x maintenant.
+				lose: macro(name, x, unit, introduced) $cap($name.have) $lose $x $unit.
+				qlose: macro(name) Combien $name.qhave $lose?
+				get: macro(name, x, unit, introduced) $cap($name.have) $get $x $unit.
+				qget: macro(name) Combien $name.qhave $get?
+				total: macro(name, x, unit) $cap($name.have) $x $unit maintenant.
 				qtotal: macro(name) Combien $name.qhave maintenant?
-				start: macro(name, x) $cap($name.had) $x.
+				now: macro(name, x, unit) Maintenant, $name.have $x $unit.
+				start: macro(name, x, unit) $cap($name.had) $x $unit.
 				qstart: macro(name) Combien $name.qhad\0?
 			end
 		end
@@ -61,13 +62,27 @@ food: @QuestionFactory
 			end
 			unit: $food
 			sentence: do
-				lose: macro(name, x) $cap($name.have) mangé $x.
-				qlose: macro(name) Combien $name.had mangé de $food?
-				get: macro(name, x) $cap($name.have) $get $x.
-				qget: macro(name) Combien $name.had $get?
-				total: macro(name, x) $cap($name.have) $x maintenant.
+				// introduced: noun already stated (start sentence) -> "en" form
+				lose: macro(name, x, unit, introduced)
+					if introduced
+						$cap($name.haveEn) mangé $x.
+					else
+						$cap($name.have) mangé $x $unit.
+					end
+				end
+				qlose: macro(name) Combien en $name.qhad mangé?
+				get: macro(name, x, unit, introduced)
+					if introduced
+						$cap($name.haveEn) $get $x.
+					else
+						$cap($name.have) $get $x $unit.
+					end
+				end
+				qget: macro(name) Combien en $name.qhad $get?
+				total: macro(name, x, unit) $cap($name.have) $x $unit maintenant.
 				qtotal: macro(name) Combien en $name.qhave maintenant?
-				start: macro(name, x) $cap($name.had) $x.
+				now: macro(name, x, unit) Maintenant, $name.haveEn $x.
+				start: macro(name, x, unit) $cap($name.had) $x $unit.
 				qstart: macro(name) Combien en $name.qhad\0?
 			end
 		end
