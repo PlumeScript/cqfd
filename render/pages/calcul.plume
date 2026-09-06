@@ -178,3 +178,30 @@ pbCalcN2: do
 		end
 	end
 end
+
+pbMulX: do
+	instruction:macro(question)
+		let start = $ question.context.start
+		if start + question.instructions.depth > len(question.context.voc)
+			set start = $ len(question.context.voc) - question.instructions.depth
+		end
+
+		for i in seq(start, start+question.instructions.depth)
+			if i==start
+				Il y a $pages.formula($question.values[i-start+1]) $question.context.voc[i]s.
+			else
+				\sDans chaque $question.context.voc[i-1], il y a $pages.formula($question.values[i-start+1]) $question.context.voc[i]s.
+			end
+		end
+		\sEn tout, combien il-y-a-t-il de $question.context.voc[start+question.instructions.depth]s\0?
+	end
+	solution: macro(question)
+		let start = $ question.context.start
+		if start + question.instructions.depth > len(question.context.voc)
+			set start = $ len(question.context.voc) - question.instructions.depth
+		end
+
+		$pages.formula($renderLatexAST($question.calcul) = $question.solution).\s
+		En tout, il y a $pages.formula($question.solution) $question.context.voc[start+question.instructions.depth]s.
+	end
+end

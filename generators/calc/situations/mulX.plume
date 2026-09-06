@@ -1,0 +1,48 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+let Range from $import(../../../core/parameters/range)
+let Choice from $import(../../../core/parameters/set)
+
+let r = $Range(2, 10)
+
+matrioska: @QuestionFactory
+	parameters: do
+		- $Choice(train, chocolat, collège)
+		- $r
+	end
+	hyperParameters: do
+		start: $Range(1, 4)
+		for i in seq(5)
+			- $r
+		end
+	end
+	get: macro(context, start:, ...values)
+		@Question(pbParameters)
+			voc: if context == "train"
+				- gare
+				- train
+				- wagon
+				- roue
+			elseif context == "chocolat"
+				- caisse
+				- boîte
+				- chocolat
+				- pépite de caramel
+			elseif context == "collège"
+				- collège
+				- bâtiment
+				- classe
+				- élève
+			end
+			values: $values
+			start: $start
+		end
+	end
+end
