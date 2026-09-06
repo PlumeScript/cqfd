@@ -86,7 +86,7 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 
 		let args  = $ makeArgs(n)
 		let hargs = $ makeHyperArgs(seed)
-		set self.memory[n] = if not args or (validate and not validate(...args, ...hargs))
+		set self.memory[n] = if not args or (validate and not validate(...args))
 			$empty
 		else
 			$get(...args, ...hargs)
