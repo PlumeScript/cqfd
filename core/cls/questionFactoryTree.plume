@@ -496,4 +496,16 @@ ref QuestionFactoryTree: macro()
 		end
 		return 0
 	end
+
+	getSize: macro()
+		let total = 1
+		for elem in self.questionFactoryList
+			if elem.type == "QuestionFactoryLeaf"
+				set total += $elem.question.size
+			else
+				set total += $elem.tree.getSize()
+			end
+		end
+		return $total
+	end
 end
