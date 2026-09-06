@@ -1,0 +1,96 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Choice from $import(../../core/parameters/set)
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+
+// Problem class: k1 * X + k2 * Y = Z
+pbCalcN2: macro(context, names:)
+	@QuestionFactory
+		parameters: do
+			unknown: $Choice(x, y, z)
+			isLoss: $Choice(0, 1)
+		end
+		hyperParameters: do
+			context: $context
+			name: if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+
+		get: macro(unknown:, isLoss:, context:, name:)
+			let values = do
+				...context.values
+			end
+
+			if isLoss and values.x < values.y
+				set values.x, values.y = ($values.y,  $values.x)
+			end
+			// Avoid null, and 1 for plural.
+			if isLoss and (values.x == values.y) or (values.x == values.y+1)
+				set values.x *= 2
+			end
+
+			set values.z = if isLoss==1
+				$(values.x - values.y)
+			else
+				$(values.x + values.y)
+			end
+
+			@Question(pbCalcN2)
+				context: $context
+				values: $values
+				// run $ print("!", values)
+				calcul: @Node
+					if isLoss==1
+						if unknown == "x"
+							- +
+							- $values.y
+							- $values.z
+						elseif unknown == "y"
+							- \0-
+							- $values.x
+							- $values.z
+						elseif unknown == "z"
+							- \0-
+							- $values.x
+							- $values.y
+						end
+					else
+						if unknown == "x"
+							- \0-
+							- $values.z
+							- $values.y
+						elseif unknown == "y"
+							- \0-
+							- $values.z
+							- $values.x
+						elseif unknown == "z"
+							- +
+							- $values.x
+							- $values.y
+						end
+					end
+
+				end
+				solution: do
+					$values[unknown]
+				end
+				instructions: do
+					unknown: $unknown
+					isLoss: $(isLoss==1)
+				end
+				name: $(name != 0 and name)
+				id: $unknown-$isLoss
+			end
+		end
+	end
+end
