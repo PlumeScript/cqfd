@@ -5,6 +5,7 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+let Range from $import(../../core/parameters/range)
 let Choice from $import(../../core/parameters/set)
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
@@ -48,7 +49,6 @@ pbCalcN2: macro(context, names:)
 			@Question(pbCalcN2)
 				context: $context
 				values: $values
-				// run $ print("!", values)
 				calcul: @Node
 					if isLoss==1
 						if unknown == "x"
@@ -90,6 +90,60 @@ pbCalcN2: macro(context, names:)
 				end
 				name: $(name != 0 and name)
 				id: $unknown-$isLoss
+			end
+		end
+	end
+end
+
+// Problem class: A * B * C * ... = Z
+pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:)
+	if depth
+		set minDepth = $depth
+		set maxDepth = $depth
+	end
+
+	@QuestionFactory
+		parameters: do
+			unknown: $ Range(1, maxDepth+1)
+			depth:   $ Range(minDepth, maxDepth)
+		end
+		hyperParameters: do
+			context: $context
+			name: if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+
+		validate: macro(unknown:, depth:)
+			// TODO: support division
+			// return $ unknown <=depth+1
+			return $ unknown == depth+1
+		end
+
+		get: macro(unknown:, depth:, context:, name:)
+			let calcul = $ Node("number", Table.at(context.values, depth+1))
+			let result = $ Table.at(context.values, depth+1)
+			for i in seq(depth, 1, -1)
+				set calcul = $ Node("*", context.values[i], calcul)
+				set result *= $ context.values[i]
+			end
+
+			let values = $Table(...context.values)
+			set values[unknown+1] = $ result
+
+			@Question(pbMulX)
+				context: $context
+				values: $values
+				calcul: $calcul
+				solution: $values[unknown+1]
+				instructions: do
+					unknown: $unknown
+					depth: $depth
+				end
+				name: $(name != 0 and name)
+				id: $unknown-$depth
 			end
 		end
 	end
