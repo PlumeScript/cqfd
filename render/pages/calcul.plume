@@ -185,15 +185,13 @@ pbMulX: do
 		if start + question.instructions.depth > len(question.context.voc)
 			set start = $ len(question.context.voc) - question.instructions.depth
 		end
-
-		for i in seq(start, start+question.instructions.depth)
-			if i==start
-				Il y a $pages.formula($question.values[i-start+1]) $question.context.voc[i]s.
-			else
-				\sDans chaque $question.context.voc[i-1], il y a $pages.formula($question.values[i-start+1]) $question.context.voc[i]s.
-			end
+		let depth = $question.instructions.depth
+		let sent = $question.context.sentence
+		$ sent.starts[start](pages.formula(question.values[1]))
+		for i in seq(1, depth)
+			\s$ sent.trans[start+i-1](pages.formula(question.values[i+1]))
 		end
-		\sEn tout, combien il-y-a-t-il de $question.context.voc[start+question.instructions.depth]s\0?
+		\s$ sent.q[start+depth]()
 	end
 	solution: macro(question)
 		let start = $ question.context.start
@@ -202,6 +200,6 @@ pbMulX: do
 		end
 
 		$pages.formula($renderLatexAST($question.calcul) = $question.solution).\s
-		En tout, il y a $pages.formula($question.solution) $question.context.voc[start+question.instructions.depth]s.
+		$ question.context.sentence.a[start+question.instructions.depth](pages.formula(question.solution))
 	end
 end
