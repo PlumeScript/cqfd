@@ -24,7 +24,7 @@ ref Range: macro(Number start, Number stop)
 end
 
 // Range based on integer length
-// Same number of value per length
+// One block per length: 9 * 10^(k-1) distinct values per length k
 ref Integer: macro (...args)
 	let smin, smax
 	if len(args) == 0
@@ -45,20 +45,15 @@ ref Integer: macro (...args)
 
 	let size = 0
 	for i in seq(smin, smax)
-		set size += $ 10^i * (smax-i+1)
+		set size += $ 9 * 10^(i-1)
 	end
 	@Parameter
 		type: integer
 		size: $size
+		// The per-length blocks tile [10^(smin-1) .. 10^smax-1] contiguously,
+		// so position i maps to i + 10^(smin-1).
 		get: macro(i)
-			let slot = $ i % (smax-smin+1)
-			let pos  = $ (i / (smax-smin+1)).floor()
-			let base = $ 10^(smin+slot-1)
-			if base == 1
-				$ pos % 10
-			else
-				$ base + pos % (base*9)
-			end
+			$ i + 10^(smin-1)
 		end
 	end
 end
