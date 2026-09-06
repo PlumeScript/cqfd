@@ -16,10 +16,20 @@ end
 
 ref DecimalRepresentation: macro(Number x, b: 10)
 	let intPart = $x.floor()
-	let decPart = $(x - intPart)
-	set decPart *= $ 10^(len(String(decPart))-2)
+	// decimal length from the shortest decimal spelling of x
+	let ns = $(String(x).replace(".", ""))
+	let decLen = $(len(ns) - len(String(intPart)))
+	let decPart = 0
+	if decLen != 0
+		set decPart = $ (x - intPart) * 10^decLen
+		set decPart = $decPart.round()
+	end
 	let intFigures = $ decomposition(intPart, b: b)
 	let decFigures = $ decomposition(decPart, b: b)
+	// pad leading zeros up to the spelled decimal length
+	while len(decFigures) < decLen
+		run $ Table.append(decFigures, 0)
+	end
 	let sizeIntPart = $ len(intFigures)
 	let sizeDecPart = $ len(decFigures)
 
@@ -48,9 +58,12 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 	end
 
 	getFiguresAlong: macro(x)
+		// pair by decimal position k (k=1 -> tenths), missing position -> 0
 		let size = $ max(self.sizeDecPart, x.sizeDecPart)
 		for i in seq(size)
-			- $ (self.decFigures[i]? or 0, x.decFigures[i]? or 0)
+			let j = $ self.sizeDecPart - i + 1
+			let k = $ x.sizeDecPart - i + 1
+			- $ (self.decFigures[j]? or 0, x.decFigures[k]? or 0)
 		end
 		set size = $ max(self.sizeIntPart, x.sizeIntPart)
 		for i in seq(size)
