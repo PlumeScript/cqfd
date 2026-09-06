@@ -63,9 +63,10 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 			let index = $hyperParameterMap[parameter]
 			// draw block and position within it: one Feistel permutation per
 			// block, so the sequence no longer repeats the same ordering
-			let hblock = $ Number.floor((index-1) / parameter.size)
-			let pos = $ index % parameter.size
-			let rindex = $ FeistelWalker(parameter.size, derive(seed*count, hblock, 0))(pos)
+			let size = $ (parameter.size? or parameter.getSize())
+			let hblock = $ Number.floor((index-1) / size)
+			let pos = $ index % size
+			let rindex = $ FeistelWalker(size, derive(seed*count, hblock, 0))(pos)
 			set args[name] = $ parameter.get(rindex)
 			if not args[name]
 				return
