@@ -9,7 +9,7 @@ ref renderLatexAST: macro(node, ?mayPar)
 	
 	let tnode = $ type(node) == "table" and node.type? or type(node)
 	if tnode == "treeNode"
-		if mayPar and node.label != "number" and node.label != "bold"
+		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*"
 			(
 		end
 		if node.label == "+"
@@ -47,7 +47,7 @@ ref renderLatexAST: macro(node, ?mayPar)
 		elseif node.label == "bold"
 			\\mathbf{$renderLatexAST($node.children[1])}
 		end
-		if mayPar and node.label != "number" and node.label != "bold"
+		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*"
 			)
 		end
 	elseif type(node) == "number"
