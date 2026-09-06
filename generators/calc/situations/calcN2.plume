@@ -1,0 +1,75 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+let Range from $import(../../../core/parameters/range)
+let Choice from $import(../../../core/parameters/set)
+
+macro cap(x)
+	$x.sub(1).upper()$x.sub(2, -1)
+end
+
+money: @QuestionFactory
+	parameters: do
+		lose: $Choice(dépensé, donné)
+		get: $Choice(reçu, gagné)
+	end
+	hyperParameters: do
+		- $Range(5, 50)
+		- $Range(5, 50)
+	end
+	get: macro(x, y, lose:, get:)
+		@Question(pbParameters)
+			values: do
+				x: $x
+				y: $y
+			end
+			unit: €
+			sentence: do
+				lose: macro(name, x) $cap($name.have) $lose $x.
+				qlose: macro(name) Combien  $name.qhave $lose?
+				get: macro(name, x) $cap($name.have) $get $x.
+				qget: macro(name) Combien  $name.qhave $get?
+				total: macro(name, x) $cap($name.have) $x maintenant.
+				qtotal: macro(name) Combien $name.qhave maintenant?
+				start: macro(name, x) $cap($name.had) $x.
+				qstart: macro(name) Combien $name.qhad\0?
+			end
+		end
+	end
+end
+
+food: @QuestionFactory
+	parameters: do
+		food: $Choice(pommes, bonbons, gâteaux, carottes)
+		get: $Choice(acheté)
+	end
+	hyperParameters: do
+		- $Range(8, 12)
+		- $Range(8, 12)
+	end
+	get: macro(x, y, food:, get:)
+		@Question(pbParameters)
+			values: do
+				x: $x
+				y: $y
+			end
+			unit: $food
+			sentence: do
+				lose: macro(name, x) $cap($name.have) mangé $x.
+				qlose: macro(name) Combien $name.had mangé de $food?
+				get: macro(name, x) $cap($name.have) $get $x.
+				qget: macro(name) Combien $name.had $get?
+				total: macro(name, x) $cap($name.have) $x maintenant.
+				qtotal: macro(name) Combien en $name.qhave maintenant?
+				start: macro(name, x) $cap($name.had) $x.
+				qstart: macro(name) Combien en $name.qhad\0?
+			end
+		end
+	end
+end

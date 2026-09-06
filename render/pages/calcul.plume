@@ -79,3 +79,90 @@ calculHoleNoSolution: do
 		.
 	end
 end
+
+pbCalcN2: do
+	macro getName(question, first)
+		if question.name?
+			have: if first
+				$question.name[1] a
+			elseif question.name[2] == "m"
+				il a
+			else
+				elle a
+			end
+			had: if first
+				$question.name[1] avait
+			elseif question.name[2] == "m"
+				il avait
+			else
+				elle avait
+			end
+			qhave: if question.name[2] == "m"
+				a-t-il
+			else
+				a-t-elle
+			end
+			qhad: if question.name[2] == "m"
+				avait-il
+			else
+				avait-elle
+			end
+		else
+			have: j'ai
+			had: j'avais
+			qhave: ai-je
+			qhad: avais-je
+		end
+	end
+	instruction:macro(question)
+		if question.instructions.unknown != "x"
+			$getName($question, $true).had $pages.formula($question.values.x) $question.context.unit.\s
+		end
+
+		if question.instructions.unknown != "y"
+			let value = $pages.formula($question.values.y) $question.context.unit
+			let name = $ getName(question, question.instructions.unknown == "x")
+			if question.instructions.isLoss
+				$question.context.sentence.lose($name, $value)
+			else
+				$question.context.sentence.get($name, $value)
+			end
+		end
+
+		let name = $ getName(question, false)
+		if question.instructions.unknown != "z"
+			\sMaintenant,\s
+			$name.have\s
+			$pages.formula($(question.values.z)) $question.context.unit.\s
+		end
+
+		if question.instructions.unknown == "x"
+			\s$question.context.sentence.qstart($name)
+		elseif question.instructions.unknown == "y"
+			\s
+			if question.instructions.isLoss
+				$question.context.sentence.qlose($name)
+			else
+				$question.context.sentence.qget($name)
+			end
+		else
+			\s$question.context.sentence.qtotal($name)
+		end
+	end
+	solution: macro(question)
+		let name = $ getName(question, true)
+		$pages.formula($renderLatexAST($question.calcul) = $question.solution).\s
+		let value = $pages.formula($question.solution) $question.context.unit
+		if question.instructions.unknown == "x"
+			\s$question.context.sentence.start($name, $value)
+		elseif question.instructions.unknown == "y"
+			if question.instructions.isLoss
+				$question.context.sentence.lose($name, $value)
+			else
+				$question.context.sentence.get($name, $value)
+			end
+		else
+			\s$question.context.sentence.total($name, $value)
+		end
+	end
+end
