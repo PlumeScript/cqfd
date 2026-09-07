@@ -125,9 +125,10 @@ food: @QuestionFactory
 	end
 end
 
+// Drinks: quantified units read naturally ("20 cartons de jus")
 drink: @QuestionFactory
 	parameters: do
-		drink: $Choice(jus, sodas, cafés, thés)
+		drink: $Choice(cartons de jus, bouteilles de soda, tasses de café, tasses de thé)
 		get: $Choice(acheté)
 	end
 	hyperParameters: do
