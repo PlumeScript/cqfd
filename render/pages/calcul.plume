@@ -147,6 +147,11 @@ pbCalcN2: do
 			\s$question.context.sentence.now($name, $pages.formula($(question.values.z)), $question.context.unit)\s
 		end
 
+		// trap: useless extra info provided by the context
+		if question.trap and question.context.sentence.trap?
+			\s$question.context.sentence.trap($name)
+		end
+
 		if question.instructions.unknown == "x"
 			\s$question.context.sentence.qstart($name)
 		elseif question.instructions.unknown == "y"
@@ -190,6 +195,10 @@ pbMulX: do
 		$ sent.starts[start](pages.formula(question.values[1]))
 		for i in seq(1, depth)
 			\s$ sent.trans[start+i-1](pages.formula(question.values[i+1]))
+		end
+		// trap: the level below the target, useless for the answer
+		if question.trap and start+depth+1 <= len(question.context.voc) and depth+2 <= len(question.context.values)
+			\s$ sent.trans[start+depth](pages.formula(question.context.values[depth+2]))
 		end
 		\s$ sent.q[start+depth]()
 	end
