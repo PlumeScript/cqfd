@@ -6,20 +6,20 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let Range from $import(../../core/parameters/range)
-let Choice from $import(../../core/parameters/set)
+let Choice, Constant from $import(../../core/parameters/set)
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 
 // Problem class: k1 * X + k2 * Y = Z
-pbCalcN2: macro(context, names:)
+pbCalcN2: macro(context, names:, ?trap)
 	@QuestionFactory
 		parameters: do
 			unknown: $Choice(x, y, z)
 			isLoss: $Choice(0, 1)
 		end
 		hyperParameters: do
-			context: $context
+			context: $Constant($context)
 			name: if names
 				$Choice(...names)
 			else
@@ -49,6 +49,7 @@ pbCalcN2: macro(context, names:)
 			@Question(pbCalcN2)
 				context: $context
 				values: $values
+				trap: $trap
 				calcul: @Node
 					if isLoss==1
 						if unknown == "x"
@@ -96,7 +97,7 @@ pbCalcN2: macro(context, names:)
 end
 
 // Problem class: A * B * C * ... = Z
-pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:)
+pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?trap)
 	if depth
 		set minDepth = $depth
 		set maxDepth = $depth
@@ -107,8 +108,9 @@ pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:)
 			unknown: $ Range(1, maxDepth+1)
 			depth:   $ Range(minDepth, maxDepth)
 		end
+
 		hyperParameters: do
-			context: $context
+			context: $Constant($context)
 			name: if names
 				$Choice(...names)
 			else
@@ -134,6 +136,7 @@ pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:)
 			set values[unknown+1] = $ result
 
 			@Question(pbMulX)
+				trap: $trap
 				context: $context
 				values: $values
 				calcul: $calcul
