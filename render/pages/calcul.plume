@@ -179,7 +179,7 @@ pbCalcN2: do
 				$question.context.sentence.get($name, $value, $question.context.unit, $introduced)
 			end
 		else
-			\s$question.context.sentence.total($name, $value, $question.context.unit)
+			\s$question.context.sentence.total($name, $value, $question.context.unit, question.instructions.isLoss, question.name?)
 		end
 	end
 end
