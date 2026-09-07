@@ -166,11 +166,361 @@ let sentences = do
 			end
 		end
 	end
+	arbre: do
+		starts: do
+			- macro(n)
+				Il y a $n arbres.
+			end
+			- macro(n)
+				Il y a $n branches.
+			end
+			- macro(n)
+				Il y a $n nids.
+			end
+		end
+		trans: do
+			- macro(n)
+				Chaque arbre a $n branches.
+			end
+			- macro(n)
+				Chaque branche a $n nids.
+			end
+			- macro(n)
+				Chaque nid a $n œufs.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de branches\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de nids\0?
+			end
+			- macro()
+				En tout, combien y a-t-il d'œufs\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n branches.
+			end
+			- macro(n)
+				En tout, il y a $n nids.
+			end
+			- macro(n)
+				En tout, il y a $n œufs.
+			end
+		end
+	end
+	ville: do
+		starts: do
+			- macro(n)
+				Il y a $n villes.
+			end
+			- macro(n)
+				Il y a $n parkings.
+			end
+			- macro(n)
+				Il y a $n voitures.
+			end
+		end
+		trans: do
+			- macro(n)
+				Dans chaque ville, il y a $n parkings.
+			end
+			- macro(n)
+				Dans chaque parking, il y a $n voitures.
+			end
+			- macro(n)
+				Chaque voiture a $n sièges.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de parkings\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de voitures\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de sièges\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n parkings.
+			end
+			- macro(n)
+				En tout, il y a $n voitures.
+			end
+			- macro(n)
+				En tout, il y a $n sièges.
+			end
+		end
+	end
+	magasin: do
+		starts: do
+			- macro(n)
+				Il y a $n magasins.
+			end
+			- macro(n)
+				Il y a $n pianos.
+			end
+			- macro(n)
+				Il y a $n touches.
+			end
+		end
+		trans: do
+			- macro(n)
+				Dans chaque magasin, il y a $n pianos.
+			end
+			- macro(n)
+				Chaque piano a $n touches.
+			end
+			- macro(n)
+				Chaque touche a $n cordes.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de pianos\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de touches\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de cordes\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n pianos.
+			end
+			- macro(n)
+				En tout, il y a $n touches.
+			end
+			- macro(n)
+				En tout, il y a $n cordes.
+			end
+		end
+	end
+	salle: do
+		starts: do
+			- macro(n)
+				Il y a $n salles.
+			end
+			- macro(n)
+				Il y a $n aquariums.
+			end
+			- macro(n)
+				Il y a $n poulpes.
+			end
+		end
+		trans: do
+			- macro(n)
+				Dans chaque salle, il y a $n aquariums.
+			end
+			- macro(n)
+				Dans chaque aquarium, il y a $n poulpes.
+			end
+			- macro(n)
+				Chaque poulpe a $n tentacules.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il d'aquariums\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de poulpes\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de tentacules\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n aquariums.
+			end
+			- macro(n)
+				En tout, il y a $n poulpes.
+			end
+			- macro(n)
+				En tout, il y a $n tentacules.
+			end
+		end
+	end
+	caisse: do
+		starts: do
+			- macro(n)
+				Il y a $n caisses.
+			end
+			- macro(n)
+				Il y a $n packs.
+			end
+			- macro(n)
+				Il y a $n briques.
+			end
+		end
+		trans: do
+			- macro(n)
+				Dans chaque caisse, il y a $n packs.
+			end
+			- macro(n)
+				Dans chaque pack, il y a $n briques.
+			end
+			- macro(n)
+				Dans chaque brique, il y a $n litres de jus.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de packs\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de briques\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de litres de jus\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n packs.
+			end
+			- macro(n)
+				En tout, il y a $n briques.
+			end
+			- macro(n)
+				En tout, il y a $n litres de jus.
+			end
+		end
+	end
+	haras: do
+		starts: do
+			- macro(n)
+				Il y a $n haras.
+			end
+			- macro(n)
+				Il y a $n prés.
+			end
+			- macro(n)
+				Il y a $n licornes.
+			end
+		end
+		trans: do
+			- macro(n)
+				Dans chaque haras, il y a $n prés.
+			end
+			- macro(n)
+				Dans chaque pré, il y a $n licornes.
+			end
+			- macro(n)
+				Chaque licorne a $n crins.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de prés\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de licornes\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de crins\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n prés.
+			end
+			- macro(n)
+				En tout, il y a $n licornes.
+			end
+			- macro(n)
+				En tout, il y a $n crins.
+			end
+		end
+	end
+	$("étoile"): do
+		starts: do
+			- macro(n)
+				Il y a $n étoiles.
+			end
+			- macro(n)
+				Il y a $n planètes.
+			end
+			- macro(n)
+				Il y a $n lunes.
+			end
+		end
+		trans: do
+			- macro(n)
+				Chaque étoile a $n planètes.
+			end
+			- macro(n)
+				Chaque planète a $n lunes.
+			end
+			- macro(n)
+				Chaque lune a $n cratères.
+			end
+		end
+		q: do
+			- macro()
+			end
+			- macro()
+				En tout, combien y a-t-il de planètes\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de lunes\0?
+			end
+			- macro()
+				En tout, combien y a-t-il de cratères\0?
+			end
+		end
+		a: do
+			- macro(n)
+			end
+			- macro(n)
+				En tout, il y a $n planètes.
+			end
+			- macro(n)
+				En tout, il y a $n lunes.
+			end
+			- macro(n)
+				En tout, il y a $n cratères.
+			end
+		end
+	end
 end
 
 matrioska: @QuestionFactory
 	parameters: do
-		- $Choice(train, chocolat, collège)
+		- $Choice(train, chocolat, collège, arbre, ville, magasin, salle, caisse, haras, étoile)
 		- $r
 	end
 	hyperParameters: do
@@ -196,6 +546,41 @@ matrioska: @QuestionFactory
 				- bâtiment
 				- classe
 				- élève
+			elseif context == "arbre"
+				- arbre
+				- branche
+				- nid
+				- œuf
+			elseif context == "ville"
+				- ville
+				- parking
+				- voiture
+				- siège
+			elseif context == "magasin"
+				- magasin
+				- piano
+				- touche
+				- corde
+			elseif context == "salle"
+				- salle
+				- aquarium
+				- poulpe
+				- tentacule
+			elseif context == "caisse"
+				- caisse
+				- pack
+				- brique
+				- litre de jus
+			elseif context == "haras"
+				- haras
+				- pré
+				- licorne
+				- crin
+			else
+				- étoile
+				- planète
+				- lune
+				- cratère
 			end
 			values: $values
 			start: $start
