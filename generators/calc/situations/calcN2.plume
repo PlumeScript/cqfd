@@ -15,8 +15,7 @@ macro cap(x)
 end
 
 // Sentence table for money-like contexts: "verb + x + unit", no "en" form.
-// trap: the trap sentence is "<name> have <trapN> <trap>" (useless info).
-macro moneySentences(unit, trap:, trapN:, lose:, get:)
+macro moneySentences(unit, lose:, get:)
 	do
 		lose: macro(name, x, unit, introduced) $cap($name.have) $lose $x $unit.
 		qlose: macro(name) Combien $name.qhave $lose?
@@ -27,14 +26,12 @@ macro moneySentences(unit, trap:, trapN:, lose:, get:)
 		now: macro(name, x, unit) Maintenant, $name.have $x $unit.
 		start: macro(name, x, unit) $cap($name.had) $x $unit.
 		qstart: macro(name) Combien $name.qhad?
-		trap: macro(name) $cap($name.have) $trapN $trap.
 	end
 end
 
 // Sentence table for countable-noun contexts (food-like): "en" form when the
-// noun was already introduced by the start sentence. trapN items sit in
-// "<trapPlace>" — a subset of the total, useless for the answer.
-macro foodSentences(unit, trapPlace:, trapN:, lose:, get:)
+// noun was already introduced by the start sentence.
+macro foodSentences(unit, lose:, get:)
 	do
 		lose: macro(name, x, unit, introduced)
 			if introduced
@@ -57,7 +54,6 @@ macro foodSentences(unit, trapPlace:, trapN:, lose:, get:)
 		now: macro(name, x, unit) Maintenant, $name.haveEn $x.
 		start: macro(name, x, unit) $cap($name.had) $x $unit.
 		qstart: macro(name) Combien en $name.qhad?
-		trap: macro(name) $cap($name.haveEn) $trapN $trapPlace.
 	end
 end
 
@@ -65,22 +61,20 @@ money: @QuestionFactory
 	parameters: do
 		lose: $Choice(dépensé, donné)
 		get: $Choice(reçu, gagné)
-		trapN: $Range(1, 12)
 	end
 	hyperParameters: do
 		- $Range(5, 50)
 		- $Range(5, 50)
 	end
-	get: macro(x, y, lose:, get:, trapN:)
+	get: macro(x, y, lose:, get:)
 		let unit = €
-		let trap = pièces en plus
 		@Question(pbParameters)
 			values: do
 				x: $x
 				y: $y
 			end
 			unit: $unit
-			sentence: $moneySentences($unit, trap: $trap, trapN: $trapN, lose: $lose, get: $get)
+			sentence: $moneySentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
@@ -90,22 +84,20 @@ points: @QuestionFactory
 	parameters: do
 		lose: $Choice(perdu)
 		get: $Choice(gagné)
-		trapN: $Range(1, 5)
 	end
 	hyperParameters: do
 		- $Range(100, 500)
 		- $Range(50, 250)
 	end
-	get: macro(x, y, lose:, get:, trapN:)
+	get: macro(x, y, lose:, get:)
 		let unit = points
-		let trap = vies
 		@Question(pbParameters)
 			values: do
 				x: $x
 				y: $y
 			end
 			unit: $unit
-			sentence: $moneySentences($unit, trap: $trap, trapN: $trapN, lose: $lose, get: $get)
+			sentence: $moneySentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
@@ -114,23 +106,21 @@ food: @QuestionFactory
 	parameters: do
 		food: $Choice(pommes, bonbons, gâteaux, carottes)
 		get: $Choice(acheté)
-		trapN: $Range(1, 3)
 	end
 	hyperParameters: do
 		- $Range(8, 12)
 		- $Range(8, 12)
 	end
-	get: macro(x, y, food:, get:, trapN:)
+	get: macro(x, y, food:, get:)
 		let unit = $food
 		let lose = mangé
-		let trapPlace = dans le panier
 		@Question(pbParameters)
 			values: do
 				x: $x
 				y: $y
 			end
 			unit: $unit
-			sentence: $foodSentences($unit, trapPlace: $trapPlace, trapN: $trapN, lose: $lose, get: $get)
+			sentence: $foodSentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
@@ -139,23 +129,21 @@ drink: @QuestionFactory
 	parameters: do
 		drink: $Choice(jus, sodas, cafés, thés)
 		get: $Choice(acheté)
-		trapN: $Range(1, 3)
 	end
 	hyperParameters: do
 		- $Range(8, 12)
 		- $Range(8, 12)
 	end
-	get: macro(x, y, drink:, get:, trapN:)
+	get: macro(x, y, drink:, get:)
 		let unit = $drink
 		let lose = bu
-		let trapPlace = dans le frigo
 		@Question(pbParameters)
 			values: do
 				x: $x
 				y: $y
 			end
 			unit: $unit
-			sentence: $foodSentences($unit, trapPlace: $trapPlace, trapN: $trapN, lose: $lose, get: $get)
+			sentence: $foodSentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
@@ -165,23 +153,21 @@ marketMade: @QuestionFactory
 	parameters: do
 		thing: $Choice(voitures, télévisions, piscines)
 		get: $Choice(acheté, fabriqué)
-		trapN: $Range(1, 3)
 	end
 	hyperParameters: do
 		- $Range(2, 9)
 		- $Range(2, 9)
 	end
-	get: macro(x, y, thing:, get:, trapN:)
+	get: macro(x, y, thing:, get:)
 		let unit = $thing
 		let lose = vendu
-		let trapPlace = à la maison
 		@Question(pbParameters)
 			values: do
 				x: $x
 				y: $y
 			end
 			unit: $unit
-			sentence: $foodSentences($unit, trapPlace: $trapPlace, trapN: $trapN, lose: $lose, get: $get)
+			sentence: $foodSentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
@@ -191,23 +177,21 @@ marketRaised: @QuestionFactory
 	parameters: do
 		thing: $Choice(licornes, poulpes)
 		get: $Choice(acheté, élevé)
-		trapN: $Range(1, 3)
 	end
 	hyperParameters: do
 		- $Range(2, 9)
 		- $Range(2, 9)
 	end
-	get: macro(x, y, thing:, get:, trapN:)
+	get: macro(x, y, thing:, get:)
 		let unit = $thing
 		let lose = vendu
-		let trapPlace = à la maison
 		@Question(pbParameters)
 			values: do
 				x: $x
 				y: $y
 			end
 			unit: $unit
-			sentence: $foodSentences($unit, trapPlace: $trapPlace, trapN: $trapN, lose: $lose, get: $get)
+			sentence: $foodSentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
@@ -218,22 +202,20 @@ fix: @QuestionFactory
 		thing: $Choice(photocopieuses, ampoules, lampadaires, voitures, fusées)
 		lose: $Choice(cassé)
 		get: $Choice(réparé)
-		trapN: $Range(1, 3)
 	end
 	hyperParameters: do
 		- $Range(2, 9)
 		- $Range(2, 9)
 	end
-	get: macro(x, y, thing:, lose:, get:, trapN:)
+	get: macro(x, y, thing:, lose:, get:)
 		let unit = $thing
-		let trapPlace = dans l'atelier
 		@Question(pbParameters)
 			values: do
 				x: $x
 				y: $y
 			end
 			unit: $unit
-			sentence: $foodSentences($unit, trapPlace: $trapPlace, trapN: $trapN, lose: $lose, get: $get)
+			sentence: $foodSentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
