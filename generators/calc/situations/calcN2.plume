@@ -79,7 +79,7 @@ money: @QuestionFactory
 	end
 end
 
-// Video-game style money variant
+// Video-game style variant: points are countable, so the "en" form fits
 points: @QuestionFactory
 	parameters: do
 		lose: $Choice(perdu)
@@ -97,7 +97,7 @@ points: @QuestionFactory
 				y: $y
 			end
 			unit: $unit
-			sentence: $moneySentences($unit, lose: $lose, get: $get)
+			sentence: $foodSentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
