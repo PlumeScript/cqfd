@@ -21,7 +21,15 @@ macro moneySentences(unit, lose:, get:)
 		qlose: macro(name) Combien $name.qhave $lose?
 		get: macro(name, x, unit, introduced) $cap($name.have) $get $x $unit.
 		qget: macro(name) Combien $name.qhave $get?
-		total: macro(name, x, unit) $cap($name.have) $x $unit maintenant.
+		total: macro(name, x, unit, isLoss, named)
+			if named
+				$cap($name.have) $x $unit.
+			elseif isLoss
+				Il me reste $x $unit.
+			else
+				$cap($name.have) $x $unit.
+			end
+		end
 		qtotal: macro(name) Combien $name.qhave maintenant?
 		now: macro(name, x, unit) Maintenant, $name.have $x $unit.
 		start: macro(name, x, unit) $cap($name.had) $x $unit.
@@ -49,7 +57,15 @@ macro foodSentences(unit, lose:, get:)
 			end
 		end
 		qget: macro(name) Combien en $name.qhad $get?
-		total: macro(name, x, unit) $cap($name.have) $x $unit maintenant.
+		total: macro(name, x, unit, isLoss, named)
+			if named
+				$cap($name.have) $x $unit.
+			elseif isLoss
+				Il m'en reste $x $unit.
+			else
+				$cap($name.have) $x $unit.
+			end
+		end
 		qtotal: macro(name) Combien en $name.qhave maintenant?
 		now: macro(name, x, unit) Maintenant, $name.haveEn $x.
 		start: macro(name, x, unit) $cap($name.had) $x $unit.
