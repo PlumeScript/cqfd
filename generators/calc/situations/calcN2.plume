@@ -41,7 +41,7 @@ macro foodSentences(unit, lose:, get:)
 				$cap($name.have) $lose $x $unit.
 			end
 		end
-		qlose: macro(name) Combien en $name.qhad $lose?
+		qlose: macro(name) Combien en $name.qhave $lose?
 		get: macro(name, x, unit, introduced)
 			if introduced
 				$cap($name.haveEn) $get $x.
@@ -49,7 +49,7 @@ macro foodSentences(unit, lose:, get:)
 				$cap($name.have) $get $x $unit.
 			end
 		end
-		qget: macro(name) Combien en $name.qhad $get?
+		qget: macro(name) Combien en $name.qhave $get?
 		total: macro(name, x, unit) $cap($name.have) $x $unit.
 		totalLoss: macro(name, x, unit) Il m'en reste $x $unit.
 		qtotal: macro(name) Combien en $name.qhave maintenant?
