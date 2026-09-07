@@ -128,7 +128,7 @@ pbCalcN2: do
 	end
 	instruction:macro(question)
 		if question.instructions.unknown != "x"
-			$cap($getName($question, $true).had) $pages.formula($question.values.x) $question.context.unit.\s
+			$cap($getName($question, $true).had) $pages.formula($question.values.x) $question.context.unit.
 		end
 
 		if question.instructions.unknown != "y"
@@ -136,15 +136,15 @@ pbCalcN2: do
 			let introduced = $ (question.instructions.unknown == "z")
 			let name = $ getName(question, question.instructions.unknown == "x")
 			if question.instructions.isLoss
-				$question.context.sentence.lose($name, $pages.formula($question.values.y), $question.context.unit, $introduced)
+				\s$question.context.sentence.lose($name, $pages.formula($question.values.y), $question.context.unit, $introduced)
 			else
-				$question.context.sentence.get($name, $pages.formula($question.values.y), $question.context.unit, $introduced)
+				\s$question.context.sentence.get($name, $pages.formula($question.values.y), $question.context.unit, $introduced)
 			end
 		end
 
 		let name = $ getName(question, false)
 		if question.instructions.unknown != "z"
-			\s$question.context.sentence.now($name, $pages.formula($(question.values.z)), $question.context.unit)\s
+			\s$question.context.sentence.now($name, $pages.formula($(question.values.z)), $question.context.unit)
 		end
 
 		// trap: useless extra info provided by the context
@@ -171,7 +171,7 @@ pbCalcN2: do
 		let value = $pages.formula($question.solution)
 		let introduced = $ (question.instructions.unknown == "z")
 		if question.instructions.unknown == "x"
-			\s$question.context.sentence.start($name, $value, $question.context.unit)
+			$question.context.sentence.start($name, $value, $question.context.unit)
 		elseif question.instructions.unknown == "y"
 			if question.instructions.isLoss
 				$question.context.sentence.lose($name, $value, $question.context.unit, $introduced)
@@ -182,11 +182,11 @@ pbCalcN2: do
 			// dispatch here (not in the sentence template): named and plain
 			// gain share the same shape, only loss differs
 			if question.name?
-				\s$question.context.sentence.total($name, $value, $question.context.unit)
+				$question.context.sentence.total($name, $value, $question.context.unit)
 			elseif question.instructions.isLoss
-				\s$question.context.sentence.totalLoss($name, $value, $question.context.unit)
+				$question.context.sentence.totalLoss($name, $value, $question.context.unit)
 			else
-				\s$question.context.sentence.total($name, $value, $question.context.unit)
+				$question.context.sentence.total($name, $value, $question.context.unit)
 			end
 		end
 	end
