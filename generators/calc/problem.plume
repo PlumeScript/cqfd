@@ -5,6 +5,9 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+// TODO For now, trap are pure useless infos.
+// Should be useless / usefull depending on final question.
+
 let Range from $import(../../core/parameters/range)
 let Choice from $import(../../core/parameters/set)
 let Question from $import(../../core/cls/question)
