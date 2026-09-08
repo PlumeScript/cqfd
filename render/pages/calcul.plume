@@ -80,6 +80,15 @@ calculHoleNoSolution: do
 	end
 end
 
+invPb: do
+	instruction:macro(question)
+		$pages.formula($renderLatexAST($question.src.calcul) = $question.src.solution)\s
+	end
+	solution: macro(question)
+		$question.src.render(instruction)
+	end
+end
+
 pbCalcN2: do
 	macro cap(x)
 		$x.sub(1).upper()$x.sub(2, -1)

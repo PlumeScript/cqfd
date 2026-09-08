@@ -14,6 +14,17 @@ let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 
+invPb: macro(pb)
+	@QuestionFactory
+		parameters: $Table($pb)
+		get: macro(pb)
+			@Question(invPb)
+				src: $pb
+			end
+		end
+	end
+end
+
 // Problem class: k1 * X + k2 * Y = Z
 pbCalcN2: macro(context, names:, ?trap)
 	@QuestionFactory
