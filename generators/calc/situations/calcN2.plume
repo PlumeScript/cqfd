@@ -80,3 +80,477 @@ boulangerie: @QuestionFactory
 		end
 	end
 end
+
+// Repairman: fleet initially working, breakages (loss) or repairs (gain);
+// trap = total company fleet, useless for the answer.
+reparateur: @QuestionFactory
+	parameters: do
+		item: @Choice
+			- des photocopieuses
+			- des imprimantes
+			- des lampadaires
+			- des téléviseurs
+		end
+	end
+	hyperParameters: do
+		initial: $Range(20, 50)
+		delta: $Range(5, 12)
+	end
+
+	get: macro(item:, initial:, delta:)
+		let noun = if item == "des photocopieuses"
+			photocopieuses
+		elseif item == "des imprimantes"
+			imprimantes
+		elseif item == "des lampadaires"
+			lampadaires
+		else
+			téléviseurs
+		end
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		let total = $(initial + delta + 5)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sL'entreprise possède $m($total) $noun.
+				end
+				if isLoss
+					if unknow == "x"
+						$cap($name.nameFirst) répare $item.$trap Suite à une nouvelle panne, $m($delta) ne fonctionnent plus : il n'en reste que $m($rest) en fonctionnement. Combien fonctionnaient avant la panne?
+					elseif unknow == "y"
+						$cap($name.nameFirst) répare $item.$trap Il y en avait $m($initial) en fonctionnement, mais suite à des pannes, il n'en reste que $m($rest). Combien de $noun ne fonctionnent plus?
+					elseif unknow == "z"
+						$cap($name.nameFirst) répare $item.$trap Il y en avait $m($initial) en fonctionnement, mais $m($delta) viennent de tomber en panne. Combien fonctionnent encore?
+					end
+				else
+					if unknow == "x"
+						$cap($name.nameFirst) répare $item.$trap $cap($name.haveEn) réparé $m($delta) : il y en a maintenant $m($now) en fonctionnement. Combien fonctionnaient avant les réparations?
+					elseif unknow == "y"
+						$cap($name.nameFirst) répare $item.$trap Il y en avait $m($initial) en fonctionnement et il y en a maintenant $m($now). Combien de $noun $name.qhave réparé?
+					elseif unknow == "z"
+						$cap($name.nameFirst) répare $item.$trap Il y en avait $m($initial) en fonctionnement et $name.haveEn réparé $m($delta). Combien fonctionnent maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au départ, il y avait $m($initial) $noun en fonctionnement.
+					elseif unknow == "y"
+						$m($delta) $noun ne fonctionnent plus.
+					elseif unknow == "z"
+						Il reste $m($rest) $noun en fonctionnement.
+					end
+				else
+					if unknow == "x"
+						Au départ, il y avait $m($initial) $noun en fonctionnement.
+					elseif unknow == "y"
+						$cap($name.have) réparé $m($delta) $noun.
+					elseif unknow == "z"
+						Il y a maintenant $m($now) $noun en fonctionnement.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Magical animal breeder: herd in the stud, sales (loss) or births (gain);
+// trap = number of meadows.
+licorne: @QuestionFactory
+	parameters: do
+		animal: @Choice
+			- des licornes
+			- des pégases
+			- des griffons
+		end
+	end
+	hyperParameters: do
+		initial: $Range(15, 40)
+		delta: $Range(2, 10)
+		meadows: $Range(2, 6)
+	end
+
+	get: macro(animal:, initial:, delta:, meadows:)
+		let noun = if animal == "des licornes"
+			licornes
+		elseif animal == "des pégases"
+			pégases
+		else
+			griffons
+		end
+		let born = if animal == "des licornes"
+			nées
+		else
+			nés
+		end
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				let introSimple = if name.name == "je"
+					J'élève $animal.
+				else
+					$cap($name.nameFirst) élève $animal.
+				end
+				let introTrap = if name.name == "je"
+					Je possède $m($meadows) prés dans lesquels j'élève $animal.
+				else
+					$cap($name.nameFirst) possède $m($meadows) prés dans lesquels $name.name élève $animal.
+				end
+				let intro = if trap
+					$introTrap
+				else
+					$introSimple
+				end
+				if isLoss
+					if unknow == "x"
+						$intro $m($delta) ont quitté le haras : il en reste $m($rest). Combien de $noun y avait-il dans le haras au départ?
+					elseif unknow == "y"
+						$intro Il y en avait $m($initial) dans le haras, mais il n'en reste que $m($rest). Combien de $noun ont quitté le haras?
+					elseif unknow == "z"
+						$intro Il y en avait $m($initial) dans le haras, mais $m($delta) ont quitté. Combien de $noun restent dans le haras?
+					end
+				else
+					if unknow == "x"
+						$intro $m($delta) sont $born : il y en a maintenant $m($now) dans le haras. Combien de $noun y avait-il dans le haras au départ?
+					elseif unknow == "y"
+						$intro Il y a $m($initial) $noun dans le haras et il y en a maintenant $m($now). Combien de $noun sont $born?
+					elseif unknow == "z"
+						$intro Il y a $m($initial) $noun dans le haras et $m($delta) sont $born. Combien de $noun y a-t-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au départ, il y avait $m($initial) $noun dans le haras.
+					elseif unknow == "y"
+						$m($delta) $noun ont quitté le haras.
+					elseif unknow == "z"
+						Il reste $m($rest) $noun dans le haras.
+					end
+				else
+					if unknow == "x"
+						Au départ, il y avait $m($initial) $noun dans le haras.
+					elseif unknow == "y"
+						$m($delta) $noun sont $born.
+					elseif unknow == "z"
+						Il y a maintenant $m($now) $noun dans le haras.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Literature doctor: collection of a minor country's literature,
+// sales (loss) or purchases (gain); trap = books per box.
+litterature: @QuestionFactory
+	parameters: do
+		country: @Choice
+			- tchèque
+			- polonaise
+			- roumaine
+			- hongroise
+			- finlandaise
+			- danoise
+		end
+		century: @Choice
+			- IXe
+			- Xe
+			- XIe
+			- XIIe
+			- XIIIe
+			- XIVe
+		end
+	end
+	hyperParameters: do
+		initial: $Range(15, 60)
+		delta: $Range(4, 12)
+		perBox: $Range(4, 10)
+	end
+
+	get: macro(country:, century:, initial:, delta:, perBox:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				let title = if name.name == "elle"
+					docteure
+				else
+					docteur
+				end
+				let intro = if name.name == "je"
+					Je suis docteur en littérature.
+				else
+					$cap($name.nameFirst) est $title en littérature.
+				end
+				set trap = if trap
+					\sChaque colis contient $m($perBox) livres.
+				end
+				if isLoss
+					if unknow == "x"
+						$intro$trap $cap($name.have) vendu $m($delta) livres sur la littérature $country du $century siècle, et $name.haveEn maintenant $m($rest). Combien de livres $name.qhad au départ?
+					elseif unknow == "y"
+						$intro$trap $cap($name.had) $m($initial) livres sur la littérature $country du $century siècle, et $name.haveEn maintenant $m($rest). Combien de livres $name.qhave vendu?
+					elseif unknow == "z"
+						$intro$trap $cap($name.had) $m($initial) livres sur la littérature $country du $century siècle, puis $name.haveEn vendu $m($delta). Combien de livres $name.indirect reste-t-il?
+					end
+				else
+					if unknow == "x"
+						$intro$trap $cap($name.have) acheté $m($delta) livres sur la littérature $country du $century siècle, et $name.haveEn maintenant $m($now). Combien de livres $name.qhad au départ?
+					elseif unknow == "y"
+						$intro$trap $cap($name.had) $m($initial) livres sur la littérature $country du $century siècle, et $name.haveEn maintenant $m($now). Combien de livres $name.qhave acheté?
+					elseif unknow == "z"
+						$intro$trap $cap($name.have) $m($initial) livres sur la littérature $country du $century siècle ; $name.haveEn encore acheté $m($delta). Combien de livres $name.qhave maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au départ, $name.had $m($initial) livres sur la littérature $country du $century siècle.
+					elseif unknow == "y"
+						$cap($name.have) vendu $m($delta) livres sur la littérature $country du $century siècle.
+					elseif unknow == "z"
+						Il $name.indirect reste $m($rest) livres.
+					end
+				else
+					if unknow == "x"
+						Au départ, $name.had $m($initial) livres sur la littérature $country du $century siècle.
+					elseif unknow == "y"
+						$cap($name.have) acheté $m($delta) livres sur la littérature $country du $century siècle.
+					elseif unknow == "z"
+						$cap($name.have) maintenant $m($now) livres sur la littérature $country du $century siècle.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Birthday party: cakes bought, eaten by the guests (loss) or brought back (gain);
+// trap = cuts per cake.
+fete: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(6, 12)
+		delta: $Range(2, 4)
+		perCake: $Range(4, 8)
+	end
+
+	get: macro(initial:, delta:, perCake:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				let possessif = if name.name == "je"
+					ma
+				else
+					sa
+				end
+				set trap = if trap
+					\sChaque gâteau est coupé en $m($perCake) parts.
+				end
+				if isLoss
+					if unknow == "x"
+						À la fête d'anniversaire, les invités ont mangé $m($delta) gâteaux.$trap Il en reste $m($rest) : combien de gâteaux $name.qhave achetés?
+					elseif unknow == "y"
+						$cap($name.haveFirst) acheté $m($initial) gâteaux pour $possessif fête d'anniversaire.$trap Il en reste $m($rest) : combien de gâteaux les invités ont-ils mangés?
+					elseif unknow == "z"
+						$cap($name.haveFirst) acheté $m($initial) gâteaux pour $possessif fête d'anniversaire.$trap Les invités en ont mangé $m($delta) : combien de gâteaux reste-t-il?
+					end
+				else
+					if unknow == "x"
+						À la fête d'anniversaire, les invités ont rapporté $m($delta) gâteaux.$trap Il y en a maintenant $m($now) : combien de gâteaux $name.qhave achetés?
+					elseif unknow == "y"
+						$cap($name.haveFirst) acheté $m($initial) gâteaux pour $possessif fête d'anniversaire.$trap Il y en a maintenant $m($now) : combien de gâteaux les invités ont-ils rapportés?
+					elseif unknow == "z"
+						$cap($name.haveFirst) acheté $m($initial) gâteaux pour $possessif fête d'anniversaire.$trap Les invités en ont rapporté $m($delta) : combien de gâteaux y a-t-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				let possessif = if name.name == "je"
+					ma
+				else
+					sa
+				end
+				if isLoss
+					if unknow == "x"
+						$cap($name.haveFirst) acheté $m($initial) gâteaux pour $possessif fête d'anniversaire.
+					elseif unknow == "y"
+						Les invités ont mangé $m($delta) gâteaux.
+					elseif unknow == "z"
+						Il reste $m($rest) gâteaux.
+					end
+				else
+					if unknow == "x"
+						$cap($name.haveFirst) acheté $m($initial) gâteaux pour $possessif fête d'anniversaire.
+					elseif unknow == "y"
+						Les invités ont rapporté $m($delta) gâteaux.
+					elseif unknow == "z"
+						Il y a maintenant $m($now) gâteaux.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Chocolate house: bricks already laid, more bricks (gain) or bricks eaten (loss);
+// trap = number of rooms the house must have.
+maisonChocolat: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(20, 60)
+		delta: $Range(2, 8)
+		rooms: $Range(2, 5)
+	end
+
+	get: macro(initial:, delta:, rooms:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				let empeche = if name.name == "je"
+					m'en
+				else
+					s'en
+				end
+				let intro = if trap
+					$cap($name.haveFirst) fait construire une maison en chocolat de $m($rooms) pièces.
+				else
+					$cap($name.haveFirst) fait construire une maison en chocolat.
+				end
+				if isLoss
+					if unknow == "x"
+						$intro Suite à un petit creux, $name.have mangé $m($delta) briques sans pouvoir $empeche empêcher : il n'en reste que $m($rest). Combien de briques $name.qhad fait poser au début de la journée?
+					elseif unknow == "y"
+						$intro Au début de la journée, $name.had fait poser $m($initial) briques ; maintenant, il n'en reste que $m($rest). Combien de briques $name.qhave mangées?
+					elseif unknow == "z"
+						$intro Au début de la journée, $name.had fait poser $m($initial) briques, mais $name.have mangé $m($delta) sans pouvoir $empeche empêcher. Combien de briques reste-t-il?
+					end
+				else
+					if unknow == "x"
+						$intro L'après-midi, $name.have fait poser $m($delta) briques de plus : il y en a maintenant $m($now). Combien de briques $name.qhad fait poser au début de la journée?
+					elseif unknow == "y"
+						$intro Au début de la journée, $name.had fait poser $m($initial) briques ; maintenant, il y en a $m($now). Combien de briques $name.qhave fait poser aujourd'hui?
+					elseif unknow == "z"
+						$intro Au début de la journée, $name.had fait poser $m($initial) briques ; l'après-midi, $name.haveEn fait poser $m($delta). Combien de briques y en a-t-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au début de la journée, $name.had fait poser $m($initial) briques.
+					elseif unknow == "y"
+						$cap($name.have) mangé $m($delta) briques de la maison.
+					elseif unknow == "z"
+						Il reste $m($rest) briques.
+					end
+				else
+					if unknow == "x"
+						Au début de la journée, $name.had fait poser $m($initial) briques.
+					elseif unknow == "y"
+						$cap($name.have) fait poser $m($delta) briques de plus.
+					elseif unknow == "z"
+						Il y a maintenant $m($now) briques en tout.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Aquarium register: tickets already sold, more sales (gain) or cancellations (loss);
+// trap = tickets sold yesterday.
+aquarium: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(2, 5)
+		delta: $Range(1, 3)
+		yesterday: $Range(1, 4)
+	end
+
+	get: macro(initial:, delta:, yesterday:)
+		set initial *= 100
+		set delta *= 10
+		set yesterday *= 100
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sHier, $m($yesterday) tickets avaient été vendus.
+				end
+				if isLoss
+					if unknow == "x"
+						$cap($name.nameFirst) travaille à l'entrée d'un aquarium.$trap Depuis l'ouverture, $m($delta) tickets ont été annulés : il n'en reste que $m($rest). Combien de tickets $name.qhad déjà vendus au départ?
+					elseif unknow == "y"
+						$cap($name.nameFirst) travaille à l'entrée d'un aquarium.$trap $cap($name.have) déjà vendu $m($initial) tickets, puis $m($delta) ont été annulés : il n'en reste que $m($rest). Combien de tickets $name.qhave annulés?
+					elseif unknow == "z"
+						$cap($name.nameFirst) travaille à l'entrée d'un aquarium.$trap $cap($name.have) déjà vendu $m($initial) tickets, mais $m($delta) ont été annulés. Combien de tickets $name.qhave vendus en tout?
+					end
+				else
+					if unknow == "x"
+						$cap($name.nameFirst) travaille à l'entrée d'un aquarium.$trap L'après-midi, $name.have vendu $m($delta) tickets de plus : $name.haveEn maintenant $m($now) en tout. Combien de tickets $name.qhad déjà vendus ce matin?
+					elseif unknow == "y"
+						$cap($name.nameFirst) travaille à l'entrée d'un aquarium.$trap Ce matin, $name.have déjà vendu $m($initial) tickets ; maintenant, $name.haveEn $m($now) en tout. Combien de tickets $name.qhave vendus dans l'après-midi?
+					elseif unknow == "z"
+						$cap($name.nameFirst) travaille à l'entrée d'un aquarium.$trap Ce matin, $name.have déjà vendu $m($initial) tickets ; dans l'après-midi, $name.haveEn vendu $m($delta). Combien de tickets $name.qhave vendus en tout?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au départ, $name.had déjà vendu $m($initial) tickets.
+					elseif unknow == "y"
+						$cap($name.have) annulé $m($delta) tickets.
+					elseif unknow == "z"
+						Finalement, $name.have vendu $m($rest) tickets.
+					end
+				else
+					if unknow == "x"
+						Ce matin, $name.had déjà vendu $m($initial) tickets.
+					elseif unknow == "y"
+						$cap($name.have) vendu $m($delta) tickets dans l'après-midi.
+					elseif unknow == "z"
+						En tout, $name.have vendu $m($now) tickets.
+					end
+				end
+			end
+		end
+	end
+end
