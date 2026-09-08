@@ -12,213 +12,71 @@ let Choice from $import(../../../core/parameters/set)
 
 macro cap(x)
 	$x.sub(1).upper()$x.sub(2, -1)
-end
-
-// Sentence table for money-like contexts: "verb + x + unit", no "en" form.
-macro moneySentences(unit, lose:, get:)
-	do
-		lose: macro(name, x, unit, introduced) $cap($name.have) $lose $x $unit.
-		qlose: macro(name) Combien $name.qhave $lose?
-		get: macro(name, x, unit, introduced) $cap($name.have) $get $x $unit.
-		qget: macro(name) Combien $name.qhave $get?
-		total: macro(name, x, unit) $cap($name.have) $x $unit.
-		totalLoss: macro(name, x, unit) Il me reste $x $unit.
-		qtotal: macro(name) Combien $name.qhave maintenant?
-		now: macro(name, x, unit) Maintenant, $name.have $x $unit.
-		start: macro(name, x, unit) $cap($name.had) $x $unit.
-		qstart: macro(name) Combien $name.qhad au départ\0?
 	end
-end
 
-// Sentence table for countable-noun contexts (food-like): "en" form when the
-// noun was already introduced by the start sentence.
-macro foodSentences(unit, lose:, get:)
-	do
-		lose: macro(name, x, unit, introduced)
-			if introduced
-				$cap($name.haveEn) $lose $x.
-			else
-				$cap($name.have) $lose $x $unit.
-			end
-		end
-		qlose: macro(name) Combien en $name.qhave $lose?
-		get: macro(name, x, unit, introduced)
-			if introduced
-				$cap($name.haveEn) $get $x.
-			else
-				$cap($name.have) $get $x $unit.
-			end
-		end
-		qget: macro(name) Combien en $name.qhave $get?
-		total: macro(name, x, unit) $cap($name.have) $x $unit.
-		totalLoss: macro(name, x, unit) Il m'en reste $x $unit.
-		qtotal: macro(name) Combien en $name.qhave maintenant?
-		now: macro(name, x, unit) Maintenant, $name.haveEn $x.
-		start: macro(name, x, unit) $cap($name.had) $x $unit.
-		qstart: macro(name) Combien en $name.qhad au départ\0?
-	end
-end
-
-money: @QuestionFactory
+boulangerie: @QuestionFactory
 	parameters: do
-		lose: $Choice(dépensé, donné)
-		get: $Choice(reçu, gagné)
+		item: @Choice
+			- du pain
+			- des gâteaux
+			- des pâtisseries
+			- des viennoiseries
+		end
 	end
 	hyperParameters: do
-		- $Range(5, 50)
-		- $Range(5, 50)
+		initial: $Range(20, 50)
+		spent: $Range(5, 10)
 	end
-	get: macro(x, y, lose:, get:)
-		let unit = €
-		@Question(pbParameters)
-			values: do
-				x: $x
-				y: $y
-			end
-			unit: $unit
-			sentence: $moneySentences($unit, lose: $lose, get: $get)
-		end
-	end
-end
 
-// Video-game style variant: points are countable, so the "en" form fits
-points: @QuestionFactory
-	parameters: do
-		lose: $Choice(perdu)
-		get: $Choice(gagné)
-	end
-	hyperParameters: do
-		- $Range(100, 500)
-		- $Range(50, 250)
-	end
-	get: macro(x, y, lose:, get:)
-		let unit = points
+	get: macro(item:, initial:, spent:)
 		@Question(pbParameters)
 			values: do
-				x: $x
-				y: $y
+				x: $initial
+				y: $spent
 			end
-			unit: $unit
-			sentence: $foodSentences($unit, lose: $lose, get: $get)
-		end
-	end
-end
-
-food: @QuestionFactory
-	parameters: do
-		food: $Choice(pommes, bonbons, gâteaux, carottes)
-		get: $Choice(acheté)
-	end
-	hyperParameters: do
-		- $Range(8, 12)
-		- $Range(8, 12)
-	end
-	get: macro(x, y, food:, get:)
-		let unit = $food
-		let lose = mangé
-		@Question(pbParameters)
-			values: do
-				x: $x
-				y: $y
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sà $m($(spent/10))€ l'unité
+				end
+				if isLoss
+					if unknow == "x"
+						A la boulangerie, $name.haveFirst dépensé $m($spent)€ pour acheter $item$trap
+						. Vu qu'il $name.indirect restait $m($(initial - spent))€ en sortant, combien $name.qhad en arrivant?
+					elseif unknow == "y"
+						$cap($name.arrived) à la boulangerie avec $m($initial)€. Après avoir acheté $item$trap
+						, il $name.indirect reste $m($(initial - spent))€. Combien $name.qhave dépensé?
+					elseif unknow == "z"
+						$cap($name.arrived) à la boulangerie avec $m($initial)€. $cap($name.have) dépensé $m($spent)€ pour acheter $item$trap. Combien $name.indirect reste-t-il?
+					end
+				else
+					if unknow == "x"
+						A la boulangerie, $name.haveFirst dépensé $m($spent)€ pour acheter $item$trap. $cap($name.name) $name.alsoWent au marché. En tout, $name.have dépensé $m($(initial + spent))€ aujourd'hui. Combien $name.qhad dépensé au marché?
+					elseif unknow == "y"
+						$cap($name.haveFirst) dépensé $m($initial)€ au marché, puis $name.went à la boulangerie pour acheter $item$trap. En tout, $name.have dépensé $m($(initial + spent))€ aujourd'hui. Combien $name.qhave dépensé à la boulangerie?
+					elseif unknow == "z"
+						$cap($name.haveFirst) dépensé $m($initial)€ au marché, puis dépensé $m($spent)€ à la boulangerie pour acheter $item$trap. En tout, combien $name.qhave dépensé?
+					end
+				end
 			end
-			unit: $unit
-			sentence: $foodSentences($unit, lose: $lose, get: $get)
-		end
-	end
-end
-
-// Drinks: quantified units read naturally ("20 cartons de jus")
-drink: @QuestionFactory
-	parameters: do
-		drink: $Choice(cartons de jus, bouteilles de soda, tasses de café, tasses de thé)
-		get: $Choice(acheté)
-	end
-	hyperParameters: do
-		- $Range(8, 12)
-		- $Range(8, 12)
-	end
-	get: macro(x, y, drink:, get:)
-		let unit = $drink
-		let lose = bu
-		@Question(pbParameters)
-			values: do
-				x: $x
-				y: $y
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						$cap($name.hadFirst) $m($initial)€ en arrivant.
+					elseif unknow == "y"
+						$cap($name.haveFirst) dépensé $m($spent)€.
+					elseif unknow == "z"
+						Il $name.indirect reste $m($(initial-spent))€.
+					end
+				else
+					if unknow == "x"
+						$cap($name.hadFirst) dépensé $m($initial)€ au marché.
+					elseif unknow == "y"
+						$cap($name.haveFirst) dépensé $m($spent)€ à la boulangerie.
+					elseif unknow == "z"
+						En tout, $name.haveFirst dépensé $m($(initial+spent))€.
+					end
+				end
 			end
-			unit: $unit
-			sentence: $foodSentences($unit, lose: $lose, get: $get)
-		end
-	end
-end
-
-// Market: things bought / sold / made
-marketMade: @QuestionFactory
-	parameters: do
-		thing: $Choice(voitures, télévisions, piscines)
-		get: $Choice(acheté, fabriqué)
-	end
-	hyperParameters: do
-		- $Range(2, 9)
-		- $Range(2, 9)
-	end
-	get: macro(x, y, thing:, get:)
-		let unit = $thing
-		let lose = vendu
-		@Question(pbParameters)
-			values: do
-				x: $x
-				y: $y
-			end
-			unit: $unit
-			sentence: $foodSentences($unit, lose: $lose, get: $get)
-		end
-	end
-end
-
-// Market: things bought / sold / raised (animals)
-marketRaised: @QuestionFactory
-	parameters: do
-		thing: $Choice(licornes, poulpes)
-		get: $Choice(acheté, élevé)
-	end
-	hyperParameters: do
-		- $Range(2, 9)
-		- $Range(2, 9)
-	end
-	get: macro(x, y, thing:, get:)
-		let unit = $thing
-		let lose = vendu
-		@Question(pbParameters)
-			values: do
-				x: $x
-				y: $y
-			end
-			unit: $unit
-			sentence: $foodSentences($unit, lose: $lose, get: $get)
-		end
-	end
-end
-
-// Repair shop: things repaired (gain) or broken (loss)
-fix: @QuestionFactory
-	parameters: do
-		thing: $Choice(photocopieuses, ampoules, lampadaires, voitures, fusées)
-		lose: $Choice(cassé)
-		get: $Choice(réparé)
-	end
-	hyperParameters: do
-		- $Range(2, 9)
-		- $Range(2, 9)
-	end
-	get: macro(x, y, thing:, lose:, get:)
-		let unit = $thing
-		@Question(pbParameters)
-			values: do
-				x: $x
-				y: $y
-			end
-			unit: $unit
-			sentence: $foodSentences($unit, lose: $lose, get: $get)
 		end
 	end
 end
