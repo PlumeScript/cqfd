@@ -39,7 +39,7 @@ ref renderLatexAST: macro(node, ?mayPar)
 			
 			$ renderLatexAST(node.children[1], ?mayPar)
 			^{
-				$ renderLatexAST(node.children[2], ?mayPar)
+				$ renderLatexAST(node.children[2])
 			}
 		elseif node.label == "-:"
 			$ renderLatexAST(node.children[1])
