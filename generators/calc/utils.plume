@@ -59,7 +59,7 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 	end
 end
 
-getCompute: do
+ref getCompute: do
 	add: macro(x, y)
 		let dx = $ DecimalRepresentation(x)
 		let dy = $ DecimalRepresentation(y)
@@ -137,6 +137,18 @@ getCompute: do
 			end
 		end
 
+		return $realCompute
+	end
+
+	pow: macro(x, y)
+		let realCompute = 0
+		let result = $x
+		if y>0
+			for i in seq(y-1)
+				set realCompute += $ getCompute.mul(result, x)
+				set result *= $x
+			end
+		end
 		return $realCompute
 	end
 end
