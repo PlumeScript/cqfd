@@ -9,7 +9,9 @@ ref renderLatexAST: macro(node, ?mayPar)
 	
 	let tnode = $ type(node) == "table" and node.type? or type(node)
 	if tnode == "treeNode"
-		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*" and node.label != "/"
+		// a power never needs grouping in an operand slot: exponentiation
+		// has the highest precedence (the base wraps itself when needed)
+		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*" and node.label != "/" and node.label != "^"
 			(
 		end
 		if node.label == "+"
@@ -50,17 +52,22 @@ ref renderLatexAST: macro(node, ?mayPar)
 					end
 				end
 			elseif len(node.children) == 2
-				// the left operand starts the expression: a sum always needs
-				// grouping; a bare negative operand is redundant in (-x)-y,
-				// except under fullSign where every signed operand is explicit
-				if type(node.children[1]) == "table" and node.children[1].label == "+"
-					$ renderLatexAST(node.children[1], ?mayPar)
-				else
-					if node.fullSign? and type(node.children[1]) == "table" and node.children[1].label == "-" and len(node.children[1].children) == 1
+				// the left operand starts the expression: - and + share
+				// precedence and are left-associative, so it never needs
+				// grouping, except under fullSign where signed operands
+				// are explicit
+				if node.fullSign?
+					if type(node.children[1]) == "table" and node.children[1].label == "+"
 						$ renderLatexAST(node.children[1], ?mayPar)
 					else
-						$ renderLatexAST(node.children[1])
+						if type(node.children[1]) == "table" and node.children[1].label == "-" and len(node.children[1].children) == 1
+							$ renderLatexAST(node.children[1], ?mayPar)
+						else
+							$ renderLatexAST(node.children[1])
+						end
 					end
+				else
+					$ renderLatexAST(node.children[1])
 				end
 				\0-
 				$ renderLatexAST(node.children[2], ?mayPar)
@@ -88,8 +95,14 @@ ref renderLatexAST: macro(node, ?mayPar)
 				end
 			end
 		elseif node.label == "^"
-			
+			// a power base needs its own grouping: (x^d)^(y/d)
+			if type(node.children[1]) == "table" and node.children[1].label == "^"
+				(
+			end
 			$ renderLatexAST(node.children[1], ?mayPar)
+			if type(node.children[1]) == "table" and node.children[1].label == "^"
+				)
+			end
 			^{
 				$ renderLatexAST(node.children[2])
 			}
@@ -132,7 +145,7 @@ ref renderLatexAST: macro(node, ?mayPar)
 		elseif node.label == "bold"
 			\\mathbf{$renderLatexAST($node.children[1])}
 		end
-		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*" and node.label != "/"
+		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*" and node.label != "/" and node.label != "^"
 			)
 		end
 	elseif type(node) == "number"
