@@ -58,3 +58,85 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 		end
 	end
 end
+
+getCompute: do
+	add: macro(x, y)
+		let dx = $ DecimalRepresentation(x)
+		let dy = $ DecimalRepresentation(y)
+
+		let carry = 0
+		let realCompute = 0
+		for fx, fy in dx.getFiguresAlong(dy)
+			let sum = $ fx + fy + carry
+			if fx*fy != 0 or fy*carry != 0 or carry*fx != 0
+				set realCompute += 1
+			end
+			if fx*fy*carry != 0
+				set realCompute += 1
+			end
+			if sum >= 10
+				set carry = 1
+			else
+				set carry = 0
+			end
+		end
+
+		return $realCompute
+	end
+
+	sub: macro(x, y)
+		let dx = $ DecimalRepresentation(x)
+		let dy = $ DecimalRepresentation(y)
+
+		let carry = 0
+		let realCompute = 0
+		for fx, fy in dx.getFiguresAlong(dy)
+			let dif = $ fx - fy - carry
+			if fy != 0
+				set realCompute += 1
+			end
+			if carry != 0
+				set realCompute += 1
+			end
+			if dif < 0
+				set carry = 1
+			else
+				set carry = 0
+			end
+		end
+
+		return $realCompute
+	end
+
+	mul: macro(x, y)
+		let dx = $ DecimalRepresentation(x)
+		let dy = $ DecimalRepresentation(y)
+
+		let realCompute = 0
+		let sum = $Table()
+		for i, fx in enumerate(dx.getFigures())
+			let carry = 0
+			for j, fy in enumerate(dy.getFigures())
+				let prod = $ fx * fy + carry
+				if prod >= 10
+					set carry = $ (prod / 10).floor()
+					set realCompute += 1
+				else
+					set carry = 0
+				end
+				set sum[i] = $ sum[i]? or Table()
+				set sum[i][j] = $ prod
+
+				if sum[i-1]?[j+1]? and sum[i-1]?[j+1]? != 0 and prod != 0
+					set realCompute += 1
+				end
+
+				if fx != 0 and fy != 0 and fx != 1 and fy != 1
+					set realCompute += 1
+				end
+			end
+		end
+
+		return $realCompute
+	end
+end
