@@ -9,7 +9,7 @@ let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 let Choice from $import(../../core/parameters/set)
-let Decimal from $import(../../core/parameters/range)
+let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
 ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
@@ -261,6 +261,40 @@ mulZ2: macro(...params)
 				instruction: $ Node("*", A, B)
 				solution: $C
 				id: $signA$signB$calc.id
+			end
+		end
+	end
+end
+
+powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, minCompute:, maxCompute:, compute:, Number minExposant: 0, Number maxExposant: 3, ?negativeExposant)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Range(minExposant, maxExposant)
+		end
+		validate: macro(x, y)
+			if not minCompute and not maxCompute
+				return $true
+			end
+
+			let realCompute = $ getCompute.pow(x, y)
+
+			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
+		end
+		get: macro(x, y)
+			@Question(calcul)
+				instruction: $Node(^, $x, $y)
+				solution: $(x^y)
+				id: $x^$y
 			end
 		end
 	end
