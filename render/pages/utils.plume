@@ -41,6 +41,18 @@ ref renderLatexAST: macro(node, ?mayPar)
 			^{
 				$ renderLatexAST(node.children[2], ?mayPar)
 			}
+		elseif node.label == "-:"
+			$ renderLatexAST(node.children[1])
+			\\div
+			$ renderLatexAST(node.children[2], ?mayPar)
+		elseif node.label == "/"
+			\\frac
+			{
+				$ renderLatexAST(node.children[1])
+			}
+			{
+				$ renderLatexAST(node.children[2])
+			}
 		elseif node.label == "<"
 			@Table.join(sep: \\lt)
 				for x in node.children

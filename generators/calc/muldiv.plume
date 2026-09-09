@@ -80,3 +80,27 @@ mulZ2: macro(...params)
 		end
 	end
 end
+
+// Straightfoward, should be enhanced
+divN2: macro(?frac, ...args)
+	@QuestionFactory
+		parameters: $Table($mulN2(...args))
+		get: macro(calc)
+			let opp = if frac
+				/
+			else
+				\0-:
+			end
+
+			let A = $calc.instruction.children[1]
+			let B = $calc.instruction.children[2]
+			let C = $calc.solution
+
+			@Question(calcul)
+				instruction: $ Node(opp, C, B)
+				solution: $A
+				id: $C/$B
+			end
+		end
+	end
+end
