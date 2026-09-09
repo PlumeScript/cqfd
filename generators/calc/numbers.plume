@@ -119,43 +119,49 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 	end
 end
 
-ref addZ2: macro(...args)
+
+macro makeZ(A, B, C, signA, signB, bigger)
+	if bigger=="A" and A<B or bigger=="B" and A>B
+		set A, B = ($B, $A)
+	end
+
+	if signA == "-"
+		set A = $Node(-, $A)
+	end
+	if signB == "-"
+		set B = $Node(-, $B)
+	end
+	if bigger=="A" and signA == "-" or bigger=="B" and signB == "-"
+		if C != 0
+			set C = $Node(-, $C)
+		end
+	end
+	return $ (A, B, C)
+end
+
+ref addZ2Plus: macro(...args)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
-			signB: $Choice(+, -)
 			bigger: $Choice(A, B)
 		end
 
 		hyperParameters: do
-			add: $ addN2(...args)
-			sub: $ subN2(...args)
+			calc: $ addN2(...args)
 		end
 
-		get: macro(signA:, signB:, bigger:, add:, sub:)
-			let calc = if signA==signB
-				$add
-			else
-				$sub
-			end
-
+		get: macro(signA:, bigger:, calc:)
 			let A = $calc.instruction.children[1]
 			let B = $calc.instruction.children[2]
 			let C = $calc.solution
 
-			if bigger=="A" and A<B or bigger=="B" and A>B
-				set A, B = ($B, $A)
+			let signB = if signA == "+"
+				+
+			else
+				\0-
 			end
 
-			if signA == "-"
-				set A = $Node(-, $A)
-			end
-			if signB == "-"
-				set B = $Node(-, $B)
-			end
-			if bigger=="A" and signA == "-" or bigger=="B" and signB == "-"
-				set C = $Node(-, $C)
-			end
+			set A, B, C = $ makeZ(A, B, C, signA, signB, bigger)
 
 			@Question(calcul)
 				instruction: $ Node("+", A, B)
@@ -164,6 +170,44 @@ ref addZ2: macro(...args)
 			end
 		end
 	end
+end
+
+ref addZ2Minus: macro(...args)
+	@QuestionFactory
+		parameters: do
+			signA: $Choice(+, -)
+			bigger: $Choice(A, B)
+			
+		end
+
+		hyperParameters: do
+			calc: $ subN2(...args)
+		end
+
+		get: macro(signA:, bigger:, calc:)
+			let A = $calc.instruction.children[1]
+			let B = $calc.instruction.children[2]
+			let C = $calc.solution
+
+			let signB = if signA == "+"
+				\0-
+			else
+				+
+			end
+
+			set A, B, C = $ makeZ(A, B, C, signA, signB, bigger)
+
+			@Question(calcul)
+				instruction: $ Node("+", A, B)
+				solution: $C
+				id: $signA$signB$bigger$calc.id
+			end
+		end
+	end
+end
+
+ref addZ2: macro(...args)
+	$ addZ2Plus(...args) * addZ2Minus(...args)
 end
 
 subZ2: macro(...args)
@@ -258,7 +302,7 @@ mulZ2: macro(...params)
 			signB: $Choice(+, -)
 		end
 		hyperParameters: do
-			calc: $subN2(...params)
+			calc: $mulN2(...params)
 		end
 		get: macro(signA:, signB:, calc:)
 			let A = $calc.instruction.children[1]
