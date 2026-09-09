@@ -32,14 +32,34 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 				return $true
 			end
 
+			if negativeExposant
+				if x != 1 and x != 2 and x!= 4 and x!= 5 and x!= 8 and x!= 10 and x!= 16 and x!= 20
+					return $false
+				end
+			end
+
+			// Wrong value for y<0
 			let realCompute = $ getCompute.pow(x, y)
+
+			if negativeExposant
+				// dirty heuristic
+				set realCompute *= 2
+			end
 
 			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
 		end
 		get: macro(x, y)
 			@Question(calcul)
-				instruction: $Node(^, $x, $y)
-				solution: $(x^y)
+				instruction: if negativeExposant
+					$Node(^, $x, $Node(-, $y))
+				else
+					$Node(^, $x, $y)
+				end
+				solution: if negativeExposant
+					$(x^(-y))
+				else
+					$(x^y)
+				end
 				id: $x^$y
 			end
 		end
@@ -52,6 +72,9 @@ powZ2: macro(...args)
 		get: macro(calc)
 			let x = $calc.instruction.children[1]
 			let y = $calc.instruction.children[2]
+			if type(y) == "table" and y.label == "-"
+				set y = $ -1 * y.children[1]
+			end
 			@Question(calcul)
 				instruction: $ Node("^", Node("-", x), y)
 				solution: $((-x)^y)
