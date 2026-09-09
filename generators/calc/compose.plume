@@ -1,0 +1,89 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+let getCompute from $import(./utils)
+
+composeAdd: macro(left, right, minCompute:, maxCompute:, compute:)
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $left
+			- $right
+		end
+		get: macro(left, right)
+			let realCompute = $ getCompute.add(left.solution, right.solution) + left.compute + right.compute
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+			return @Question(calcul)
+				instruction: $Node(+, $left.instruction, $right.instruction)
+				solution: $ left.solution + right.solution
+				compute: $realCompute
+				id: ($left.id)+($right.id)
+			end
+		end
+	end
+end
+
+composeSub: macro(left, right, minCompute:, maxCompute:, compute:)
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $left
+			- $right
+		end
+		get: macro(left, right)
+			let realCompute = $ getCompute.sub(left.solution, right.solution) + left.compute + right.compute
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+			return @Question(calcul)
+				instruction: $Node(-, $left.instruction, $right.instruction)
+				solution: $ left.solution + right.solution
+				compute: $realCompute
+				id: ($left.id)-($right.id)
+			end
+		end
+	end
+end
+
+composeMul: macro(left, right, minCompute:, maxCompute:, compute:)
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $left
+			- $right
+		end
+		get: macro(left, right)
+			let realCompute = $ getCompute.mul(left.solution, right.solution) + left.compute + right.compute
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+			return @Question(calcul)
+				instruction: $Node(*, $left.instruction, $right.instruction)
+				solution: $ left.solution + right.solution
+				compute: $realCompute
+				id: ($left.id)*($right.id)
+			end
+		end
+	end
+end
