@@ -65,15 +65,25 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 		let count = 1
 		for name, parameter in items(hyperParameters)
 			set count += 1
-			set hyperParameterMap[parameter] = $ (hyperParameterMap[parameter]? or 0)+1
-			let index = $hyperParameterMap[parameter]
+			let prev = $ hyperParameterMap[parameter]? or 0
+			let index = $ prev + 1
 			// draw block and position within it: one Feistel permutation per
 			// block, so the sequence no longer repeats the same ordering
 			let size = $ (parameter.size? or parameter.getSize())
 			let hblock = $ Number.floor((index-1) / size)
 			let pos = $ index % size
 			let rindex = $ FeistelWalker(size, derive(seed*count, hblock, 0))(pos)
-			set args[name] = $ parameter.get(rindex)
+			if parameter.type? == "QuestionFactory"
+				// nested factory: an invalid draw is a normal event ; redraw
+				// until its own validate accepts, then skip the whole consumed
+				// range in the draw stream (like the tree leaf counters)
+				let hres = $ parameter.getUntilValid(rindex)
+				set args[name] = $hres.result
+				set hyperParameterMap[parameter] = $ prev + hres.try
+			else
+				set args[name] = $ parameter.get(rindex)
+				set hyperParameterMap[parameter] = $ index
+			end
 			if not args[name]
 				return
 			end
