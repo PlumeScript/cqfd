@@ -28,20 +28,20 @@ ref mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		type: astNumber
-		validate: macro(x, y)
-			if not minCompute and not maxCompute
-				return $true
-			end
+		
 
+		get: macro(x, y)
 			let realCompute = $ getCompute.mul(x, y)
 
-			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
-		end
-		get: macro(x, y)
-			@Question(calcul)
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+
+			return @Question(calcul)
 				instruction: $ Node("*", x, y)
 				solution: $(x*y)
 				id: $max($x, $y)*$min($x, $y)
+				compute: $realCompute
 			end
 		end
 	end
@@ -76,6 +76,7 @@ mulZ2: macro(...params)
 				instruction: $ Node("*", A, B)
 				solution: $C
 				id: $signA$signB$calc.id
+				compute: $calc.compute
 			end
 		end
 	end
@@ -100,6 +101,7 @@ ref divN2: macro(?frac, ...args)
 				instruction: $ Node(opp, C, B)
 				solution: $A
 				id: $C/$B
+				compute: $calc.compute // not a good approx
 			end
 		end
 	end
@@ -139,6 +141,7 @@ divZ2: macro(?frac, ...params)
 				instruction: $ Node(opp, A, B)
 				solution: $C
 				id: $signA$signB$calc.id
+				compute: $calc.compute
 			end
 		end
 	end
