@@ -119,7 +119,7 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 	end
 end
 
-addZ2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+addZ2: macro(...args)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
@@ -128,8 +128,8 @@ addZ2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 		end
 
 		hyperParameters: do
-			add: $ addN2(minIndex: minIndex, maxIndex: maxIndex, minFigures: minFigures, maxFigures: maxFigures, figures: figures, minCompute: minCompute, maxCompute: maxCompute, compute: compute)
-			sub: $ subN2(minIndex: minIndex, maxIndex: maxIndex, minFigures: minFigures, maxFigures: maxFigures, figures: figures, minCompute: minCompute, maxCompute: maxCompute, compute: compute)
+			add: $ addN2(...args)
+			sub: $ subN2(...args)
 		end
 
 		get: macro(signA:, signB:, bigger:, add:, sub:)
