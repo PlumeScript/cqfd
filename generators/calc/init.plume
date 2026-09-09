@@ -5,7 +5,10 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-...import(./numbers)
+...import(./holes)
+...import(./addsub)
+...import(./muldiv)
+...import(./pow)
 ...import(./problem)
 
 

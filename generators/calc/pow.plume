@@ -1,0 +1,62 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+let Choice from $import(../../core/parameters/set)
+let Range, Decimal from $import(../../core/parameters/range)
+let DecimalRepresentation, getCompute from $import(./utils)
+
+ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, minCompute:, maxCompute:, compute:, Number minExposant: 0, Number maxExposant: 3, ?negativeExposant)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Range(minExposant, maxExposant)
+		end
+		validate: macro(x, y)
+			if not minCompute and not maxCompute
+				return $true
+			end
+
+			let realCompute = $ getCompute.pow(x, y)
+
+			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
+		end
+		get: macro(x, y)
+			@Question(calcul)
+				instruction: $Node(^, $x, $y)
+				solution: $(x^y)
+				id: $x^$y
+			end
+		end
+	end
+end
+
+powZ2: macro(...args)
+	@QuestionFactory
+		parameters: $Table($powN2(...args))
+		get: macro(calc)
+			let x = $calc.instruction.children[1]
+			let y = $calc.instruction.children[2]
+			@Question(calcul)
+				instruction: $ Node("^", Node("-", x), y)
+				solution: $((-x)^y)
+				id: -$x^$y
+			end
+		end
+	end
+end
