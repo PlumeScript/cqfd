@@ -96,7 +96,7 @@ macro makeZ(A, B, C, signA, signB, bigger)
 	return $ (A, B, C)
 end
 
-ref addZ2Plus: macro(...args)
+ref addZ2Plus: macro(?fullSign, ...args)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
@@ -119,9 +119,15 @@ ref addZ2Plus: macro(...args)
 			end
 
 			set A, B, C = $ makeZ(A, B, C, signA, signB, bigger)
+			let instr = $Node(+, $A, $B)
+			// fullSign rides on the sum node: the renderer prints every term
+			// with an explicit sign, ex: (+5)+(-3)
+			if fullSign
+				set instr.fullSign = 1
+			end
 
 			@Question(calcul)
-				instruction: $ Node("+", A, B)
+				instruction: $instr
 				solution: $C
 				id: $signA$signB$bigger$calc.id
 				compute: $calc.compute
@@ -130,7 +136,7 @@ ref addZ2Plus: macro(...args)
 	end
 end
 
-ref addZ2Minus: macro(...args)
+ref addZ2Minus: macro(?fullSign, ...args)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
@@ -154,9 +160,15 @@ ref addZ2Minus: macro(...args)
 			end
 
 			set A, B, C = $ makeZ(A, B, C, signA, signB, bigger)
+			let instr = $Node(+, $A, $B)
+			// fullSign rides on the sum node: the renderer prints every term
+			// with an explicit sign, ex: (+5)+(-3)
+			if fullSign
+				set instr.fullSign = 1
+			end
 
 			@Question(calcul)
-				instruction: $ Node("+", A, B)
+				instruction: $instr
 				solution: $C
 				id: $signA$signB$bigger$calc.id
 				compute: $calc.compute
@@ -169,7 +181,7 @@ ref addZ2: macro(...args)
 	$ addZ2Plus(...args) * addZ2Minus(...args)
 end
 
-subZ2: macro(...args)
+subZ2: macro(?fullSign, ...args)
 	@QuestionFactory
 		parameters: $Table($addZ2(...args))
 		get: macro(calc)
@@ -181,9 +193,13 @@ subZ2: macro(...args)
 			else
 				set B = $Node(-, $B)
 			end
+			let instr = $Node(-, $A, $B)
+			if fullSign
+				set instr.fullSign = 1
+			end
 
 			@Question(calcul)
-				instruction: $ Node("-", A, B)
+				instruction: $instr
 				solution: $calc.solution
 				id: -$calc.id
 				compute: $calc.compute
