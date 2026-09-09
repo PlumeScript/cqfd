@@ -10,7 +10,7 @@ let derive, FeistelWalker from $import(../utils/walkers)
 
 Map: macro(parameter, transform)
 	@Parameter
-		size: $parameter.size
+		size: $parameter.getSize()
 		get: macro(i)
 			$ transform(parameter.get(i))
 		end
@@ -33,7 +33,7 @@ Choice: macro(...values)
 			let v = $values[i+1]
 			return if v.type? == "Parameter" or v.type? == "QuestionFactory" or v.type? == "QuestionFactoryTree"
 				let subseed = $ derive(i, n, 0)
-				let size = $ v.size? or v.getSize()
+				let size = $ v.getSize()
 				$ v.get(FeistelWalker(size, subseed)(0), seed: subseed)
 			else
 				$v
