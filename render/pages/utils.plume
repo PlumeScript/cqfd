@@ -46,7 +46,7 @@ ref renderLatexAST: macro(node, ?mayPar)
 			\\div
 			$ renderLatexAST(node.children[2], ?mayPar)
 		elseif node.label == "/"
-			\\frac
+			\\dfrac
 			{
 				$ renderLatexAST(node.children[1])
 			}
