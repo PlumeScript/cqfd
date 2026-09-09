@@ -167,7 +167,7 @@ addZ2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 end
 
 // TODO: consider figureNumber
-mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+ref mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
@@ -223,6 +223,40 @@ mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 				instruction: $ Node("*", x, y)
 				solution: $(x*y)
 				id: $max($x, $y)*$min($x, $y)
+			end
+		end
+	end
+end
+
+// TODO: toggle full parenthesis (ex: (+1) * (-2)) (same for addZ2)
+mulZ2: macro(...params)
+	@QuestionFactory
+		parameters: do
+			signA: $Choice(+, -)
+			signB: $Choice(+, -)
+		end
+		hyperParameters: do
+			calc: $subN2(...params)
+		end
+		get: macro(signA:, signB:, calc:)
+			let A = $calc.instruction.children[1]
+			let B = $calc.instruction.children[2]
+			let C = $calc.solution
+
+			if signA == "-"
+				set A = $Node(-, $A)
+			end
+			if signB == "-"
+				set B = $Node(-, $B)
+			end
+			if signA != signB
+				set C = $Node(-, $C)
+			end
+
+			@Question(calcul)
+				instruction: $ Node("*", A, B)
+				solution: $C
+				id: $signA$signB$calc.id
 			end
 		end
 	end
