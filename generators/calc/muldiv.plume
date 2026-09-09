@@ -69,7 +69,7 @@ mulZ2: macro(...params)
 				set B = $Node(-, $B)
 			end
 			if signA != signB
-				set C = $Node(-, $C)
+				set C *= -1
 			end
 
 			@Question(calcul)
@@ -96,6 +96,10 @@ ref divN2: macro(?frac, ...args)
 			let A = $calc.instruction.children[1]
 			let B = $calc.instruction.children[2]
 			let C = $calc.solution
+
+			if type(A) == "table" and A.label == "-"
+				set A = $ -1 * A.children[1]
+			end
 
 			@Question(calcul)
 				instruction: $ Node(opp, C, B)
@@ -134,7 +138,7 @@ divZ2: macro(?frac, ...params)
 				set B = $Node(-, $B)
 			end
 			if signA != signB
-				set C = $Node(-, $C)
+				set C *= -1
 			end
 
 			@Question(calcul)

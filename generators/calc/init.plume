@@ -10,7 +10,7 @@ Licensed under the MIT License — see LICENSE for details.
 ...import(./muldiv)
 ...import(./pow)
 ...import(./problem)
-
+...import(./compose)
 
 situations: for file in os.Path("./situations").getChildren()
 	let all
