@@ -83,3 +83,51 @@ powZ2: macro(...args)
 		end
 	end
 end
+
+powDivN2: macro(minDelta:1, maxDelta: 10, ?frac, ?negativeExposant, ...args)
+	@QuestionFactory
+		parameters: do
+			- $ powN2(negativeExposant: negativeExposant, ...args)
+			- $ Range(minDelta, maxDelta)
+		end
+
+		get: macro(calc, delta)
+			let opp = if frac
+				/
+			else
+				\0-:
+			end
+
+
+			let x = $calc.instruction.children[1]
+			let y = $calc.instruction.children[2]
+
+			@Question(calcul)
+				instruction: @Node($opp)
+					if negativeExposant
+						- @Node(^)
+							- $x
+							- $delta
+						end
+						- @Node(^)
+							- $x
+							- $(y.children[1]+delta)
+						end
+					else
+						- @Node(^)
+							- $x
+							- $(y+delta)
+						end
+						- @Node(^)
+							- $x
+							- $delta
+						end
+						
+					end
+				end
+				solution: $calc.solution
+				id: $delta-$calc.id-direction
+			end
+		end
+	end
+end
