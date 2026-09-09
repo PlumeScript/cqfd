@@ -10,7 +10,7 @@ let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 let Choice from $import(../../core/parameters/set)
 let Decimal from $import(../../core/parameters/range)
-let DecimalRepresentation from $import(./utils)
+let DecimalRepresentation, getCompute from $import(./utils)
 
 ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
@@ -32,25 +32,7 @@ ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 				return $true
 			end
 
-			let dx = $ DecimalRepresentation(x)
-			let dy = $ DecimalRepresentation(y)
-
-			let carry = 0
-			let realCompute = 0
-			for fx, fy in dx.getFiguresAlong(dy)
-				let sum = $ fx + fy + carry
-				if fx*fy != 0 or fy*carry != 0 or carry*fx != 0
-					set realCompute += 1
-				end
-				if fx*fy*carry != 0
-					set realCompute += 1
-				end
-				if sum >= 10
-					set carry = 1
-				else
-					set carry = 0
-				end
-			end
+			let realCompute = $ getCompute.add(x, y)
 
 			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
 		end
@@ -87,25 +69,7 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 				return $true
 			end
 
-			let dx = $ DecimalRepresentation(x)
-			let dy = $ DecimalRepresentation(y)
-
-			let carry = 0
-			let realCompute = 0
-			for fx, fy in dx.getFiguresAlong(dy)
-				let dif = $ fx - fy - carry
-				if fy != 0
-					set realCompute += 1
-				end
-				if carry != 0
-					set realCompute += 1
-				end
-				if dif < 0
-					set carry = 1
-				else
-					set carry = 0
-				end
-			end
+			let realCompute = $ getCompute.sub(x, y)
 			
 			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
 		end
@@ -254,33 +218,7 @@ ref mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 				return $true
 			end
 
-			let dx = $ DecimalRepresentation(x)
-			let dy = $ DecimalRepresentation(y)
-
-			let realCompute = 0
-			let sum = $Table()
-			for i, fx in enumerate(dx.getFigures())
-				let carry = 0
-				for j, fy in enumerate(dy.getFigures())
-					let prod = $ fx * fy + carry
-					if prod >= 10
-						set carry = $ (prod / 10).floor()
-						set realCompute += 1
-					else
-						set carry = 0
-					end
-					set sum[i] = $ sum[i]? or Table()
-					set sum[i][j] = $ prod
-
-					if sum[i-1]?[j+1]? and sum[i-1]?[j+1]? != 0 and prod != 0
-						set realCompute += 1
-					end
-
-					if fx != 0 and fy != 0 and fx != 1 and fy != 1
-						set realCompute += 1
-					end
-				end
-			end
+			let realCompute = $ getCompute.mul(x, y)
 
 			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
 		end
