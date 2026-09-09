@@ -8,6 +8,7 @@ Licensed under the MIT License — see LICENSE for details.
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
+let Choice from $import(../../core/parameters/set)
 let Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation from $import(./utils)
 
@@ -113,6 +114,53 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 				instruction: $ Node("-", x, y)
 				solution: $(x-y)
 				id: $x-$y
+			end
+		end
+	end
+end
+
+addZ2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+	@QuestionFactory
+		parameters: do
+			signA: $Choice(+, -)
+			signB: $Choice(+, -)
+			bigger: $Choice(A, B)
+		end
+
+		hyperParameters: do
+			add: $ addN2(minIndex: minIndex, maxIndex: maxIndex, minFigures: minFigures, maxFigures: maxFigures, figures: figures, minCompute: minCompute, maxCompute: maxCompute, compute: compute)
+			sub: $ subN2(minIndex: minIndex, maxIndex: maxIndex, minFigures: minFigures, maxFigures: maxFigures, figures: figures, minCompute: minCompute, maxCompute: maxCompute, compute: compute)
+		end
+
+		get: macro(signA:, signB:, bigger:, add:, sub:)
+			let calc = if signA==signB
+				$add
+			else
+				$sub
+			end
+
+			let A = $calc.instruction.children[1]
+			let B = $calc.instruction.children[2]
+			let C = $calc.solution
+
+			if bigger=="A" and A<B or bigger=="B" and A>B
+				set A, B = ($B, $A)
+			end
+
+			if signA == "-"
+				set A = $Node(-, $A)
+			end
+			if signB == "-"
+				set B = $Node(-, $B)
+			end
+			if bigger=="A" and signA == "-" or bigger=="B" and signB == "-"
+				set C = $Node(-, $C)
+			end
+
+			@Question(calcul)
+				instruction: $ Node("+", A, B)
+				solution: $C
+				id: $signA$signB$bigger$calc.id
 			end
 		end
 	end
