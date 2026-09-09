@@ -119,7 +119,7 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 	end
 end
 
-addZ2: macro(...args)
+ref addZ2: macro(...args)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
@@ -161,6 +161,28 @@ addZ2: macro(...args)
 				instruction: $ Node("+", A, B)
 				solution: $C
 				id: $signA$signB$bigger$calc.id
+			end
+		end
+	end
+end
+
+subZ2: macro(...args)
+	@QuestionFactory
+		parameters: $Table($addZ2(...args))
+		get: macro(calc)
+			let A = $calc.instruction.children[1]
+			let B = $calc.instruction.children[2]
+
+			if type(B) == "table" and B.label? == "-"
+				set B = $B.children[1]
+			else
+				set B = $Node(-, $B)
+			end
+
+			@Question(calcul)
+				instruction: $ Node("-", A, B)
+				solution: $calc.solution
+				id: -$calc.id
 			end
 		end
 	end
