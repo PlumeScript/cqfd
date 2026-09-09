@@ -266,7 +266,7 @@ mulZ2: macro(...params)
 	end
 end
 
-powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, minCompute:, maxCompute:, compute:, Number minExposant: 0, Number maxExposant: 3, ?negativeExposant)
+ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, minCompute:, maxCompute:, compute:, Number minExposant: 0, Number maxExposant: 3, ?negativeExposant)
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
@@ -295,6 +295,21 @@ powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number 
 				instruction: $Node(^, $x, $y)
 				solution: $(x^y)
 				id: $x^$y
+			end
+		end
+	end
+end
+
+powZ2: macro(...args)
+	@QuestionFactory
+		parameters: $Table($powN2(...args))
+		get: macro(calc)
+			let x = $calc.instruction.children[1]
+			let y = $calc.instruction.children[2]
+			@Question(calcul)
+				instruction: $ Node("^", Node("-", x), y)
+				solution: $((-x)^y)
+				id: -$x^$y
 			end
 		end
 	end
