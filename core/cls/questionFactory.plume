@@ -96,7 +96,7 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 
 		let args  = $ makeArgs(n, block)
 		let hargs = $ makeHyperArgs(seed)
-		let result = if not args or (validate and not validate(...args))
+		let result = if not args or not hargs or (validate and not validate(...args))
 			$empty
 		else
 			$get(...args, ...hargs)
