@@ -67,7 +67,8 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 	end
 end
 
-powZ2: macro(...args)
+// fullSign: no double sign in power rendering, kept for API uniformity
+powZ2: macro(?fullSign, ...args)
 	@QuestionFactory
 		parameters: $Table($powN2(...args))
 		get: macro(calc)

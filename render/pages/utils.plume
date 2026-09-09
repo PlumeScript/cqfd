@@ -13,26 +13,78 @@ ref renderLatexAST: macro(node, ?mayPar)
 			(
 		end
 		if node.label == "+"
-			@Table.join(sep: +)
-				for x in node.children
-					- $ renderLatexAST(x)
+			// a sum is a list of signed terms: a unary-minus child is a
+			// negative term. Without fullSign the minus is folded into the
+			// separator (5-3); with fullSign every term is explicit ((+5)+(-3))
+			for i in seq(len(node.children))
+				if type(node.children[i]) == "table" and node.children[i].label == "-" and len(node.children[i].children) == 1
+					if node.fullSign?
+						if i > 1
+							+
+						end
+						(-
+						$ renderLatexAST(node.children[i].children[1], ?mayPar)
+						)
+					else
+						\0-
+						$ renderLatexAST(node.children[i].children[1], ?mayPar)
+					end
+				else
+					if i > 1
+						+
+					end
+					if node.fullSign?
+						(+
+						$ renderLatexAST(node.children[i], ?mayPar)
+						)
+					else
+						$ renderLatexAST(node.children[i])
+					end
 				end
 			end
 		elseif node.label == "-"
-			if len(node.children) > 1
+			if len(node.children) > 2
 				@Table.join(sep: -)
 					for x in node.children
 						- $ renderLatexAST(x, ?mayPar)
 					end
 				end
+			elseif len(node.children) == 2
+				// the left operand starts the expression: a sum always needs
+				// grouping; a bare negative operand is redundant in (-x)-y,
+				// except under fullSign where every signed operand is explicit
+				if type(node.children[1]) == "table" and node.children[1].label == "+"
+					$ renderLatexAST(node.children[1], ?mayPar)
+				else
+					if node.fullSign? and type(node.children[1]) == "table" and node.children[1].label == "-" and len(node.children[1].children) == 1
+						$ renderLatexAST(node.children[1], ?mayPar)
+					else
+						$ renderLatexAST(node.children[1])
+					end
+				end
+				\0-
+				$ renderLatexAST(node.children[2], ?mayPar)
 			else
 				\0-
 				$ renderLatexAST(node.children[1], ?mayPar)
 			end
 		elseif node.label == "*"
-			@Table.join(sep: \\times)
-				for x in node.children
-					- $ renderLatexAST(x, ?mayPar)
+			for i in seq(len(node.children))
+				if i > 1
+					\\times
+				end
+				if node.fullSign?
+					// full sign: positive factors get (+x), negative factors
+					// keep their own (-x) grouping
+					if type(node.children[i]) == "table" and node.children[i].label == "-" and len(node.children[i].children) == 1
+						$ renderLatexAST(node.children[i], ?mayPar)
+					else
+						(+
+						$ renderLatexAST(node.children[i], ?mayPar)
+						)
+					end
+				else
+					$ renderLatexAST(node.children[i], ?mayPar)
 				end
 			end
 		elseif node.label == "^"
@@ -42,7 +94,17 @@ ref renderLatexAST: macro(node, ?mayPar)
 				$ renderLatexAST(node.children[2])
 			}
 		elseif node.label == "-:"
-			$ renderLatexAST(node.children[1])
+			// the left operand starts the expression: a sum needs grouping;
+			// a signed one is only explicit under fullSign
+			if type(node.children[1]) == "table" and node.children[1].label == "+"
+				$ renderLatexAST(node.children[1], ?mayPar)
+			else
+				if node.fullSign? and type(node.children[1]) == "table" and node.children[1].label == "-" and len(node.children[1].children) == 1
+					$ renderLatexAST(node.children[1], ?mayPar)
+				else
+					$ renderLatexAST(node.children[1])
+				end
+			end
 			\\div
 			$ renderLatexAST(node.children[2], ?mayPar)
 		elseif node.label == "/"

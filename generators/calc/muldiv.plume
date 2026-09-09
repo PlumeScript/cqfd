@@ -47,8 +47,8 @@ ref mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 	end
 end
 
-// TODO: toggle full parenthesis (ex: (+1) * (-2)) (same for addZ2)
-mulZ2: macro(...params)
+// fullSign: explicit sign on every factor, ex: (+1) * (-2)
+mulZ2: macro(?fullSign, ...params)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
@@ -72,8 +72,13 @@ mulZ2: macro(...params)
 				set C *= -1
 			end
 
+			let instr = $Node(*, $A, $B)
+			if fullSign
+				set instr.fullSign = 1
+			end
+
 			@Question(calcul)
-				instruction: $ Node("*", A, B)
+				instruction: $instr
 				solution: $C
 				id: $signA$signB$calc.id
 				compute: $calc.compute
@@ -111,7 +116,8 @@ ref divN2: macro(?frac, ...args)
 	end
 end
 
-divZ2: macro(?frac, ...params)
+// fullSign: no double sign in division rendering, kept for API uniformity
+divZ2: macro(?frac, ?fullSign, ...params)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
@@ -141,8 +147,13 @@ divZ2: macro(?frac, ...params)
 				set C *= -1
 			end
 
+			let instr = $ Node(opp, A, B)
+			if fullSign
+				set instr.fullSign = 1
+			end
+
 			@Question(calcul)
-				instruction: $ Node(opp, A, B)
+				instruction: $instr
 				solution: $C
 				id: $signA$signB$calc.id
 				compute: $calc.compute
