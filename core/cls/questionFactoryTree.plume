@@ -47,6 +47,10 @@ ref QuestionFactoryTree: macro()
 		end
 	end
 
+	tree: macro()
+		$self
+	end
+
 	// Merge a subtree: single leaves flatten into this level (weights fold),
 	// but a multi-leaf subtree stays a weighted QuestionFactorySubTree node.
 	addSubTree: macro(tree, weight)
