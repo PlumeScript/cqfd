@@ -131,3 +131,31 @@ powDivN2: macro(minDelta:1, maxDelta: 10, ?frac, ?negativeExposant, ...args)
 		end
 	end
 end
+
+powPowN2: macro(...args)
+	@QuestionFactory
+		parameters: do
+			- $ powN2(...args)
+		end
+		get: macro(calc)
+			let d
+			let x = $calc.instruction.children[1]
+			let y = $calc.instruction.children[2]
+			for i in seq(2, y-1)
+				if y%i==0
+					set d = $i
+					break
+				end
+			end
+			if not d
+				return
+			end
+
+			return @Question(calcul)
+				instruction: $Node(^, $Node(^, $x, $d), $(y/d))
+				solution: $calc.solution
+				id: $x^$d^$(y/d)
+			end
+		end
+	end
+end
