@@ -45,7 +45,9 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 		for name, parameter in items(parameters)
 			set basei = $ basei / parameter.getSize()
 			let argn = $ Number.floor(n / basei)
-			if parameter.type? == "QuestionFactory"
+			// Nested factories and trees both draw an infinite stream: forward
+			// the outer block so each block queries fresh positions.
+			if parameter.type? == "QuestionFactory" or parameter.type? == "QuestionFactoryTree"
 				set args[name] = $ parameter.get(block * parameter.getSize() + argn)
 			else
 				set args[name] = $ parameter.get(argn)
