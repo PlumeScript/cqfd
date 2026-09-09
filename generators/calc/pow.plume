@@ -61,6 +61,7 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 					$(x^y)
 				end
 				id: $x^$y
+				compute: $ getCompute.pow(x, y)
 			end
 		end
 	end
@@ -79,6 +80,7 @@ powZ2: macro(...args)
 				instruction: $ Node("^", Node("-", x), y)
 				solution: $((-x)^y)
 				id: -$x^$y
+				compute: $calc.compute
 			end
 		end
 	end
@@ -127,6 +129,7 @@ powDivN2: macro(minDelta:1, maxDelta: 10, ?frac, ?negativeExposant, ...args)
 				end
 				solution: $calc.solution
 				id: $delta-$calc.id-direction
+				compute: $calc.compute
 			end
 		end
 	end
@@ -155,6 +158,7 @@ powPowN2: macro(...args)
 				instruction: $Node(^, $Node(^, $x, $d), $(y/d))
 				solution: $calc.solution
 				id: $x^$d^$(y/d)
+				compute: $calc.compute
 			end
 		end
 	end
