@@ -27,7 +27,7 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 	if not size
 		set size = 1
 		for _, parameter in items(parameters)
-			set size *= $parameter.size
+			set size *= $(parameter.size? or parameter.getSize())
 		end
 	end
 	size: $size
@@ -43,10 +43,10 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 		let basei = $size
 		set n = $ n % size
 		for name, parameter in items(parameters)
-			set basei = $ basei / parameter.size
+			set basei = $ basei / (parameter.size? or parameter.getSize())
 			let argn = $ Number.floor(n / basei)
 			if parameter.type? == "QuestionFactory"
-				set args[name] = $ parameter.get(block * parameter.size + argn)
+				set args[name] = $ parameter.get(block * (parameter.size? or parameter.getSize()) + argn)
 			else
 				set args[name] = $ parameter.get(argn)
 			end
