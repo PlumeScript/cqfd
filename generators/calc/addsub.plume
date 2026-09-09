@@ -27,20 +27,18 @@ ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		type: astNumber
-		validate: macro(x, y)
-			if not minCompute and not maxCompute
-				return $true
-			end
-
+		get: macro(x, y)
 			let realCompute = $ getCompute.add(x, y)
 
-			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
-		end
-		get: macro(x, y)
-			@Question(calcul)
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+
+			return @Question(calcul)
 				instruction: $ Node("+", x, y)
 				solution: $(x+y)
 				id: $max($x, $y)+$min($x, $y)
+				compute: $realCompute
 			end
 		end
 	end
@@ -61,23 +59,18 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		type: astNumber
-		validate: macro(x, y)
-			if x<y
-				return $false
-			end
-			if not minCompute and not maxCompute
-				return $true
+		get: macro(x, y)
+			let realCompute = $ getCompute.sub(x, y)
+
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
 			end
 
-			let realCompute = $ getCompute.sub(x, y)
-			
-			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
-		end
-		get: macro(x, y)
-			@Question(calcul)
+			return @Question(calcul)
 				instruction: $ Node("-", x, y)
 				solution: $(x-y)
 				id: $x-$y
+				compute: $realCompute
 			end
 		end
 	end
@@ -131,6 +124,7 @@ ref addZ2Plus: macro(...args)
 				instruction: $ Node("+", A, B)
 				solution: $C
 				id: $signA$signB$bigger$calc.id
+				compute: $calc.compute
 			end
 		end
 	end
@@ -165,6 +159,7 @@ ref addZ2Minus: macro(...args)
 				instruction: $ Node("+", A, B)
 				solution: $C
 				id: $signA$signB$bigger$calc.id
+				compute: $calc.compute
 			end
 		end
 	end
@@ -191,6 +186,7 @@ subZ2: macro(...args)
 				instruction: $ Node("-", A, B)
 				solution: $calc.solution
 				id: -$calc.id
+				compute: $calc.compute
 			end
 		end
 	end
