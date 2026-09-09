@@ -19,10 +19,15 @@ ref renderLatexAST: macro(node, ?mayPar)
 				end
 			end
 		elseif node.label == "-"
-			@Table.join(sep: -)
-				for x in node.children
-					- $ renderLatexAST(x, ?mayPar)
+			if len(node.children) > 1
+				@Table.join(sep: -)
+					for x in node.children
+						- $ renderLatexAST(x, ?mayPar)
+					end
 				end
+			else
+				\0-
+				$ renderLatexAST(node.children[1], ?mayPar)
 			end
 		elseif node.label == "*"
 			@Table.join(sep: \\times)
