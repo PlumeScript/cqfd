@@ -1,0 +1,82 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+let Choice from $import(../../core/parameters/set)
+let Range, Decimal from $import(../../core/parameters/range)
+let DecimalRepresentation, getCompute from $import(./utils)
+
+// TODO: consider figureNumber
+ref mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		type: astNumber
+		validate: macro(x, y)
+			if not minCompute and not maxCompute
+				return $true
+			end
+
+			let realCompute = $ getCompute.mul(x, y)
+
+			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
+		end
+		get: macro(x, y)
+			@Question(calcul)
+				instruction: $ Node("*", x, y)
+				solution: $(x*y)
+				id: $max($x, $y)*$min($x, $y)
+			end
+		end
+	end
+end
+
+// TODO: toggle full parenthesis (ex: (+1) * (-2)) (same for addZ2)
+mulZ2: macro(...params)
+	@QuestionFactory
+		parameters: do
+			signA: $Choice(+, -)
+			signB: $Choice(+, -)
+		end
+		hyperParameters: do
+			calc: $mulN2(...params)
+		end
+		get: macro(signA:, signB:, calc:)
+			let A = $calc.instruction.children[1]
+			let B = $calc.instruction.children[2]
+			let C = $calc.solution
+
+			if signA == "-"
+				set A = $Node(-, $A)
+			end
+			if signB == "-"
+				set B = $Node(-, $B)
+			end
+			if signA != signB
+				set C = $Node(-, $C)
+			end
+
+			@Question(calcul)
+				instruction: $ Node("*", A, B)
+				solution: $C
+				id: $signA$signB$calc.id
+			end
+		end
+	end
+end
