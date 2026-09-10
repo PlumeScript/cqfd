@@ -58,7 +58,7 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 				if parameter.valueType? == "number"
 					set args[name] = $ parameter.get(block * parameter.getSize() + argn)
 				elseif nindex > 0
-					set args[name] = $ parameter.get(block * parameter.getSize() + argn, seed: $derive(seed, nindex, 0))
+					set args[name] = $ parameter.get(block * parameter.getSize() + argn, seed: derive(seed, nindex, 0))
 				else
 					set args[name] = $ parameter.get(block * parameter.getSize() + argn)
 				end
