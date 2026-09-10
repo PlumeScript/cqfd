@@ -54,7 +54,7 @@ composeSub: macro(left, right, minCompute:, maxCompute:, compute:)
 			end
 			return @Question(calcul)
 				instruction: $Node(-, $left.instruction, $right.instruction)
-				solution: $ left.solution + right.solution
+				solution: $ left.solution - right.solution
 				compute: $realCompute
 				id: ($left.id)-($right.id)
 			end
@@ -80,7 +80,7 @@ composeMul: macro(left, right, minCompute:, maxCompute:, compute:)
 			end
 			return @Question(calcul)
 				instruction: $Node(*, $left.instruction, $right.instruction)
-				solution: $ left.solution + right.solution
+				solution: $ left.solution * right.solution
 				compute: $realCompute
 				id: ($left.id)*($right.id)
 			end
