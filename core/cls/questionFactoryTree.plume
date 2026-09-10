@@ -443,7 +443,7 @@ ref QuestionFactoryTree: macro()
 		let fw = $ FeistelWalker(fact(W), seed+baseSeed+blockId)
 		let chosen = $empty
 		let bestP = $empty
-		let bestV = -1
+		let bestV = 0 // 0 = not set yet (v >= 1 here; compare with ==, 0 is truthy)
 		for t in seq(0, fact(W)-1)
 			let p = $ PermFromRank(W, fw(permuId+t))
 			let v = $ self._windowViolations(node, p, k, prevSuffix)
@@ -451,7 +451,7 @@ ref QuestionFactoryTree: macro()
 				set chosen = $p
 				break
 			end
-			if v < bestV
+			if bestV == 0 or v < bestV
 				set bestV = $v
 				set bestP = $p
 			end
