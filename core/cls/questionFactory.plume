@@ -33,6 +33,8 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 	size: $size
 	memory: $Table()
 	idhash: $Table()
+	// Highest raw position ever passed to get(): the drawn frontier.
+	maxPos: $empty
 	
 	// Decode n into mixed-radix digits: first parameter is most significant,
 	// each digit turned into one argument value via parameter.get. A nested
@@ -110,6 +112,10 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 	// The cache is scoped per block: each block re-draws its hyperparameters,
 	// so documents longer than one block no longer repeat the same questions.
 	get: macro(Number n, Number seed: 0)
+		// Track the drawn frontier on the raw position (before shuffling).
+		if not self.maxPos or n > self.maxPos
+			set self.maxPos = $n
+		end
 		let block = $ Number.floor(n / size)
 		set n = $ n % size
 		set n = $ FeistelWalker(size, seed+block)(n)
@@ -138,6 +144,13 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 	// Reject a cached question id if it would repeat too soon after its
 	// original position, then retry with a nearby index.
 	getUntilValid: macro(Number n, Number seed: 0)
+		// Every drawn position is cached, and its id was accepted at its own
+		// position (distance < size), so the scan below would always be
+		// rejected until the first fresh position (the frontier). Start there:
+		// same accepted slot, O(1) instead of O(drawn).
+		if self.maxPos? and n <= self.maxPos
+			set n = $ self.maxPos + 1
+		end
 		let result
 		let try = 0
 		
