@@ -38,17 +38,29 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 	// each digit turned into one argument value via parameter.get. A nested
 	// QuestionFactory receives the outer block (so it re-draws its own
 	// hyperparameters per block); plain Parameters are positional and keep argn.
-	macro makeArgs(Number n, Number block)
+	macro makeArgs(Number n, Number block, Number seed)
 		let args = $Table()
 		let basei = $size
+		let nindex = 0
 		set n = $ n % size
 		for name, parameter in items(parameters)
 			set basei = $ basei / parameter.getSize()
 			let argn = $ Number.floor(n / basei)
 			// Nested factories and trees both draw an infinite stream: forward
-			// the outer block so each block queries fresh positions.
+			// the outer block so each block queries fresh positions. The first
+			// exercise generator keeps the historical (unseeded) stream; later
+			// ones are seeded by their nested index so structurally identical
+			// sub-factories draw independent streams; value parameters
+			// (Decimal) keep the positional stream.
 			if parameter.type? == "QuestionFactory" or parameter.type? == "QuestionFactoryTree"
-				set args[name] = $ parameter.get(block * parameter.getSize() + argn)
+				if parameter.valueType? == "number"
+					set args[name] = $ parameter.get(block * parameter.getSize() + argn)
+				elseif nindex > 0
+					set args[name] = $ parameter.get(block * parameter.getSize() + argn, seed: $derive(seed, nindex, 0))
+				else
+					set args[name] = $ parameter.get(block * parameter.getSize() + argn)
+				end
+				set nindex += 1
 			else
 				set args[name] = $ parameter.get(argn)
 			end
@@ -106,7 +118,7 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 			return $bmem[n]
 		end
 
-		let args  = $ makeArgs(n, block)
+		let args  = $ makeArgs(n, block, seed)
 		let hargs = $ makeHyperArgs(seed)
 		let result = if not args or not hargs or (validate and not validate(...args))
 			$empty
