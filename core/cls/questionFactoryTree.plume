@@ -6,7 +6,7 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let Question from $import(./Question)
-let PermutationWalker, FeistelWalker, PermFromRank, fact from $import(../utils/walkers)
+let PermutationWalker, FeistelWalker, PermFromRank, fact, derive from $import(../utils/walkers)
 
 // Weighted tree of QuestionFactory leaves. get(n, seed) walks the tree with
 // deterministic weighted selection and returns the n-th question.
@@ -308,7 +308,19 @@ ref QuestionFactoryTree: macro()
 			set self.questionMap[key] = (counter: 0, id: $self.questionId)
 		end
 		let questionInfos = $self.questionMap[key]
-		let questionSeed  = $ FeistelWalker(self.nodeMap._size, self.nodeMap._size+seed)(questionInfos.id)
+		// Legacy: the leaf draw seed was a permutation of the leaf ids (at most
+		// nodeMap._size values, shared across the historical outer seeds 0/1),
+		// so structurally identical trees always drew the same leaf streams.
+		// From seed 2 on, derive a per-leaf seed so trees with different outer
+		// seeds draw independent leaf streams (e.g. the two sides of a composed
+		// exercise no longer share sub-expressions).
+		let leafSize = $self.nodeMap._size
+		let questionSeed = $empty
+		if seed > 1
+			set questionSeed = $ derive(leafSize, seed, questionInfos.id)
+		else
+			set questionSeed = $ FeistelWalker(leafSize, leafSize+seed)(questionInfos.id)
+		end
 		
 
 
