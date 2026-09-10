@@ -59,6 +59,9 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		type: astNumber
+		validate: macro(x, y)
+			return $ x>=y
+		end
 		get: macro(x, y)
 			let realCompute = $ getCompute.sub(x, y)
 
