@@ -413,6 +413,18 @@ ref QuestionFactoryTree: macro()
 		if k > c
 			set k = $c
 		end
+		// Weight-feasibility cap: the dominant group (wmax slots) fits at most
+		// W/wmax times at spacing >= k (worst-case boundary suffix), so any
+		// wider window is structurally infeasible here; k falls to 1 (plain walker).
+		let wmax = 0
+		for child in node.questionFactoryList
+			if child.weight > wmax
+				set wmax = $child.weight
+			end
+		end
+		if wmax > 0 and k * wmax > W
+			set k = $ Number.floor(W / wmax)
+		end
 		if k < 2
 			return $ PermutationWalker(W, seed+baseSeed)(levelIndex)
 		end
