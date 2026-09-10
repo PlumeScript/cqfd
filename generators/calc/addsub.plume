@@ -88,10 +88,8 @@ macro makeZ(A, B, C, signA, signB, bigger)
 	if signB == "-"
 		set B = $Node(-, $B)
 	end
-	if bigger=="A" and signA == "-" or bigger=="B" and signB == "-"
-		if C != 0
-			set C = $ -1 * C
-		end
+	if ((bigger=="A" and signA == "-" or bigger=="B" and signB == "-") and C>0) or ((bigger=="A" and signA == "+" or bigger=="B" and signB == "+") and C<0)
+		set C = $ -1 * C
 	end
 	return $ (A, B, C)
 end
