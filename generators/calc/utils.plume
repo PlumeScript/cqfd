@@ -72,6 +72,62 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 	end
 end
 
+// Weight of a table fact: 0 trivial (a or b in 0/1), 1 easy (min 2/5),
+// 2 medium (min 3/4/6/9), 3 hard (min 7/8)
+macro tableWeight(a, b)
+	if a == 0 or a == 1 or b == 0 or b == 1
+		return 0
+	end
+	if min(a, b) == 2 or min(a, b) == 5
+		return 1
+	end
+	if min(a, b) == 7 or min(a, b) == 8
+		return 3
+	end
+	return 2
+end
+
+// Score of one orientation of the long multiplication grid (rows = digits of
+// the first operand, columns of the second): carries, diagonal assemblies,
+// weighted table facts, width bonus
+macro mulScore(dx, dy)
+	let realCompute = 0
+	let sum = $Table()
+	for i, fx in enumerate(dx.getFigures())
+		let carry = 0
+		for j, fy in enumerate(dy.getFigures())
+			let prod = $ fx * fy + carry
+			if prod >= 10
+				set carry = $ (prod / 10).floor()
+				set realCompute += 1
+			else
+				set carry = 0
+			end
+			set sum[i] = $ sum[i]? or Table()
+			set sum[i][j] = $ prod
+
+			if sum[i-1]?[j+1]? and sum[i-1]?[j+1]? != 0 and prod != 0
+				set realCompute += 1
+			end
+
+			set realCompute += $ tableWeight(fx, fy)
+		end
+		// store the row carry-out for the next row's diagonal check
+		if carry != 0
+			set sum[i][len(dy.getFigures()) + 1] = $carry
+		end
+	end
+
+	// width bonus: one point per 4 digits beyond 3 (counting down)
+	let w = $ dx.sizeIntPart + dx.sizeDecPart + dy.sizeIntPart + dy.sizeDecPart - 3
+	let bonus = 0
+	while w >= 4
+		set w -= 4
+		set bonus += 1
+	end
+	return $ realCompute + bonus
+end
+
 ref getCompute: do
 	add: macro(x, y)
 		let dx = $ DecimalRepresentation(x)
@@ -124,37 +180,7 @@ ref getCompute: do
 	mul: macro(x, y)
 		let dx = $ DecimalRepresentation(x)
 		let dy = $ DecimalRepresentation(y)
-
-		let realCompute = 0
-		let sum = $Table()
-		for i, fx in enumerate(dx.getFigures())
-			let carry = 0
-			for j, fy in enumerate(dy.getFigures())
-				let prod = $ fx * fy + carry
-				if prod >= 10
-					set carry = $ (prod / 10).floor()
-					set realCompute += 1
-				else
-					set carry = 0
-				end
-				set sum[i] = $ sum[i]? or Table()
-				set sum[i][j] = $ prod
-
-				if sum[i-1]?[j+1]? and sum[i-1]?[j+1]? != 0 and prod != 0
-					set realCompute += 1
-				end
-
-				if fx != 0 and fy != 0 and fx != 1 and fy != 1
-					set realCompute += 1
-				end
-			end
-			// store the row carry-out for the next row's diagonal check
-			if carry != 0
-				set sum[i][len(dy.getFigures()) + 1] = $carry
-			end
-		end
-
-		return $realCompute
+		return $ min(mulScore(dx, dy), mulScore(dy, dx))
 	end
 
 	pow: macro(x, y)
