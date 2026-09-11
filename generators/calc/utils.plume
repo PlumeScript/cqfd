@@ -183,6 +183,89 @@ ref getCompute: do
 		return $ min(mulScore(dx, dy), mulScore(dy, dx))
 	end
 
+	// Score of the French long division C / B: per quotient digit cycle
+	// (decision, estimation table, row carries + tables, short subtraction)
+	div: macro(C, B)
+		// French long division: one cycle per quotient digit (k=0 included)
+		let const dx = $ DecimalRepresentation(C)
+		let const dy = $ DecimalRepresentation(B)
+		let const t = $ max(dx.sizeDecPart, dy.sizeDecPart)
+		let const Cn = $ (C * 10^t).round()
+		let const Bn = $ (B * 10^t).round()
+		let const Cf = $ decomposition(Cn)
+		let const Bf = $ decomposition(Bn)
+		let const n = $ len(Cf)
+		let const m = $ len(Bf)
+
+		// one cycle: decision, estimation table, row carries + tables, short sub
+		macro cycle(P, k)
+			let carry = 0
+			let rowCarry = 0
+			let j = 1
+			while j <= m
+				let const p = $ k * Bf[j] + carry
+				if p >= 10
+					set rowCarry += 1
+					set carry = $ (p / 10).floor()
+				else
+					set carry = 0
+				end
+				set j += 1
+			end
+			let rowTw = 0
+			set j = 1
+			while j < m
+				set rowTw += $ tableWeight(k, Bf[j])
+				set j += 1
+			end
+			return $ 1 + tableWeight(k, Bf[m]) + rowCarry + rowTw + getCompute.sub(P, k * Bn)
+		end
+
+		// L = length of the first prefix of Cn >= Bn (0: quotient < 1)
+		let L = 0
+		let P = 0
+		let j = 1
+		while j <= n
+			set P = $ P * 10 + Cf[n - j + 1]
+			if L == 0 and P >= Bn
+				set L = $j
+			end
+			set j += 1
+		end
+
+		let score = 0
+		let r = 0
+		if L != 0
+			let Q = 0
+			set j = 1
+			while j <= L
+				set Q = $ Q * 10 + Cf[n - j + 1]
+				set j += 1
+			end
+			set P = $Q
+			while r < n - L + 1
+				set r += 1
+				let const k = $ (P / Bn).floor()
+				set score += $ cycle(P, k)
+				set P = $ P - k * Bn
+				if r < n - L + 1
+					set P = $ P * 10 + Cf[n - L - r + 1]
+				end
+			end
+		end
+
+		// decimal part: bring down zeros until the exact remainder 0
+		while P > 0 and r < 10
+			set r += 1
+			set P *= 10
+			let const k = $ (P / Bn).floor()
+			set score += $ cycle(P, k)
+			set P = $ P - k * Bn
+		end
+
+		return $score
+	end
+
 	pow: macro(x, y)
 		let realCompute = 0
 		let result = $x
