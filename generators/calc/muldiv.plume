@@ -88,7 +88,11 @@ mulZ2: macro(?fullSign, ...params)
 end
 
 // Straightfoward, should be enhanced
-ref divN2: macro(?frac, ...args)
+ref divN2: macro(minCompute:, maxCompute:, compute:, ?frac, ...args)
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
 	@QuestionFactory
 		parameters: $Table($mulN2(...args))
 		get: macro(calc)
@@ -106,11 +110,16 @@ ref divN2: macro(?frac, ...args)
 				set A = $ -1 * A.children[1]
 			end
 
-			@Question(calcul)
+			let const realCompute = $ getCompute.div(C, B)
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+
+			return @Question(calcul)
 				instruction: $ Node(opp, C, B)
 				solution: $A
 				id: $C/$B
-				compute: $calc.compute // not a good approx
+				compute: $realCompute
 			end
 		end
 	end
