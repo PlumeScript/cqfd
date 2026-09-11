@@ -58,11 +58,11 @@ ref DecimalRepresentation: macro(Number x, b: 10)
 	end
 
 	getFiguresAlong: macro(x)
-		// pair by decimal position k (k=1 -> tenths), missing position -> 0
+		// decimal part emitted least-significant first, aligned on the decimal point
 		let size = $ max(self.sizeDecPart, x.sizeDecPart)
 		for i in seq(size)
-			let j = $ self.sizeDecPart - i + 1
-			let k = $ x.sizeDecPart - i + 1
+			let j = $ self.sizeDecPart - size + i
+			let k = $ x.sizeDecPart - size + i
 			- $ (self.decFigures[j]? or 0, x.decFigures[k]? or 0)
 		end
 		set size = $ max(self.sizeIntPart, x.sizeIntPart)
