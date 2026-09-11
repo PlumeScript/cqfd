@@ -148,6 +148,10 @@ ref getCompute: do
 					set realCompute += 1
 				end
 			end
+			// store the row carry-out for the next row's diagonal check
+			if carry != 0
+				set sum[i][len(dy.getFigures()) + 1] = $carry
+			end
 		end
 
 		return $realCompute
