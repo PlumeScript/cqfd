@@ -255,7 +255,8 @@ ref getCompute: do
 		end
 
 		// decimal part: bring down zeros until the exact remainder 0
-		while P > 0 and r < 10
+		// (guard r < 20: non-terminating decimals stop early, e.g. 1/3)
+		while P > 0 and r < 20
 			set r += 1
 			set P *= 10
 			let const k = $ (P / Bn).floor()
@@ -269,11 +270,18 @@ ref getCompute: do
 	pow: macro(x, y)
 		let realCompute = 0
 		let result = $x
-		if y>0
-			for i in seq(y-1)
+		let e = $y
+		if y < 0
+			set e = $ -1 * y
+		end
+		if e > 0
+			for i in seq(e-1)
 				set realCompute += $ getCompute.mul(result, x)
 				set result *= $x
 			end
+		end
+		if y < 0
+			set realCompute += $ getCompute.div(1, result)
 		end
 		return $realCompute
 	end
