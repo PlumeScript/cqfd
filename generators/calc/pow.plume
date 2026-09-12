@@ -38,12 +38,10 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 				end
 			end
 
-			// Wrong value for y<0
-			let realCompute = $ getCompute.pow(x, y)
-
-			if negativeExposant
-				// dirty heuristic
-				set realCompute *= 2
+			let const realCompute = if negativeExposant
+				$ getCompute.pow(x, -y)
+			else
+				$ getCompute.pow(x, y)
 			end
 
 			return $ (not minCompute or minCompute <= realCompute) and (not maxCompute or maxCompute >= realCompute)
@@ -61,7 +59,11 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 					$(x^y)
 				end
 				id: $x^$y
-				compute: $ getCompute.pow(x, y)
+				compute: if negativeExposant
+					$ getCompute.pow(x, -y)
+				else
+					$ getCompute.pow(x, y)
+				end
 			end
 		end
 	end
