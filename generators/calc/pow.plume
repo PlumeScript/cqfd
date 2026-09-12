@@ -12,7 +12,7 @@ let Choice from $import(../../core/parameters/set)
 let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
-ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, minCompute:, maxCompute:, compute:, Number minExposant: 0, Number maxExposant: 3, ?negativeExposant)
+ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, minCompute:, maxCompute:, compute:, Number minExposant: 0, Number maxExposant:10, ?negativeExposant)
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
