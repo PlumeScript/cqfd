@@ -131,6 +131,33 @@ calculHoleNoSolution: do
 	end
 end
 
+calcul_notdef: do
+	instruction:macro(question)
+		$ pages.formula(renderLatexAST(question.instruction))
+	end
+
+	ref solution: macro(question)
+		Non défini.
+	end
+end
+
+approx: do
+	instruction:macro(question)
+		@pages.formula
+			$ renderLatexAST(question.instruction)
+		end
+	end
+	solution: macro(question)
+		@pages.formula
+			$ renderLatexAST(question.solution.bottom)
+			<
+			$ renderLatexAST(question.instruction)
+			<
+			$ renderLatexAST(question.solution.top)
+		end
+	end
+end
+
 invPb: do
 	instruction:macro(question)
 		$pages.formula($renderLatexAST($question.src.calcul) = $question.src.solution)\s

@@ -1,0 +1,120 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+let Decimal from $import(../../core/parameters/range)
+
+sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+
+	set minFigures /= 2
+	set maxFigures /= 2
+
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		get: macro(x)
+			@Question(calcul)
+				instruction: @Node(sqrt)
+					- $(x^2)
+				end
+				solution: $x
+				id: sqrt($(x^2))
+				compute: 0 // PlaceHolder
+			end
+		end
+	end
+end
+
+sqrtC: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+
+	set minFigures /= 2
+	set maxFigures /= 2
+
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		get: macro(x)
+			@Question(calcul_notdef)
+				instruction: @Node(sqrt) @Node(-)
+					- $(x^2)
+				end
+				solution: $x
+				id: sqrt(-$(x^2))
+				compute: 0
+			end
+		end
+	end
+end
+
+sqrtR: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, Number digit: 0)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		validate: macro(x)
+			$ x^0.5 != (x^0.5).floor()
+		end
+		get: macro(x)
+			@Question(approx)
+				instruction: @Node(sqrt)
+					- $x
+				end
+				solution: do
+					top:    $ (x^0.5 * 10^digit).ceil() * 10^(-digit)
+					bottom: $ (x^0.5 * 10^digit).floor() * 10^(-digit)
+				end
+				id: sqrt($x)
+				compute: 0
+			end
+		end
+	end
+end
+
+sqrtEasy: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, ?negative)
+	if figures
+		set minFigures = $figures
+		set maxFigures = $figures
+	end
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+		end
+		get: macro(x)
+			@Question(calcul)
+				instruction: @Node(sqrt) @Node(^)
+					- if negative
+						$Node(-, $x)
+					else
+						$x
+					end
+					- 2
+				end
+				solution: $x
+				id: sqrt($x^2)
+				compute: 0
+			end
+		end
+	end
+end
+

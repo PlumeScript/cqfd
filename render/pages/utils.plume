@@ -11,7 +11,7 @@ ref renderLatexAST: macro(node, ?mayPar)
 	if tnode == "treeNode"
 		// a power never needs grouping in an operand slot: exponentiation
 		// has the highest precedence (the base wraps itself when needed)
-		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*" and node.label != "/" and node.label != "^"
+		if mayPar and node.label != "number" and node.label != "bold" and node.label != "sqrt" and node.label != "*" and node.label != "/" and node.label != "^"
 			(
 		end
 		if node.label == "+"
@@ -140,12 +140,14 @@ ref renderLatexAST: macro(node, ?mayPar)
 					- $ renderLatexAST(x)
 				end
 			end
+		elseif node.label == "sqrt"
+			\\sqrt{$renderLatexAST($node.children[1])}
 		elseif node.label == "number"
 			$ Number(node.children[1]).localize()
 		elseif node.label == "bold"
 			\\mathbf{$renderLatexAST($node.children[1])}
 		end
-		if mayPar and node.label != "number" and node.label != "bold" and node.label != "*" and node.label != "/" and node.label != "^"
+		if mayPar and node.label != "number" and node.label != "bold" and node.label != "sqrt" and node.label != "*" and node.label != "/" and node.label != "^"
 			)
 		end
 	elseif type(node) == "number"
