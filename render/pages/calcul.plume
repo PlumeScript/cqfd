@@ -15,11 +15,62 @@ calcul: do
 	solutionShort: macro(question)
 		$ pages.formula(renderLatexAST(question.solution))
 	end
-	solution: macro(question)
+	ref solution: macro(question)
 		@pages.formula
 			$ renderLatexAST(question.instruction)
 			=
 			$ renderLatexAST(question.solution)
+		end
+	end
+	steps: macro(question, Number first: 1, Number last: -1, ?solution)
+		if question.steps?
+			if last==-1
+				set last = $ len(question.steps)+1
+			end
+
+			let steps = (...question.steps, $question.solution)
+
+			macro wrapper(i, content)
+				if i == len(steps)
+					@ardoise.box $content
+				else
+					$content
+				end
+			end
+
+			@pages.List(indent: 0, gap: 2)
+				for i in seq(1, first-1)
+					- @pages.formula
+						$ renderLatexAST(question.instruction)
+						=
+						\0...
+					end
+				end
+
+				for i in seq(first, last)
+					- @wrapper($i) @pages.formula
+						$ renderLatexAST(question.instruction)
+						=
+						$ renderLatexAST(steps[i])
+					end
+				end
+
+				for i in seq(last+1, len(steps))
+					- @wrapper($(solution and i)) @pages.formula
+						$ renderLatexAST(question.instruction)
+						=
+						if solution
+							\\color{green}{
+								$ renderLatexAST(steps[i])
+							}
+						else
+							\0...
+						end
+					end
+				end
+			end
+		else
+			$ solution(question)
 		end
 	end
 end
