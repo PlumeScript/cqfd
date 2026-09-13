@@ -58,6 +58,25 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 				else
 					$(x^y)
 				end
+				steps: do
+					let mul = $x
+					let absy = if y>0
+						$y
+					else
+						$ -y
+					end
+					for i in seq(absy-1)
+						set mul = $Node(*, $x, $mul)
+					end
+
+					if negativeExposant
+						- $Node(/, 1, $Node(^, $x, $absy))
+						- $Node(/, 1, $mul)
+						- $Node(/, 1, $(x^y))
+					else
+						- $mul
+					end
+				end
 				id: $x^$y
 				compute: if negativeExposant
 					$ getCompute.pow(x, -y)
