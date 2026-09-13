@@ -15,7 +15,7 @@ ref Question: macro(renderClass, id:, ...content)
 	id: $(id or repr(content))
 	...content
 
-	render: macro(mode, renderer:)
+	render: macro(mode, renderer:, ...args)
 		set renderer = $ renderer or global.renderer
 		if not renderer[renderClass]?
 			raise Renderer "$renderer.name" doesn't handle renderClass "$renderClass".
@@ -27,12 +27,12 @@ ref Question: macro(renderClass, id:, ...content)
 		if not method
 			set method = $renderer[renderClass].any?
 			if method
-				return $ method(mode, self, renderer)
+				return $ method(mode, self, renderer, ...args)
 			end
 		end
 		if not method
 			raise Renderer "$renderer.name\0.$renderClass" doesn't handle render mode "$mode".
 		end
-		return $ method(self)
+		return $ method(self, ...args)
 	end
 end
