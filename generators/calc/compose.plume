@@ -87,3 +87,31 @@ composeMul: macro(left, right, minCompute:, maxCompute:, compute:)
 		end
 	end
 end
+
+composeSqrtN: macro(calc, minCompute:, maxCompute:, compute:)
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $calc
+		end
+		validate: macro(calc)
+			$ calc.solution > 0 and calc.solution^0.5 == (calc.solution^0.5).floor()
+		end
+		get: macro(calc)
+			let realCompute = $ calc.compute // placeHolder
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+			return @Question(calcul)
+				instruction: $Node(sqrt, $calc.instruction)
+				solution: $ calc.solution^0.5
+				compute: $realCompute
+				id: sqrt($calc.id)
+			end
+		end
+	end
+end
