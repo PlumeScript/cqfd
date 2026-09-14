@@ -10,6 +10,7 @@ Licensed under the MIT License — see LICENSE for details.
 ...import(./muldiv)
 ...import(./pow)
 ...import(./sqrt)
+...import(./rationnals)
 ...import(./problem)
 ...import(./compose)
 
