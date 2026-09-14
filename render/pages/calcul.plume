@@ -131,6 +131,24 @@ calculHoleNoSolution: do
 	end
 end
 
+calcRationnalHole: do
+	instruction:macro(question)
+		@pages.formula
+			
+			$ renderLatexAST(question.instruction.left)
+			=
+			$ renderLatexAST(question.instruction.right)
+		end
+	end
+	solution: macro(question)
+		@pages.formula
+			$ renderLatexAST(question.solution.left)
+			=
+			$ renderLatexAST(question.solution.right)
+		end
+	end
+end
+
 calcul_notdef: do
 	instruction:macro(question)
 		$ pages.formula(renderLatexAST(question.instruction))
