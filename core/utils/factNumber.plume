@@ -1,0 +1,36 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let primes = (2, 3, 5, 7, 11, 13)
+
+ref FactNumberCls: do
+	fromNumber: macro(x)
+		@FactNumberCls
+			for p in primes
+				let vp = 1
+				while x % p^vp == 0
+					set vp += 1
+				end
+				- $(vp-1)
+			end
+		end
+	end
+
+	meta call: macro(...vp)
+		type: Number
+		vp: $vp
+		let value = 1
+		for i, vi in enumerate(vp)
+			set value *= $ primes[i] ^ vi
+		end
+		value: $value
+		meta tostring: macro()
+			$value
+		end
+		id: $value
+	end
+end
