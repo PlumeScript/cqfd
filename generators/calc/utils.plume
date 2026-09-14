@@ -296,4 +296,90 @@ ref getCompute: do
 		end
 		return $realCompute
 	end
+
+	// Score of the digit-by-digit square root of n (French extraction):
+	// one cycle per pair of digits around the decimal point — decision +1,
+	// estimation fact, trial row k x (20R + k) (carries + tables), short sub.
+	// Decimal digits come from DecimalRepresentation, which keeps the leading
+	// zeros of the decimal part; radicands below 1e-4 are out of scope (T27).
+	sqrt: macro(n)
+		// value of the c-th two-digit group (c from 1, most-significant
+		// first) of an LSB-first figures table: a lone most-significant
+		// digit when the length is odd
+		macro pairValue(f, c)
+			let const L = $ len(f)
+			if L % 2 == 1 and c == 1
+				return $ f[L]
+			end
+			let const top = $ L - 2 * c + 2 + (L % 2)
+			return $ f[top]*10 + f[top-1]
+		end
+
+		let const d = $ DecimalRepresentation(n)
+		let const ip = $ d.intFigures
+		let const dp = $ d.decFigures
+		let const nI = $ ((len(ip) + 1) / 2).floor()
+		let const nD = $ ((len(dp) + 1) / 2).floor()
+		let const total = $ nI + nD
+
+		// one cycle: decision, estimation fact, trial row, short subtraction
+		macro cycle(P, R, k)
+			let est = 0
+			if R == 0
+				set est = $ tableWeight(k, k)
+			else
+				let const rf = $ decomposition(2 * R)
+				set est = $ tableWeight(k, rf[len(rf)])
+			end
+			let rowCarry = 0
+			let rowTw = 0
+			if R != 0
+				let const Nf = $ decomposition(20 * R + k)
+				let carry = 0
+				let j = 1
+				while j <= len(Nf)
+					let const p = $ k * Nf[j] + carry
+					if p >= 10
+						set rowCarry += 1
+						set carry = $ (p / 10).floor()
+					else
+						set carry = 0
+					end
+					set j += 1
+				end
+				set j = 1
+				while j < len(Nf)
+					set rowTw += $ tableWeight(k, Nf[j])
+					set j += 1
+				end
+			end
+			return $ 1 + est + rowCarry + rowTw + getCompute.sub(P, k * (20 * R + k))
+		end
+
+		let P = 0
+		let R = 0
+		let score = 0
+		let c = 1
+		while c <= total
+			let g = 0
+			if c <= nI
+				set g = $ pairValue(ip, c)
+			else
+				set g = $ pairValue(dp, c - nI)
+			end
+			set P = $ P * 100 + g
+			// k: largest 0..9 with (20R + k) * k <= P (off perfect squares too)
+			let k = 0
+			while (20 * R + k + 1) * (k + 1) <= P
+				set k += 1
+			end
+			let const N = $ 20 * R + k
+			set score += $ cycle(P, R, k)
+			set R = $ R * 10 + k
+			set P = $ P - k * N
+			set c += 1
+		end
+
+		return $score
+	end
 end
