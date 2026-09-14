@@ -1,0 +1,151 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let QuestionFactory from $import(../cls/questionfactory)
+let Choice from $import(./set)
+let Range from $import(./range)
+let FactNumberCls from $import(../utils/factNumber)
+
+ref FactNumber: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
+	@QuestionFactory
+		parameters: do
+			for i in seq(1, minP-1)
+				- $Choice(0)
+			end
+			for i in seq(minP, maxP)
+				- $Range(0, $maxE)
+			end
+		end
+		get: macro(...vp)
+			let result = $FactNumberCls(...vp)
+			if result.value >= minN and result.value <= maxN
+				return $result
+			end
+		end
+	end
+end
+
+FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, minK: 2, maxK: 10)
+	@QuestionFactory
+		parameters: do
+			// Base
+			- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			// Multiple
+			- $ Range(minK, maxK)
+		end
+		get: macro(a, k)
+			let b = $ FactNumberCls.fromNumber(a.value * k)
+
+			if a.value != b.value and a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN
+				return do
+					- $a
+					- $b
+					id: $a.id-$b.id
+				end
+			else
+				return
+			end
+		end
+	end
+end
+
+ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
+	@QuestionFactory
+		parameters: do
+			// weight
+			for i in seq(1, minP-1)
+				- $Choice(0)
+			end
+			for i in seq(minP, maxP)
+				- $Range(0, $maxE)
+			end
+			// choice
+			for i in seq(1, maxP)
+				- $Choice(0, 1)
+			end
+		end
+		get: macro(...vp)
+			let weight = for i in seq(1, maxP)
+				- $vp[i]
+			end
+			let choice = for i in seq(maxP+1, 2*maxP)
+				- $vp[i]
+			end
+
+			let a = @FactNumberCls
+				for i in seq(1, maxP)
+					if choice[i] == 0
+						- $weight[i]
+					else
+						- 0
+					end
+				end
+			end
+			let b = @FactNumberCls
+				for i in seq(1, maxP)
+					if choice[i] == 1
+						- $weight[i]
+					else
+						- 0
+					end
+				end
+			end
+			
+			if a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN
+				return do
+					- $a
+					- $b
+					id: $a.id-$b.id
+				end
+			else
+				return
+			end
+		end
+	end
+end
+
+FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
+
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			for i in seq(1, maxP)
+				- $Range(0, $maxE)
+			end
+		end
+		get: macro(base, ...vp)
+			let vpa = $ Table.copy(base[1].vp)
+			let vpb = $ Table.copy(base[2].vp)
+
+			let nullcheck = $true
+			for i in seq(1, maxP)
+				if vp[i] != 0
+					set nullcheck = $false
+				end
+				set vpa[i] += $ vp[i]
+				set vpb[i] += $ vp[i]
+			end
+
+			if nullcheck
+				return
+			end
+
+			let a = $FactNumberCls(...vpa)
+			let b = $FactNumberCls(...vpb)
+
+			if a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN and not a.value % b.value == 0 and not b.value % a.value == 0
+				return do
+					- $a
+					- $b
+					id: $a.id-$b.id
+				end
+			else
+				return
+			end
+		end
+	end
+end
