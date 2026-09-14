@@ -7,12 +7,13 @@ Licensed under the MIT License — see LICENSE for details.
 
 let FactNumber2Coprimes from $import(../../core/parameters/factNumber)
 let Range from $import(../../core/parameters/range)
+let Choice from $import(../../core/parameters/set)
 
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 
-simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
+ref simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
 			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
@@ -31,6 +32,58 @@ simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK
 					- $r[1].value
 					- $r[2].value
 				end
+			end
+		end
+	end
+end
+
+rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10)
+	@QuestionFactory
+		parameters: do
+			- $ simplifyRationnal(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			- $ Choice(1, 2, 3, 4)
+			- $ Choice(0, 1)
+		end
+		get: macro(exo, holePos, switch)
+			let a = $exo.instruction
+			let b = $exo.solution
+
+			if switch == 1
+				set a, b = ($b, $a)
+			end
+
+			@Question(calcRationnalHole)
+				instruction: do
+					left: @Node(/)
+						- if holePos != 1
+							$ a.children[1]
+						else
+							\0...
+						end
+						- if holePos != 2
+							$ a.children[2]
+						else
+							\0...
+						end
+					end
+					right: @Node(/)
+						- if holePos != 3
+							$ b.children[1]
+						else
+							\0...
+						end
+						- if holePos != 4
+							$ b.children[2]
+						else
+							\0...
+						end
+					end
+				end
+				solution:do
+					left: $a
+					right: $b
+				end
+				id: $exo.id-$holePos-$switch
 			end
 		end
 	end
