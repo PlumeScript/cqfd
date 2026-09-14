@@ -102,7 +102,7 @@ composeSqrtN: macro(calc, minCompute:, maxCompute:, compute:)
 			$ calc.solution > 0 and calc.solution^0.5 == (calc.solution^0.5).floor()
 		end
 		get: macro(calc)
-			let realCompute = $ calc.compute // placeHolder
+			let realCompute = $ getCompute.sqrt(calc.solution) + calc.compute
 			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
 				return
 			end

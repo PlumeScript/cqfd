@@ -9,11 +9,16 @@ let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 let Decimal from $import(../../core/parameters/range)
+let getCompute from $import(./utils)
 
-sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:)
+sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
+	end
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
 	end
 
 	set minFigures /= 2
@@ -24,13 +29,19 @@ sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		get: macro(x)
-			@Question(calcul)
+			let const realCompute = $ getCompute.sqrt(x^2)
+
+			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
+				return
+			end
+
+			return @Question(calcul)
 				instruction: @Node(sqrt)
 					- $(x^2)
 				end
 				solution: $x
 				id: sqrt($(x^2))
-				compute: 0 // PlaceHolder
+				compute: $realCompute
 			end
 		end
 	end
