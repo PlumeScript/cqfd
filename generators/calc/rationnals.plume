@@ -37,6 +37,26 @@ ref simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, 
 	end
 end
 
+ref simplifyRationnalIrreductible: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+		end
+		get: macro(r)
+			@Question(calcul)
+				instruction: @Node(/)
+					- $r[1].value
+					- $r[2].value
+				end
+				solution: @Node(/)
+					- $r[1].value
+					- $r[2].value
+				end
+			end
+		end
+	end
+end
+
 rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
