@@ -26,6 +26,7 @@ calcul: do
 			$ renderLatexAST(question.solution)
 		end
 	end
+	let calculSolution = $solution
 	steps: macro(question, Number first: 1, Number last: -1, ?solution)
 		if question.steps?
 			if last==-1
@@ -74,7 +75,7 @@ calcul: do
 				end
 			end
 		else
-			$ solution(question)
+			$ calculSolution(question)
 		end
 	end
 end

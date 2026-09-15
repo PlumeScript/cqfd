@@ -132,6 +132,13 @@ ref addZ2Plus: macro(?fullSign, ...args)
 				solution: $C
 				id: $signA$signB$bigger$calc.id
 				compute: $calc.compute
+				steps: do
+					- if signA == "+"
+						$ Node("+", Node("+", A, B))
+					else
+						$ Node("-", Node("+", calc.instruction.children[1], calc.instruction.children[2]))
+					end
+				end
 			end
 		end
 	end
@@ -173,6 +180,21 @@ ref addZ2Minus: macro(?fullSign, ...args)
 				solution: $C
 				id: $signA$signB$bigger$calc.id
 				compute: $calc.compute
+				steps: do
+					- if signA == "+"
+						if bigger
+							$ Node("+", Node("-", calc.instruction.children[1], calc.instruction.children[2]))
+						else
+							$ Node("-", Node("-", calc.instruction.children[2], calc.instruction.children[1]))
+						end
+					else
+						if bigger
+							$ Node("-", Node("-", calc.instruction.children[1], calc.instruction.children[2]))
+						else
+							$ Node("+", Node("-", calc.instruction.children[2], calc.instruction.children[1]))
+						end
+					end
+				end
 			end
 		end
 	end

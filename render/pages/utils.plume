@@ -15,34 +15,39 @@ ref renderLatexAST: macro(node, ?mayPar)
 			(
 		end
 		if node.label == "+"
-			// a sum is a list of signed terms: a unary-minus child is a
-			// negative term. Without fullSign the minus is folded into the
-			// separator (5-3); with fullSign every term is explicit ((+5)+(-3))
-			for i in seq(len(node.children))
-				if type(node.children[i]) == "table" and node.children[i].label == "-" and len(node.children[i].children) == 1
-					if node.fullSign?
+			if len(node.children) >= 2
+				// a sum is a list of signed terms: a unary-minus child is a
+				// negative term. Without fullSign the minus is folded into the
+				// separator (5-3); with fullSign every term is explicit ((+5)+(-3))
+				for i in seq(len(node.children))
+					if type(node.children[i]) == "table" and node.children[i].label == "-" and len(node.children[i].children) == 1
+						if node.fullSign?
+							if i > 1
+								+
+							end
+							(-
+							$ renderLatexAST(node.children[i].children[1], ?mayPar)
+							)
+						else
+							\0-
+							$ renderLatexAST(node.children[i].children[1], ?mayPar)
+						end
+					else
 						if i > 1
 							+
 						end
-						(-
-						$ renderLatexAST(node.children[i].children[1], ?mayPar)
-						)
-					else
-						\0-
-						$ renderLatexAST(node.children[i].children[1], ?mayPar)
-					end
-				else
-					if i > 1
-						+
-					end
-					if node.fullSign?
-						(+
-						$ renderLatexAST(node.children[i], ?mayPar)
-						)
-					else
-						$ renderLatexAST(node.children[i])
+						if node.fullSign?
+							(+
+							$ renderLatexAST(node.children[i], ?mayPar)
+							)
+						else
+							$ renderLatexAST(node.children[i])
+						end
 					end
 				end
+			else
+				+
+				$ renderLatexAST(node.children[1], ?mayPar)
 			end
 		elseif node.label == "-"
 			if len(node.children) > 2
