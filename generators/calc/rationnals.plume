@@ -5,7 +5,7 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-let FactNumber2Coprimes from $import(../../core/parameters/factNumber)
+let FactNumber2Coprimes, FactNumber4 from $import(../../core/parameters/factNumber)
 let Range from $import(../../core/parameters/range)
 let Choice from $import(../../core/parameters/set)
 
@@ -84,6 +84,43 @@ rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 1
 					right: $b
 				end
 				id: $exo.id-$holePos-$switch
+			end
+		end
+	end
+end
+
+reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?multiple, ?coprime)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime)
+		end
+		get: macro(base)
+			@Question(reduceCommonDenominator)
+				let a, b, c, d = $base
+				let e = $ b.lcm(d)
+				let as = $ a.value * e.value / b.value
+				let cs = $ c.value * e.value / d.value
+
+				instruction: do
+					- @Node(/)
+						- $a.value
+						- $b.value
+					end
+					- @Node(/)
+						- $c.value
+						- $d.value
+					end
+				end
+				solution: do
+					- @Node(/)
+						- $as
+						- $e.value
+					end
+					- @Node(/)
+						- $cs
+						- $e.value
+					end
+				end
 			end
 		end
 	end

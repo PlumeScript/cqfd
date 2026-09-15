@@ -29,18 +29,23 @@ ref FactNumber: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number min
 	end
 end
 
-FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, minK: 2, maxK: 10)
+ref FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
 			// Base
 			- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
 			// Multiple
 			- $ Range(minK, maxK)
+			// Order
+			- $ Choice(0, 1)
 		end
-		get: macro(a, k)
+		get: macro(a, k, order)
 			let b = $ FactNumberCls.fromNumber(a.value * k)
 
-			if a.value != b.value and a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN
+			if a.value != b.value and a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN and a.value != b.value
+				if order==1
+					set a, b = ($b, $a)
+				end
 				return do
 					- $a
 					- $b
@@ -108,7 +113,7 @@ ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, N
 	end
 end
 
-FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
+ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
 
 	@QuestionFactory
 		parameters: do
@@ -142,6 +147,68 @@ FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number m
 					- $a
 					- $b
 					id: $a.id-$b.id
+				end
+			else
+				return
+			end
+		end
+	end
+end
+
+// Get two numbers a and b, then c coprime with a and d coprime with b.
+FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime)
+	if multiple and coprime
+		raise Theses flags are mutually exclusives
+	end
+	@QuestionFactory
+		parameters: do
+			- if coprime
+				$ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			elseif multiple
+				$ FactNumber2Multiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK)
+			else
+				$ FactNumber2NoCoprimesNoMultiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			end
+			// Choice for c
+			for i in seq(1, maxP)
+				- $Choice(0, 1)
+			end
+			// Choice for d
+			for i in seq(1, maxP)
+				- $Choice(0, 1)
+			end
+		end
+
+		get: macro(base, ...choice)
+			let b = $base[1]
+			let d = $base[2]
+			let a = @FactNumberCls
+				for i in seq(1, maxP)
+					if choice[i] == 0
+						- $b.vp[i]
+					else
+						- 0
+					end
+				end
+			end
+			let c= @FactNumberCls
+				for i in seq(1, maxP)
+					if choice[maxP+i] == 1
+						- $d.vp[i]
+					else
+						- 0
+					end
+				end
+			end
+
+
+			if a.value != b.value and c.value != d.value and a.value >= minN and a.value <= maxN and c.value >= minN and c.value <= maxN
+				return do
+					- $a
+					- $b
+					- $c
+					- $d
+					id: $a/$b - $c/$d
 				end
 			else
 				return

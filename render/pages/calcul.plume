@@ -176,6 +176,27 @@ approx: do
 	end
 end
 
+reduceCommonDenominator: do
+	instruction:macro(question)
+		@pages.formula
+			$ renderLatexAST(question.instruction[1])
+		end
+		\set\s
+		@pages.formula
+			$ renderLatexAST(question.instruction[2])
+		end
+	end
+	solution:macro(question)
+		@pages.formula
+			$ renderLatexAST(question.solution[1])
+		end
+		\set\s
+		@pages.formula
+			$ renderLatexAST(question.solution[2])
+		end
+	end
+end
+
 invPb: do
 	instruction:macro(question)
 		$pages.formula($renderLatexAST($question.src.calcul) = $question.src.solution)\s
