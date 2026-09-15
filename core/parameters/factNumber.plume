@@ -156,7 +156,7 @@ ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Numb
 end
 
 // Get two numbers a and b, then c coprime with a and d coprime with b.
-FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime)
+FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime, ?sameDenominator, ?noSameNumerator)
 	if multiple and coprime
 		raise Theses flags are mutually exclusives
 	end
@@ -166,6 +166,8 @@ FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?mu
 				$ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
 			elseif multiple
 				$ FactNumber2Multiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK)
+			elseif sameDenominator
+				$ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
 			else
 				$ FactNumber2NoCoprimesNoMultiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
 			end
@@ -180,8 +182,11 @@ FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?mu
 		end
 
 		get: macro(base, ...choice)
-			let b = $base[1]
-			let d = $base[2]
+			let b, d = if sameDenominator
+				($base, $base)
+			else
+				...base
+			end
 			let a = @FactNumberCls
 				for i in seq(1, maxP)
 					if choice[i] == 0
@@ -199,6 +204,10 @@ FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?mu
 						- 0
 					end
 				end
+			end
+
+			if noSameNumerator and a.value==c.value
+				return
 			end
 
 

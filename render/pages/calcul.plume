@@ -19,6 +19,10 @@ calcul: do
 		@pages.formula
 			$ renderLatexAST(question.instruction)
 			=
+			if question.beforeSimplification? and question.simplification != 1
+				$ renderLatexAST(question.beforeSimplification)
+				=
+			end
 			$ renderLatexAST(question.solution)
 		end
 	end

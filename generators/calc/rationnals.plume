@@ -12,6 +12,7 @@ let Choice from $import(../../core/parameters/set)
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
+let FactNumberCls from $import(../../core/utils/factNumber)
 
 ref simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
@@ -140,6 +141,49 @@ reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK:
 						- $cs
 						- $e.value
 					end
+				end
+			end
+		end
+	end
+end
+
+addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime, sameDenominator: sameDenominator, noSameNumerator: noSameNumerator)
+			- $Choice(+, -)
+		end
+		get: macro(base, opp)
+			@Question(calcul)
+				let a, b, c, d = $base
+				let bottom = $ b.lcm(d)
+				let left  = $ a.value * bottom.value / b.value
+				let right = $ c.value * bottom.value / d.value
+				if opp == "-"
+					set right *= -1
+				end
+				let top = $ FactNumberCls.fromNumber(left + right)
+				let k = $ top.gcd(bottom)
+
+
+				instruction: @Node($opp)
+					- @Node(/)
+						- $a.value
+						- $b.value
+					end
+					- @Node(/)
+						- $c.value
+						- $d.value
+					end
+				end
+				beforeSimplification: @Node(/)
+					- $top.value
+					- $bottom.value
+				end
+				simplification: $k.value
+				solution: @Node(/)
+					- $ top.value / k.value
+					- $ bottom.value / k.value
 				end
 			end
 		end
