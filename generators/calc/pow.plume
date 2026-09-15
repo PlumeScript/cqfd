@@ -103,6 +103,25 @@ powZ2: macro(?fullSign, ...args)
 				solution: $((-x)^y)
 				id: -$x^$y
 				compute: $calc.compute
+				steps: do
+					let mul = $Node(-, $x)
+					let absy = if y>0
+						$y
+					else
+						$ -y
+					end
+					for i in seq(absy-1)
+						set mul = $Node(*, $Node(-, $x), $mul)
+					end
+
+					if args.negativeExposant?
+						- $Node(/, 1, $Node(^, $Node(-, $x), $absy))
+						- $Node(/, 1, $mul)
+						- $Node(/, 1, $((-x)^y))
+					else
+						- $mul
+					end
+				end
 			end
 		end
 	end
