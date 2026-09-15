@@ -32,5 +32,26 @@ ref FactNumberCls: do
 			$value
 		end
 		id: $value
+		gcd: macro(x)
+			if type(x) == "number"
+				set x = $ FactNumberCls.fromNumber(x)
+			end
+			@FactNumberCls
+				for i in seq(len(primes))
+					- $ min(self.vp[i]? or 0, x.vp[i]? or 0)
+				end
+			end
+		end
+
+		lcm: macro(x)
+			if type(x) == "number"
+				set x = $ FactNumberCls.fromNumber(x)
+			end
+			@FactNumberCls
+				for i in seq(len(primes))
+					- $ max(self.vp[i]? or 0, x.vp[i]? or 0)
+				end
+			end
+		end
 	end
 end
