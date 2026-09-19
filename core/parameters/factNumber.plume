@@ -100,7 +100,7 @@ ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, N
 				end
 			end
 			
-			if a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN
+			if a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN and a.value != b.value
 				return do
 					- $a
 					- $b
