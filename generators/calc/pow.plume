@@ -72,7 +72,7 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 					if negativeExposant
 						- $Node(/, 1, $Node(^, $x, $absy))
 						- $Node(/, 1, $mul)
-						- $Node(/, 1, $(x^y))
+						- $Node(/, 1, $(x^absy))
 					else
 						- $mul
 					end
@@ -117,7 +117,7 @@ powZ2: macro(?fullSign, ...args)
 					if args.negativeExposant?
 						- $Node(/, 1, $Node(^, $Node(-, $x), $absy))
 						- $Node(/, 1, $mul)
-						- $Node(/, 1, $((-x)^y))
+						- $Node(/, 1, $((-x)^absy))
 					else
 						- $mul
 					end
