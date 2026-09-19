@@ -53,5 +53,19 @@ ref FactNumberCls: do
 				end
 			end
 		end
+
+		meta mul: macro(x, y)
+			if x != self
+				set x, y = ($y, $x)
+			end
+			if type(x) == "number"
+				set x = $ FactNumberCls.fromNumber(x)
+			end
+			@FactNumberCls
+				for i in seq(len(primes))
+					- $ (self.vp[i]? or 0) + (x.vp[i]? or 0)
+				end
+			end
+		end
 	end
 end
