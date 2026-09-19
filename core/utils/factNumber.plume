@@ -55,7 +55,7 @@ ref FactNumberCls: do
 		end
 
 		meta mul: macro(x, y)
-			if x != self
+			if y != self
 				set x, y = ($y, $x)
 			end
 			if type(x) == "number"

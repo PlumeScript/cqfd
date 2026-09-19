@@ -189,3 +189,93 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 		end
 	end
 end
+
+ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+		end
+
+		get: macro(ab, cd)
+			let a, b = $ab
+			let c, d = $cd
+
+			let top    = $ a*c
+			let bottom = $ c*d
+			let k = $ top.gcd(bottom)
+
+			// Expensive
+			if minK and k.value < minK or maxK and k.value > maxK
+				return
+			end
+
+			return @Question(calcul)
+				infos: do
+					a: $a
+					b: $b
+					c: $c
+					d: $d
+				end
+				instruction: @Node(*)
+					- @Node(/)
+						- $a.value
+						- $b.value
+					end
+					- @Node(/)
+						- $c.value
+						- $d.value
+					end
+				end
+				steps: do
+					- @Node(/)
+						- @Node(*)
+							- $a.value
+							- $c.value
+						end
+						- @Node(*)
+							- $b.value
+							- $d.value
+						end
+					end
+				end
+				beforeSimplification: @Node(/)
+					- $top.value
+					- $bottom.value
+				end
+				simplification: $k.value
+				solution: @Node(/)
+					- $ top.value / k.value
+					- $ bottom.value / k.value
+				end
+			end
+		end
+	end
+end
+
+divRationnal: macro(...args)
+	@QuestionFactory
+		parameters: do
+			- $ mulRationnal(...args)
+		end
+		get: macro(calc)
+			return @Question(calcul)
+				...calc
+				instruction: @Node(-:)
+					- @Node(/)
+						- $calc.infos.a.value
+						- $calc.infos.b.value
+					end
+					- @Node(/)
+						- $calc.infos.d.value
+						- $calc.infos.c.value
+					end
+				end
+				steps: do
+					- $calc.instruction
+					...calc.steps
+				end
+			end
+		end
+	end
+end
