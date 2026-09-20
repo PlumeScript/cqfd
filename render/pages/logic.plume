@@ -1,0 +1,25 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let pages = $import(pages)
+
+logic: do
+	instruction:macro(question)
+		$question.instruction
+	end
+	solution: macro(question)
+		if question.solution
+			Vrai.
+		else
+			Faux.
+		end
+
+		if question.solutionTip?
+			\s$question.solutionTip
+		end
+	end
+end

@@ -1,0 +1,297 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Dirty and rigid
+// sub-optimal letter generation
+
+let pages = $import(pages) // Should be in render
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Choice from $import(../../core/parameters/set)
+let Range from $import(../../core/parameters/range)
+
+let _letters = (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z)
+let letters = macro(n)
+	@QuestionFactory
+		parameters: do
+			for i in seq(n)
+				- $ Range(1, len(_letters))
+			end
+		end
+		validate: macro(...args)
+			for i in seq(len(args))
+				for j in seq(i+1, len(args))
+					if args[i] == args[j]
+						return $false
+					end
+				end
+			end
+			return $ true
+		end
+		get: macro(...args)
+			for i in args
+				- $_letters[i]
+			end
+			id: $Table.join(sep:\s, ...args)
+		end
+	end
+end
+ref lineNotationPool: do
+	- do
+		- macro(_, A, B, ...letters) $pages.formula([$A$B])
+		- macro(_, A, B, ...letters) l'ensemble des points entre $pages.formula($A) et $pages.formula($B)
+		- macro(_, A, B, ...letters) un segment
+	end
+	- do
+		- macro(_, A, B, ...letters) $pages.formula(($A$B))
+		- macro(_, A, B, ...letters) l'ensemble des points alignés avec $pages.formula($A) et $pages.formula($B)
+		- macro(_, A, B, ...letters) une droite
+	end
+	- do
+		- macro(_, A, B, ...letters) $pages.formula([$A$B\))
+		- macro(_, A, B, ...letters) le segment $pages.formula([$A$B]) prolongé du côté de $pages.formula($B)
+		- macro(_, A, B, ...letters) une demi-droite
+	end
+	- do
+		- macro(_, A, B, ...letters) $pages.formula($A$B)
+		- macro(_, A, B, ...letters) la distance entre $pages.formula($A) et $pages.formula($B)
+		- macro(_, A, B, ...letters) un nombre
+	end
+end
+
+circlePool: do
+	- do
+		- macro(n, O, ...letters) Le cercle de centre $pages.formula($O), de rayon $pages.formula($n\0cm)
+		- macro(n, O, ...letters) l'ensemble des points situés à $pages.formula($n\0cm) exactement de $pages.formula($O)
+	end
+	- do
+		- macro(n, O, ...letters) Le disque de centre $pages.formula($O), de rayon $pages.formula($n\0cm)
+		- macro(n, O, ...letters) l'ensemble des points situés à $pages.formula($n\0cm) ou moins de $pages.formula($O)
+	end
+end
+
+macro sentence(w)
+	if w.sub(1, 1).find("[a-z]", ?rich)
+		$w.sub(1, 1).upper()$w.sub(2, -1)
+	else
+		$w
+	end
+	.
+end
+
+
+shuffle: macro(pool, ?alwaysTrue, ?alwaysFalse)
+	if alwaysTrue and alwaysFalse
+		raise Theses flags arn't compatibles
+	end
+	@QuestionFactory
+		parameters: do
+			- $Range(1, 4) // first
+			- $Range(1, 3) // wich one
+			if alwaysFalse
+				- $Range(1, 4) // second
+			else
+				- $Choice(x)
+			end
+			- $Range(1, 3) // wich one
+		end
+		hyperParameters: do
+			- $letters(3)
+			- $Range(1, 10)
+		end
+		get: macro(a, b, c, d, letters, n)
+
+			if alwaysTrue
+				set c = $a
+			end
+
+			set a = $ (a-1) % len(pool) + 1
+			set c = $ (c-1) % len(pool) + 1
+
+			set b = $ (b-1) % len(pool[a]) + 1
+			set d = $ (d-1) % len(pool[c]) + 1
+
+			// Natural wording
+			if b != 1
+				set a, b, c, d = ($c, $d, $a, $b)
+			end
+
+			if a == c and b == d
+				return
+			elseif alwaysFalse and a == c
+				return
+			// Not double
+			elseif b == d
+				return
+			// "un nombre" should be associated with a notation
+			elseif pool == lineNotationPool and (c == 4 and d == 3 and b != 1 or a == 4 and b == 3 and d != 1)
+				return
+			end
+
+			let given  = $pool[a][b]
+			let target = $pool[c][d]
+			
+			return @Question(logic)
+				instruction: @sentence $given($n, ...letters) est $target($n, ...letters)
+				solution: $ a==c
+				if a != c
+					solutionTip: @sentence $given($n, ...letters) est $pool[a][d]($n, ...letters)
+				end
+				id: $a-$b-$c-$d
+			end
+		end
+	end
+end
+
+
+
+let ifThenPool = do
+	circle: do
+		letters: 2
+		number: 1
+		valid: do
+			- macro(A, B, n) si $pages.formula($A$B = $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			// Reciproque
+			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm) alors $pages.formula($A$B = $n\0cm)
+		end
+		invalid: do
+			- macro(A, B, n) si $pages.formula($A$B < $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			- macro(A, B, n) si $pages.formula($A$B > $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			// Reciproques
+			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B < $n\0cm)
+			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B > $n\0cm)
+		end
+	end
+	disque: do
+		letters: 2
+		number: 1
+		valid: do
+			- macro(A, B, n) si $pages.formula($A$B = $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			- macro(A, B, n) si $pages.formula($A$B < $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B \\leq $n\0cm)
+		end
+		invalid: do
+			- macro(A, B, n) si $pages.formula($A$B > $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			// Reciproques
+			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B > $n\0cm)
+			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B = $n\0cm)
+			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B < $n\0cm)
+		end
+	end
+	radius: do
+		letters: 2
+		number: 0
+		valid: do
+			- macro(O, A) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+			- macro(O, A) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+			- macro(O, A) Si $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre, alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+			// Reciproques
+			- macro(O, A) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
+			- macro(O, A) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
+			- macro(O, A) Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
+		end
+		invalid: do
+			- macro(O, A) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+			- macro(O, A) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+			- macro(O, A) Si $pages.formula([$O$A]) passe par le centre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+		end
+	end
+	_in: do
+		letters: 3
+		number: 0
+		valid: do
+			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $A est "sur" $pages.formula([$B$C])
+			- macro(A, B, C) si $A est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\in [$B$C])
+		end
+		invalid: do
+			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $A est "en dehors" de $pages.formula([$B$C])
+		end
+	end
+	middle: do
+		letters: 3
+		number: 0
+		valid: do
+			- macro(A, B, C) si $pages.formula($A$B=$B$C) et $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
+			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($A$B=$B$C)
+			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B \\in [$A$C])
+		end
+		invalid: do
+			- macro(A, B, C) si $pages.formula($A$B=$B$C), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
+			- macro(A, B, C) si $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
+		end
+	end
+	inter: do
+		letters: 5
+		number: 0
+		valid: do
+			- macro(A, B, C, D, E) Si $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D)) alors $pages.formula($E) est un point d'intersection de $pages.formula(($A$B)) et $pages.formula(($C$D))
+			- macro(A, B, C, D, E) Si $pages.formula($E) est un point d'intersection de $pages.formula(($A$B)) et $pages.formula(($C$D)) alors $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D))
+		end
+		invalid: do
+			- macro(A, B, C, D, E) Si $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D)) alors $pages.formula($E) est un point d'intersection de $pages.formula([$A$B]) et $pages.formula([$C$D)]
+		end
+	end
+
+	segmentLength: do
+		letters: 3
+		number: 1
+		valid: do
+			- macro(A, B, C, n) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A$B \\leq $B$C)
+			- macro(A, B, C, n) Si $pages.formula($A$B > $B$C), alors $pages.formula($A \\notin [$B$C])
+		end
+		invalid: do
+			- macro(A, B, C, n) Si $pages.formula($A$B \\leq $B$C), alors $pages.formula($A \\in [$B$C])
+			- macro(A, B, C, n) Si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A$B > $B$C)
+		end
+	end
+
+	lineInter: do
+		letters: 3
+		number: 0
+		valid: do
+			- macro(A, B, C) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A \\in ($B$C))
+			- macro(A, B, C) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A \\in [$B$C\))
+			- macro(A, B, C) Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A \\in ($B$C))
+		end
+		invalid: do
+			- macro(A, B, C) Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A \\in [$B$C])
+			- macro(A, B, C) Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A \\in [$B$C])
+			- macro(A, B, C) Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A \\in [$B$C\))
+		end
+	end
+end
+
+ifThen: do
+	for name, infos in items(ifThenPool)
+		$name: @QuestionFactory
+			parameters: do
+				- $ Range(1, len(infos.valid) + len(infos.invalid))
+			end
+			hyperParameters: do
+				for i in seq(infos.number)
+					- $Range(1, 10)
+				end
+				letters: $ letters(infos.letters)
+			end
+			get: macro(i, letters:, ...numbers)
+				let valid = $ i <= len(infos.valid)
+				let item = if valid
+					$infos.valid[i]
+				else
+					$infos.invalid[i-len(infos.valid)]
+				end
+
+				@Question(logic)
+					instruction: @sentence $item(...List($letters), ...numbers)
+					solution: $valid
+					id: $i
+				end
+			end
+		end
+	end
+end
