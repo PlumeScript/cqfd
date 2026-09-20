@@ -1,0 +1,158 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Range from $import(../../core/parameters/range)
+let Choice from $import(../../core/parameters/set)
+
+let figure2D = $import(figure2D)
+let letters from $import(./utils)
+
+let pages = $import(pages) // Should be in render
+
+drawLine: @QuestionFactory
+	parameters: $Table()
+	hyperParameters: do
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $letters(2)
+	end
+	get: macro(a, b, c, d, letters)
+		if a==c and b==d
+			set a += 1
+		end
+		let A = $figure2D.Vect2D($a, $b)
+		let B = $figure2D.Vect2D($c, $d)
+		let _A, _B = $letters
+
+		@Question(draw)
+			description: Tracer une droite $pages.formula(($_A$_B)).
+			figure: do
+				- $ figure2D.Line(A, B)
+				- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
+				- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
+			end
+		end
+	end
+end
+
+drawSegment: @QuestionFactory
+	parameters: $Table()
+	hyperParameters: do
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $letters(2)
+	end
+	get: macro(a, b, c, d, letters)
+		if a==c and b==d
+			set a += 1
+		end
+		let A = $figure2D.Vect2D($a, $b)
+		let B = $figure2D.Vect2D($c, $d)
+		let _A, _B = $letters
+
+		@Question(draw)
+			description: Tracer un segment $pages.formula([$_A$_B]).
+			figure: do
+				- $ figure2D.Segment(A, B)
+				- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
+				- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
+			end
+		end
+	end
+end
+
+drawHalfLine: @QuestionFactory
+	parameters: $Table()
+	hyperParameters: do
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $Range(1, 5)
+		- $letters(2)
+	end
+	get: macro(a, b, c, d, letters)
+		if a==c and b==d
+			set a += 1
+		end
+		let A = $figure2D.Vect2D($a, $b)
+		let B = $figure2D.Vect2D($c, $d)
+		let _A, _B = $letters
+
+		@Question(draw)
+			description: Tracer une demi-droite $pages.formula([$_A$_B\)).
+			figure: do
+				- $ figure2D.HalfLine(A, B)
+				- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
+				- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
+			end
+		end
+	end
+end
+
+drawCircle: macro(?disque, ?radius, ?diameter)
+	@QuestionFactory
+		parameters: do
+			disque: if disque
+				$Choice(0, 1)
+			else
+				$Choice(0)
+			end
+			radius: if radius and diameter
+				$Choice(0, 1, 2)
+			elseif radius
+				$Choice(0, 1)
+			elseif diameter
+				$Choice(0, 2)
+			else
+				$Choice(0)
+			end
+		end
+		hyperParameters: do
+			- $letters(2)
+			- $Range(0, 180)
+		end
+		get: macro(letters, angle, disque:, radius:)
+			let _A, _B = $letters
+
+			@Question(draw)
+				description: if radius == 2
+					Tracer un cercle et son diamètre $pages.formula([$_A$_B]).
+				elseif radius == 1
+					Tracer un cercle de centre $pages.formula($_A) et son rayon $pages.formula([$_A$_B]).
+				else
+					Tracer un cercle de centre $pages.formula($_A).
+				end
+
+				let center = $figure2D.Vect2D(0, 0)
+				let dotA = $figure2D.Vect2D(a: $angle, r:1, ?deg)
+				let dotB = $ 2*center - dotA
+
+				figure: do
+					- $ figure2D.Circle(center, dotA, fill: disque==1 and "#aaa5")// fill should be in render
+					
+					if radius == 2
+						- $ figure2D.Segment(dotA, dotB)
+						- $ figure2D.Dot(dotA, label: _A, angle: (dotA-dotB).angle(), ?cross)
+						- $ figure2D.Dot(dotB, label: _B, angle: (dotB-dotA).angle(), ?cross)
+					elseif radius == 1
+						- $ figure2D.Segment(center, dotA)
+						- $ figure2D.Dot(center, label: _A, ?cross)
+						- $ figure2D.Dot(dotA, label: _B, angle: (dotA-dotB).angle(), ?cross)
+					else
+						- $ figure2D.Dot(center, label: _A, ?cross)
+					end
+				end
+			end
+		end
+	end
+end

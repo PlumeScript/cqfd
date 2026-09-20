@@ -15,32 +15,8 @@ let QuestionFactory from $import(../../core/cls/questionFactory)
 let Choice from $import(../../core/parameters/set)
 let Range from $import(../../core/parameters/range)
 
-let _letters = (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z)
-let letters = macro(n)
-	@QuestionFactory
-		parameters: do
-			for i in seq(n)
-				- $ Range(1, len(_letters))
-			end
-		end
-		validate: macro(...args)
-			for i in seq(len(args))
-				for j in seq(i+1, len(args))
-					if args[i] == args[j]
-						return $false
-					end
-				end
-			end
-			return $ true
-		end
-		get: macro(...args)
-			for i in args
-				- $_letters[i]
-			end
-			id: $Table.join(sep:\s, ...args)
-		end
-	end
-end
+let letters from $import(./utils)
+
 ref lineNotationPool: do
 	- do
 		- macro(_, A, B, ...letters) $pages.formula([$A$B])

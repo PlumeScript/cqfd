@@ -6,3 +6,4 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 ...import(./logic)
+...import(./draw)
