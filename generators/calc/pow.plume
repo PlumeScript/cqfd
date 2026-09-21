@@ -12,7 +12,7 @@ let Choice from $import(../../core/parameters/set)
 let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
-ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, minCompute:, maxCompute:, compute:, Number minExposant: 0, Number maxExposant:10, ?negativeExposant)
+ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, Number minCompute: 0,Number  maxCompute: 10, compute:, Number minExposant: 0, Number maxExposant:10, ?negativeExposant)
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
@@ -60,21 +60,23 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 				end
 				steps: do
 					let mul = $x
-					let absy = if y>0
+					let absy = if y>=0
 						$y
 					else
 						$ -y
 					end
-					for i in seq(absy-1)
-						set mul = $Node(*, $x, $mul)
-					end
+					if absy>0
+						for i in seq(absy-1)
+							set mul = $Node(*, $x, $mul)
+						end
 
-					if negativeExposant
-						- $Node(/, 1, $Node(^, $x, $absy))
-						- $Node(/, 1, $mul)
-						- $Node(/, 1, $(x^absy))
-					else
-						- $mul
+						if negativeExposant
+							- $Node(/, 1, $Node(^, $x, $absy))
+							- $Node(/, 1, $mul)
+							- $Node(/, 1, $(x^absy))
+						else
+							- $mul
+						end
 					end
 				end
 				id: $x^$y
@@ -184,8 +186,13 @@ powPowN2: macro(...args)
 		get: macro(calc)
 			let d
 			let x = $calc.instruction.children[1]
-			let y = $calc.instruction.children[2]
-			for i in seq(2, y-1)
+			let y = $calc.instruction.children[2].computeValue()
+			let absy = if y>0
+				$y
+			else
+				$ -y
+			end
+			for i in seq(2, absy-1)
 				if y%i==0
 					set d = $i
 					break

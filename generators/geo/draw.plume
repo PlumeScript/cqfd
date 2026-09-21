@@ -289,7 +289,7 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope)
 				description: if radius == 2
 					Tracer un $name et son diamètre $pages.formula([$_A$_B]).
 				elseif radius == 1
-					Tracer un $name de centre $pages.formula($_A) et son rayon $pages.formula([$_A$_B]).
+					Tracer un $name de centre $pages.formula($_A) et un rayon $pages.formula([$_A$_B]).
 				elseif radius == 3
 					Tracer un $name de centre $pages.formula($_A) et une corde $pages.formula([$_B$_C]).
 				else
