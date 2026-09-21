@@ -104,6 +104,9 @@ shuffle: macro(pool, ?alwaysTrue, ?alwaysFalse)
 			// Not double
 			elseif b == d
 				return
+			// Not 3 first
+			elseif pool == lineNotationPool and a == 3
+				return
 			// "un nombre" should be associated with a notation
 			elseif pool == lineNotationPool and (c == 4 and d == 3 and b != 1 or a == 4 and b == 3 and d != 1)
 				return
@@ -181,11 +184,11 @@ let ifThenPool = do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $A est "sur" $pages.formula([$B$C])
+			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
 			- macro(A, B, C) si $A est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\in [$B$C])
 		end
 		invalid: do
-			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $A est "en dehors" de $pages.formula([$B$C])
+			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
 		end
 	end
 	middle: do

@@ -6,16 +6,32 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 let pages = $import(pages)
+let ardoise = $import(ardoise)
 
 logic: do
 	instruction:macro(question)
 		$question.instruction
 	end
-	solution: macro(question)
+	solutionShort: macro(question)
 		if question.solution
 			Vrai.
 		else
 			Faux.
+		end
+
+		if question.solutionTip?
+			\s$question.solutionTip
+		end
+	end
+	solution: macro(question)
+		@ardoise.quote $question.instruction
+		\s—\s
+		@ardoise.important
+			if question.solution
+				vrai.
+			else
+				faux.
+			end
 		end
 
 		if question.solutionTip?
