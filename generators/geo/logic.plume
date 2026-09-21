@@ -152,6 +152,7 @@ let ifThenPool = do
 		valid: do
 			- macro(A, B, n) si $pages.formula($A$B = $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
 			- macro(A, B, n) si $pages.formula($A$B < $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B = $n\0cm)
 			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B \\leq $n\0cm)
 		end
 		invalid: do
@@ -163,23 +164,28 @@ let ifThenPool = do
 		end
 	end
 	radius: do
-		letters: 2
+		letters: 3
 		number: 0
 		valid: do
-			- macro(O, A) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
-			- macro(O, A) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
-			- macro(O, A) Si $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre, alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Si $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre, alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+			- macro(A, B, C) Si $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
 			// Reciproques
-			- macro(O, A) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
-			- macro(O, A) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
-			- macro(O, A) Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
+			- macro(O, A, _) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
+			- macro(O, A, _) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
+			- macro(O, A, _) Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
 		end
 		invalid: do
-			- macro(O, A) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
-			- macro(O, A) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
-			- macro(O, A) Si $pages.formula([$O$A]) passe par le centre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Si $pages.formula([$O$A]) passe par le centre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C)
+			- macro(A, B, C) Si $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
+			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C)
 		end
 	end
+
 	_in: do
 		letters: 3
 		number: 0
@@ -198,6 +204,7 @@ let ifThenPool = do
 			- macro(A, B, C) si $pages.formula($A$B=$B$C) et $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
 			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($A$B=$B$C)
 			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B \\in [$A$C])
+			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B$C = $A$C -: 2)
 		end
 		invalid: do
 			- macro(A, B, C) si $pages.formula($A$B=$B$C), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
@@ -243,6 +250,70 @@ let ifThenPool = do
 			- macro(A, B, C) Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A \\in [$B$C\))
 		end
 	end
+
+	doubleDisque: do
+		letters: 2
+		number: 2
+		valid: do
+			- macro(A, B, n1, n2)
+				if n1==n2
+					set n1 += 1
+				end
+				Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+			end
+			- macro(A, B, n1, n2)
+				if n1==n2
+					set n1 += 1
+				end
+				Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+			end
+		end
+		invalid: do
+			- macro(A, B, n1, n2)
+				if n1==n2
+					set n1 += 1
+				end
+				Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm)
+			end
+			- macro(A, B, n1, n2)
+				if n1==n2
+					set n1 += 1
+				end
+				Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm)
+			end
+			- macro(A, B, n1, n2)
+				if n1==n2
+					set n1 += 1
+				end
+				Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+			end
+		end
+	end
+
+	align: do
+		letters: 3
+		number: 0
+		valid: do
+			- macro(A, B, C) Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in ($B$C))
+			- macro(A, B, C) Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A\, $B\, $C) sont alignés
+
+			
+			// rec false
+			- macro(A, B, C) Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A\, $B\, $C) sont alignés
+
+			// rec false
+			- macro(A, B, C) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A\, $B\, $C) sont alignés
+		end
+		invalid: do
+			- macro(A, B, C) Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in [$B$C])
+			// rec true
+
+			- macro(A, B, C) Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in [$B$C\))
+			// rec true
+		end
+	end
+
+	
 end
 
 ifThen: do
@@ -253,7 +324,7 @@ ifThen: do
 			end
 			hyperParameters: do
 				for i in seq(infos.number)
-					- $Range(1, 10)
+					- $Range(1, 20)
 				end
 				letters: $ letters(infos.letters)
 			end
