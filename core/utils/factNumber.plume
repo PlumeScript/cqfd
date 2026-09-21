@@ -9,25 +9,44 @@ let primes = (2, 3, 5, 7, 11, 13)
 
 ref FactNumberCls: do
 	fromNumber: macro(x)
+		if x != x.floor()
+			raise x must be an integer
+		end
 		@FactNumberCls
-			for p in primes
-				let vp = 1
-				while x % p^vp == 0
-					set vp += 1
+			if x>0
+				sign: 1
+			elseif x<0
+				sign: -1
+				set x *= -1
+			end
+
+			if x>0
+				for p in primes
+					let vp = 1
+					while x % p^vp == 0
+						set vp += 1
+					end
+					- $(vp-1)
 				end
-				- $(vp-1)
+			else
+				isZero: $true
 			end
 		end
 	end
 
-	meta call: macro(...vp)
+	meta call: macro(sign: 1, isZero: $false, ...vp)
 		type: Number
 		vp: $vp
-		let value = 1
+		let value = $sign
 		for i, vi in enumerate(vp)
 			set value *= $ primes[i] ^ vi
 		end
-		value: $value
+		value: if isZero
+			0
+		else
+			$value
+		end
+		sign: $sign
 		meta tostring: macro()
 			$value
 		end
@@ -61,9 +80,15 @@ ref FactNumberCls: do
 			if type(x) == "number"
 				set x = $ FactNumberCls.fromNumber(x)
 			end
-			@FactNumberCls
-				for i in seq(len(primes))
-					- $ (self.vp[i]? or 0) + (x.vp[i]? or 0)
+
+			return if x.value==0 or y.value==0
+				$FactNumberCls(isZero: $true)
+			else
+				@FactNumberCls
+					sign: $ x.sign * y.sign
+					for i in seq(len(primes))
+						- $ (self.vp[i]? or 0) + (x.vp[i]? or 0)
+					end
 				end
 			end
 		end

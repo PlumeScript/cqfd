@@ -181,9 +181,14 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 					- $bottom.value
 				end
 				simplification: $k.value
-				solution: @Node(/)
-					- $ top.value / k.value
-					- $ bottom.value / k.value
+				
+				solution: if top.value/bottom.value == (top.value/bottom.value).floor()
+					$ top.value/bottom.value
+				else
+					@Node(/)
+						- $ top.value / k.value
+						- $ bottom.value / k.value
+					end
 				end
 			end
 		end
@@ -202,7 +207,7 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:)
 			let c, d = $cd
 
 			let top    = $ a*c
-			let bottom = $ c*d
+			let bottom = $ b*d
 			let k = $ top.gcd(bottom)
 
 			// Expensive

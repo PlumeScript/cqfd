@@ -206,7 +206,7 @@ end
 
 subZ2: macro(?fullSign, ...args)
 	@QuestionFactory
-		parameters: $Table($addZ2(fullSign: fullSign, ...args))
+		parameters: $Table($addZ2(fullSign: $fullSign, ...args))
 		get: macro(calc)
 			let A = $calc.instruction.children[1]
 			let B = $calc.instruction.children[2]
