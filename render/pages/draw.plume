@@ -12,7 +12,7 @@ draw: do
 		$question.description
 	end
 	solution: macro(question)
-		@figure2D.Canva2D(width: 200, height: 50)
+		@figure2D.Canva2D(width: 200, height: 100)
 			...question.figure
 		end
 	end
