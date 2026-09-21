@@ -131,38 +131,121 @@ drawHalfLine: @QuestionFactory
 end
 
 
-drawIntersection: @QuestionFactory
-	parameters: $Table()
-	hyperParameters: do
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $Range(20, 50)
-		- $Range(20, 50)
-		- $Range(20, 50)
-		- $Range(40, 120)
-		- $letters(5)
+drawIntersection: macro(?parallel, ?one, ?infinite)
+	if not parallel and not one and not infinite
+		raise Provide at least one flag
 	end
-	get: macro(a, b, c, d, s1, s2, s3, angle, letters)
-		if a==c and b==d
-			set a += 1
+	@QuestionFactory
+		parameters: do
+			- @Choice
+				if parallel
+					- parallel
+				end
+				if one
+					- one
+				end
+				if infinite
+					- infinite
+				end
+			end
 		end
-		let A = $figure2D.Vect2D($a, $b)
-		let B = $figure2D.Vect2D($c, $d)
-		let E = $ A + (B-A)*s1/100
-		let C = $ B.rotate(angle, center: E, ?deg)
-		set C += $ (C-E)*5*s2/100
-		let D = $ E + (E-C).normalize()*5*s3/100
+		hyperParameters: do
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(20, 50)
+			- $Range(20, 50)
+			- $Range(20, 50)
+			- $Range(40, 120)
+			- $letters(5)
+		end
+		get: macro(t, a, b, c, d, s1, s2, s3, angle, letters)
+			if a==c and b==d
+				set a += 1
+			end
+			let A = $figure2D.Vect2D($a, $b)
+			let B = $figure2D.Vect2D($c, $d)
+			let E = $ A + (B-A)*s1/100
+			let C = $ B.rotate(angle, center: E, ?deg)
+			set C += $ (C-E)*5*s2/100
+			let D = $ E + (E-C).normalize()*5*s3/100
 
-		let _A, _B, _C, _D, _E = $letters
+			let _A, _B, _C, _D, _E = $letters
 
-		@Question(draw)
-			description: Tracer deux droites s'intersectant en $pages.formula($_E).
-			figure: do
-				- $ figure2D.Line(A, B)
-				- $ figure2D.Line(C, D)
-				- $ figure2D.Dot(E, label: _E, angle: ((B-A).normal().angle() + (C-D).normal().angle())/2, ?cross)
+			@Question(draw)
+				description: if t == "one"
+					Tracer deux droites s'intersectant en $pages.formula($_E).
+				elseif t == "parallel"
+					Tracer deux droites sans intersections.
+				else
+					Tracer deux droites ayant une infinité d'intersections.
+				end
+				figure: if t == "one"
+					- $ figure2D.Line(A, B)
+					- $ figure2D.Line(C, D)
+					- $ figure2D.Dot(E, label: _E, angle: ((B-A).normal().angle() + (C-D).normal().angle())/2, ?cross)
+				elseif t == "parallel"
+					- $ figure2D.Line(A, B)
+					- $ figure2D.Line(A + figure2D.Vect2D(2, 2), B + figure2D.Vect2D(2, 2))
+				else
+					- $ figure2D.Line(A, B)
+				end
+			end
+		end
+	end
+end
+
+
+drawCircleIntersection: macro(?zero, ?one, ?two, ?infinite)
+	if not zero and not one and not two and not infinite
+		raise Provide at least one flag
+	end
+	@QuestionFactory
+		parameters: do
+			- @Choice
+				if zero
+					- 0
+				end
+				if one
+					- 1
+				end
+				if two
+					- 2
+				end
+				if infinite
+					- infinite
+				end
+			end
+		end
+		hyperParameters: do
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+		end
+		get: macro(count, r1, r2, delta)
+			@Question(draw)
+				description: if count == "infinite"
+					Tracer deux cercles avec une infinité de points d'intersections.
+				elseif count == 2
+					Tracer deux cercles avec deux points d'intersections.
+				elseif count == 0
+					Tracer deux cercles avec aucun point d'intersection.
+				else
+					Tracer deux cercles avec un unique point d'intersection.
+				end
+				figure: if count == 0
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0), figure2D.Vect2D(r1, 0))
+					- $ figure2D.Circle(figure2D.Vect2D(r1+r2+delta, 0), figure2D.Vect2D(r1+delta+2*r2, 0))
+				elseif count == 1
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0), figure2D.Vect2D(r1, 0))
+					- $ figure2D.Circle(figure2D.Vect2D(r1+r2, 0), figure2D.Vect2D(r1+2*r2, 0))
+				elseif count == 2
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0), figure2D.Vect2D(r1, 0))
+					- $ figure2D.Circle(figure2D.Vect2D(max(r1, r2), 0), figure2D.Vect2D(max(r1, r2)+r2, 0))
+				elseif count == "infinite"
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0),figure2D.Vect2D(r1, 0))
+				end
 			end
 		end
 	end
