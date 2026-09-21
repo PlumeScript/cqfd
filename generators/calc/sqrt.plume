@@ -11,6 +11,14 @@ let Node from $import(../../core/utils/tree)
 let Decimal from $import(../../core/parameters/range)
 let getCompute from $import(./utils)
 
+macro clamp(x)
+	if x < 10^-10 and x > -(10^-10)
+		0
+	else
+		$x
+	end
+end
+
 sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
@@ -21,8 +29,8 @@ sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 		set maxCompute = $compute
 	end
 
-	set minFigures /= 2
-	set maxFigures /= 2
+	set minFigures = $ (minFigures / 2).floor()
+	set maxFigures = $ (maxFigures / 2).floor()
 
 	@QuestionFactory
 		parameters: do
@@ -84,7 +92,8 @@ sqrtR: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
 		end
 		validate: macro(x)
-			$ x^0.5 != (x^0.5).floor()
+
+			$ clamp(x^0.5 - (x^0.5).floor())>0
 		end
 		get: macro(x)
 			@Question(approx)

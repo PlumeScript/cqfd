@@ -5,8 +5,41 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+macro getValue(child)
+	return if type(child) == "table" and child.type? == "treeNode"
+		$child.computeValue()
+	else
+		$child
+	end
+end
+
 ref Node: macro(label, ...children)
 	type: treeNode
 	label: $label
 	children: $children
+	computeValue: macro()
+		if self.label == "+"
+			let result = 0
+			for child in self.children
+				set result += $ getValue(child) 
+			end
+			return $ result
+		elseif self.label == "*"
+			let result = 0
+			for child in self.children
+				set result *= $ getValue(child) 
+			end
+			return $ result
+		elseif self.label == "-"
+			if len(self.children) == 1
+				return $ -getValue(self.children[1])
+			else
+				return $ getValue(self.children[1]) - getValue(self.children[2])
+			end
+		elseif self.label == "/" or self.label == ":-"
+			return $ getValue(self.children[1]) / getValue(self.children[2])
+		else
+			raise Unsuported type `$self.label` for computeValue.
+		end
+	end
 end
