@@ -7,6 +7,21 @@ Licensed under the MIT License — see LICENSE for details.
 
 let primes = (2, 3, 5, 7, 11, 13)
 
+macro getNextPrime()
+	let candidate = $ Table.at(primes, -1)+1
+	let index = 0
+	while true
+		set index += 1
+		if candidate % primes[index] == 0
+			set candidate += 1
+			set index = 0
+		elseif index == len(primes)
+			break
+		end
+	end
+	run $ Table.append(primes, candidate)
+end
+
 ref FactNumberCls: do
 	fromNumber: macro(x)
 		if x != x.floor()
@@ -21,11 +36,18 @@ ref FactNumberCls: do
 			end
 
 			if x>0
-				for p in primes
+				let i=0
+				while x>1
+					set i += 1
+					if i > len(primes)
+						run $getNextPrime()
+					end
+					let p = $primes[i]
 					let vp = 1
 					while x % p^vp == 0
 						set vp += 1
 					end
+					set x /= $ p^(vp-1)
 					- $(vp-1)
 				end
 			else
@@ -56,7 +78,7 @@ ref FactNumberCls: do
 				set x = $ FactNumberCls.fromNumber(x)
 			end
 			@FactNumberCls
-				for i in seq(len(primes))
+				for i in seq(max(len(self.vp), len(x.vp)))
 					- $ min(self.vp[i]? or 0, x.vp[i]? or 0)
 				end
 			end
@@ -67,7 +89,7 @@ ref FactNumberCls: do
 				set x = $ FactNumberCls.fromNumber(x)
 			end
 			@FactNumberCls
-				for i in seq(len(primes))
+				for i in seq(max(len(self.vp), len(x.vp)))
 					- $ max(self.vp[i]? or 0, x.vp[i]? or 0)
 				end
 			end
@@ -86,7 +108,7 @@ ref FactNumberCls: do
 			else
 				@FactNumberCls
 					sign: $ x.sign * y.sign
-					for i in seq(len(primes))
+					for i in seq(max(len(self.vp), len(x.vp)))
 						- $ (self.vp[i]? or 0) + (x.vp[i]? or 0)
 					end
 				end
