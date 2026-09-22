@@ -38,28 +38,42 @@ drawLine: @QuestionFactory
 				- $ figure2D.Line(A, B)
 				- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
 				- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
+				- $ figure2D.Dot(B+(B-A)/2) // extend canva
+				- $ figure2D.Dot(A+(A-B)/2) // extend canva
 			end
 		end
 	end
 end
 
 
-drawSegment: macro(?length, ?segment, ?middle)
-	if not length and not segment
+drawSegment: macro(?length, ?segment, ?middle, ?dotin)
+	if not length and not segment and not dotin
 		raise Must provide at least "length" or "segment"
 	end
 
 	@QuestionFactory
-		parameters: $Table()
+		parameters: do
+			- @Choice
+				- 0
+				if middle
+					- 1
+				end
+				if dotin
+					- 2
+					- 3
+				end
+			end
+		end
 		hyperParameters: do
 			- $Range(1, 5)
 			- $Range(1, 5)
 			- $Range(1, 5)
 			- $Range(1, 5)
 			- $Range(2, 5)
+			- $Range(30, 90)
 			- $letters(3)
 		end
-		get: macro(a, b, c, d, l, letters)
+		get: macro(dot, a, b, c, d, l, r, letters)
 			if a==c and b==d
 				set a += 1
 			end
@@ -76,8 +90,12 @@ drawSegment: macro(?length, ?segment, ?middle)
 					else
 						Tracer un segment $pages.formula([$_A$_B])
 					end
-					if middle
-						\set son milieu $pages.formula($_C)
+					if dot == 1
+						\set placer son milieu $pages.formula($_C)
+					elseif dot == 2
+						\set placer $pages.formula($_C \\in [$_A$_B])
+					elseif dot == 3
+						\set placer $pages.formula($_C \\notin [$_A$_B])
 					end
 					.
 				end
@@ -90,8 +108,12 @@ drawSegment: macro(?length, ?segment, ?middle)
 					end
 					- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
 					- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
-					if middle
+					if dot == 1
 						- $ figure2D.Dot((A+B)/2, label: _C, angle: (B-A).normal().angle(), ?cross)
+					elseif dot==2
+						- $ figure2D.Dot(A + (B-A)*r/100, label: _C, angle: (B-A).normal().angle(), ?cross)
+					elseif dot==3
+						- $ figure2D.Dot(A + (B-A)*r/100 + (B-A).normal().normalize()*2, label: _C, angle: (B-A).normal().angle(), ?cross)
 					end
 					if length
 						- $ figure2D.Dot((A+B)/2, label: l.."cm", angle: (B-A).normal().angle(), direction: (B-A).angle())
@@ -125,6 +147,7 @@ drawHalfLine: @QuestionFactory
 				- $ figure2D.HalfLine(A, B)
 				- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
 				- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
+				- $ figure2D.Dot(B+(B-A)/2) // extend canva
 			end
 		end
 	end
@@ -251,7 +274,7 @@ drawCircleIntersection: macro(?zero, ?one, ?two, ?infinite)
 	end
 end
 
-drawCircle: macro(?disque, ?radius, ?diameter, ?rope)
+drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin)
 	@QuestionFactory
 		parameters: do
 			disque: if disque
@@ -269,6 +292,10 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope)
 				end
 				if rope
 					- 3
+				end
+				if dotin
+					- 4
+					- 5
 				end
 			end
 		end
@@ -292,6 +319,10 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope)
 					Tracer un $name de centre $pages.formula($_A) et un rayon $pages.formula([$_A$_B]).
 				elseif radius == 3
 					Tracer un $name de centre $pages.formula($_A) et une corde $pages.formula([$_B$_C]).
+				elseif radius == 4
+					Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\in \\mathscr C).
+				elseif radius == 5
+					Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\notin \\mathscr C).
 				else
 					Tracer un $name de centre $pages.formula($_A).
 				end
@@ -300,12 +331,30 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope)
 				let dotA = $figure2D.Vect2D(a: $angle1, r:1, ?deg)
 				let dotB = $ 2*center - dotA
 				let dotC =  $figure2D.Vect2D(a: $(angle1+angle2), r:1, ?deg)
-
+				let dotD = if disque==1
+					if radius == 4
+						$ figure2D.Vect2D(a: angle1, r:0.5, ?deg)
+					else
+						$ figure2D.Vect2D(a: angle1, r:1.5, ?deg)
+					end
+				else
+					if radius == 4
+						$figure2D.Vect2D(a: $angle1, r:1, ?deg)
+					else
+						if angle2>60
+							$ figure2D.Vect2D(a: angle1, r:1.5, ?deg)
+						else
+							$ figure2D.Vect2D(a: angle1, r:0.5, ?deg)
+						end
+					end
+				end
 
 				figure: do
 					- $ figure2D.Circle(center, dotA, fill: disque==1 and "#aaa5")// fill should be in render
 					
-					if radius == 3
+					if radius == 5 or radius == 4
+						- $ figure2D.Dot(dotD, label: _B, angle: (center-dotB).angle(), ?cross)
+					elseif radius == 3
 						- $ figure2D.Segment(dotB, dotC)
 						- $ figure2D.Dot(center, label: _A, angle: (dotA-dotB).angle(), ?cross)
 						- $ figure2D.Dot(dotB, label: _B, angle: (dotB-dotA).angle(), ?cross)
@@ -321,6 +370,121 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope)
 					else
 						- $ figure2D.Dot(center, label: _A, ?cross)
 					end
+				end
+			end
+		end
+	end
+end
+
+draw3CircleDot: @QuestionFactory
+	parameters: $Table()
+	hyperParameters: do
+		- $Range(2, 6)
+		- $Range(0, 80)
+		- $Range(30, 80)
+		- $Range(30, 80)
+		- $letters(3)
+	end
+	get: macro(r, a1, a2, a3, letters)
+		let _A, _B, _C = $letters
+
+		let center = $figure2D.Vect2D()
+		let A = $figure2D.Vect2D(r: 1, a: $a1)
+		let B = $figure2D.Vect2D(r: 1, a: $(a1+a2))
+		let C = $figure2D.Vect2D(r: 1, a: $(a1+a2+a3))
+
+		@Question(draw)
+			description: Soit $pages.formula(\\mathscr C) un cercle de rayon $pages.formula($r\0cm). Sans le tracer, placer $pages.formula($_A\, $_B\, $_C) appartenants à $pages.formula(\\mathscr C).
+			figure: do
+				- $ figure2D.Dot(center, ?cross)
+
+				- $ figure2D.Segment(center, A, style: (stroke: (strokeDasharray: "5")))
+				- $ figure2D.Segment(center, B, style: (stroke: (strokeDasharray: "5")))
+				- $ figure2D.Segment(center, C, style: (stroke: (strokeDasharray: "5")))
+
+				let label = $r\0cm
+				- $ figure2D.Dot((center+A)/2, label: label)
+				- $ figure2D.Dot((center+B)/2, label: label)
+				- $ figure2D.Dot((center+C)/2, label: label)
+
+				- $ figure2D.Dot(A, label: _A, angle: a1, ?cross)
+				- $ figure2D.Dot(B, label: _B, angle: a1+a2, ?cross)
+				- $ figure2D.Dot(C, label: _C, angle: a1+a2+a3, ?cross)
+
+			end
+		end
+	end
+end
+
+draw3DotLine: macro(?line, ?halfLine, ?segment, ?notin)
+	if not line and not halfLine and not segment
+		raise Provide at least one flag.
+	end
+	@QuestionFactory
+		parameters: do
+			- @Choice
+				if line
+					- line
+				end
+				if halfLine
+					- halfLine
+				end
+				if segment
+					- segment
+				end
+			end
+			- $Choice(1, 2)
+		end
+
+		hyperParameters: do
+			- $Range(20, 80)
+			- $Range(0, 360)
+			- $letters(3)
+		end
+
+		get: macro(line, inside, r, a, letters)
+			let _A, _B, _C = $letters
+
+			let center = $figure2D.Vect2D()
+			let B = $figure2D.Vect2D()
+			let C = $ figure2D.Vect2D(r: 1, a: a)
+			let A = if inside==1
+				if line=="line" or line=="halfLine"
+					$ figure2D.Vect2D(r: 2, a: a)
+				elseif line=="segment"
+					$ figure2D.Vect2D(r: r/100, a: a)
+				end
+			else
+				if line=="line"
+					$ figure2D.Vect2D(r: 2, a: a*2)
+				elseif line=="halfLine"
+					$ figure2D.Vect2D(r: -r/100, a: a)
+				elseif line=="segment"
+					$ figure2D.Vect2D(r: 2, a: a)
+				end
+			end
+
+			@Question(draw)
+				let _in = if inside==1
+					\\in
+				else
+					\\notin
+				end
+				let align = if inside == 2 and line != "line"
+					\salignés
+				end
+
+				description: if line=="line"
+					Sans tracer la droite, placer $pages.formula($_A\, $_B\, $_C)$align tel que $pages.formula($_A $_in ($_B$_C)).
+					elseif line=="segment"
+					Sans tracer le segment, placer $pages.formula($_A\, $_B\, $_C)$align tel que $pages.formula($_A $_in [$_B$_C]).
+					elseif line=="halfLine"
+					Sans tracer la demi-droite, placer $pages.formula($_A\, $_B\, $_C)$align tel que $pages.formula($_A $_in [$_B$_C\)).
+				end
+				figure: do
+					- $ figure2D.Dot(A, label: _A, angle: a+Math.pi/2, ?cross)
+					- $ figure2D.Dot(B, label: _B, angle: a+Math.pi/2, ?cross)
+					- $ figure2D.Dot(C, label: _C, angle: a+Math.pi/2, ?cross)
 				end
 			end
 		end
