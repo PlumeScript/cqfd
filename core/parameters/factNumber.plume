@@ -190,7 +190,7 @@ FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?mu
 			let a = @FactNumberCls
 				for i in seq(1, maxP)
 					if choice[i] == 0
-						- $b.vp[i]
+						- $ b.vp[i]? or 0
 					else
 						- 0
 					end
@@ -199,7 +199,7 @@ FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?mu
 			let c= @FactNumberCls
 				for i in seq(1, maxP)
 					if choice[maxP+i] == 1
-						- $d.vp[i]
+						- $ d.vp[i]? or 0
 					else
 						- 0
 					end
