@@ -353,6 +353,7 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin)
 					- $ figure2D.Circle(center, dotA, fill: disque==1 and "#aaa5")// fill should be in render
 					
 					if radius == 5 or radius == 4
+						- $ figure2D.Dot(center, label: _A, angle: (dotA-dotB).angle(), ?cross)
 						- $ figure2D.Dot(dotD, label: _B, angle: (center-dotB).angle(), ?cross)
 					elseif radius == 3
 						- $ figure2D.Segment(dotB, dotC)

@@ -204,7 +204,7 @@ let ifThenPool = do
 			- macro(A, B, C) si $pages.formula($A$B=$B$C) et $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
 			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($A$B=$B$C)
 			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B \\in [$A$C])
-			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B$C = $A$C -: 2)
+			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B$C = $A$C \\div 2)
 		end
 		invalid: do
 			- macro(A, B, C) si $pages.formula($A$B=$B$C), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
