@@ -152,7 +152,7 @@ reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK:
 				- $Choice(1)
 			end
 		end
-		hyperParameter: do
+		hyperParameters: do
 			- $Range(0, 100)
 		end
 		get: macro(base, second, switch)
