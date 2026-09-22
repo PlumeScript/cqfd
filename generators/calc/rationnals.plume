@@ -5,7 +5,7 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-let FactNumber2Coprimes, FactNumber4 from $import(../../core/parameters/factNumber)
+let FactNumber, FactNumber2Coprimes, FactNumber4 from $import(../../core/parameters/factNumber)
 let Range from $import(../../core/parameters/range)
 let Choice from $import(../../core/parameters/set)
 
@@ -13,6 +13,16 @@ let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 let FactNumberCls from $import(../../core/utils/factNumber)
+
+macro prettyFrac(a, b)
+	if a == 0
+		0
+	elseif b == 1
+		$a
+	else
+		$Node(/, $a, $b)
+	end
+end
 
 ref simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
@@ -33,6 +43,24 @@ ref simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, 
 					- $r[1].value
 					- $r[2].value
 				end
+			end
+		end
+	end
+end
+
+ref simplifyRationnalInteger: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			- $ Range(minK, maxK)
+		end
+		get: macro(r, k)
+			@Question(calcul)
+				instruction: @Node(/)
+					- $ r.value * k
+					- $ k
+				end
+				solution: $r.value
 			end
 		end
 	end
@@ -110,34 +138,57 @@ rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 1
 	end
 end
 
-reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?multiple, ?coprime)
+reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?multiple, ?coprime, ?integer)
+	if integer and (multiple or coprime)
+		raise Integer flag must be used alone
+	end
 	@QuestionFactory
 		parameters: do
-			- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime)
+			if integer
+				- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+				- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			else
+				- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime)
+				- $Choice(1)
+			end
 		end
-		get: macro(base)
+		hyperParameter: do
+			- $Range(0, 100)
+		end
+		get: macro(base, second, switch)
 			@Question(reduceCommonDenominator)
-				let a, b, c, d = $base
+				let a, b, c, d = if integer
+					- $base
+					- $ FactNumberCls.fromNumber(1)
+					...second
+				else
+					...base
+				end
+
+				if switch % 2 == 0
+					set a, b, c, d = ($c, $d, $a, $b)
+				end
+
 				let e = $ b.lcm(d)
 				let as = $ a.value * e.value / b.value
 				let cs = $ c.value * e.value / d.value
 
 				instruction: do
-					- @Node(/)
+					- @prettyFrac
 						- $a.value
 						- $b.value
 					end
-					- @Node(/)
+					- @prettyFrac
 						- $c.value
 						- $d.value
 					end
 				end
 				solution: do
-					- @Node(/)
+					- @prettyFrac
 						- $as
 						- $e.value
 					end
-					- @Node(/)
+					- @prettyFrac
 						- $cs
 						- $e.value
 					end
@@ -147,36 +198,59 @@ reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK:
 	end
 end
 
-addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime)
+addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer)
 	@QuestionFactory
 		parameters: do
-			- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime, sameDenominator: sameDenominator, noSameNumerator: noSameNumerator)
+			if integer
+				- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+				- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			else
+				- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime, sameDenominator: sameDenominator, noSameNumerator: noSameNumerator)
+				- $Choice(1)
+			end
 			- $Choice(+, -)
 		end
-		get: macro(base, opp)
+		hyperParameters: do
+			- $Range(0, 100)
+		end
+		get: macro(base, second, opp, switch)
 			@Question(calcul)
-				let a, b, c, d = $base
+				let a, b, c, d = if integer
+					- $base
+					- $ FactNumberCls.fromNumber(1)
+					...second
+				else
+					...base
+				end
+
+				if switch % 2 == 0
+					set a, b, c, d = ($c, $d, $a, $b)
+				end
+
+				
+
 				let bottom = $ b.lcm(d)
 				let left  = $ a.value * bottom.value / b.value
 				let right = $ c.value * bottom.value / d.value
+
 				if opp == "-"
 					set right *= -1
 				end
+
 				let top = $ FactNumberCls.fromNumber(left + right)
 				let k = $ top.gcd(bottom)
 
-
 				instruction: @Node($opp)
-					- @Node(/)
+					- @prettyFrac
 						- $a.value
 						- $b.value
 					end
-					- @Node(/)
+					- @prettyFrac
 						- $c.value
 						- $d.value
 					end
 				end
-				beforeSimplification: @Node(/)
+				beforeSimplification: @prettyFrac
 					- $top.value
 					- $bottom.value
 				end
