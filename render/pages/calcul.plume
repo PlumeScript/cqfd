@@ -159,8 +159,12 @@ calcul_notdef: do
 		$ pages.formula(renderLatexAST(question.instruction))
 	end
 
-	ref solution: macro(question)
+	solutionShort: macro(question)
 		Non défini.
+	end
+	solution: macro(question)
+		$ pages.formula(renderLatexAST(question.instruction))
+		\s:\snon défini.
 	end
 end
 
