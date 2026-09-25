@@ -167,19 +167,19 @@ let ifThenPool = do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(O, A, _) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Si $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre, alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre, alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
 			- macro(A, B, C) Si $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
 			// Reciproques
-			- macro(O, A, _) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
-			- macro(O, A, _) Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
-			- macro(O, A, _) Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
 		end
 		invalid: do
-			- macro(O, A, _) Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Si $pages.formula([$O$A]) passe par le centre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) passe par le centre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
 			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C)
 			- macro(A, B, C) Si $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
 			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C)
@@ -191,7 +191,7 @@ let ifThenPool = do
 		number: 0
 		valid: do
 			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
-			- macro(A, B, C) si $A est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\in [$B$C])
+			- macro(A, B, C) si $pages.formula($A) est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\in [$B$C])
 		end
 		invalid: do
 			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
