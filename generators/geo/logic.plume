@@ -192,9 +192,12 @@ let ifThenPool = do
 		valid: do
 			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
 			- macro(A, B, C) si $pages.formula($A) est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\in [$B$C])
+			- macro(A, B, C) si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
 		end
 		invalid: do
 			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
+			- macro(A, B, C) si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
+			- macro(A, B, C) si $pages.formula($A) est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\notin [$B$C])
 		end
 	end
 	middle: do
