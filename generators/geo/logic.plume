@@ -8,6 +8,13 @@ Licensed under the MIT License — see LICENSE for details.
 // Dirty and rigid
 // sub-optimal letter generation
 
+// Todo: centre du cercle & milieu du diamètre
+// Centre appartient au cercle?
+// point de la corde appartient au cercle?
+// corde est diamètre? diamètre est corde?
+// Intersection entre cercles/disques de centres différents
+// corde/diamètre est segment/droite/demi-droite
+
 let pages = $import(pages) // Should be in render
 
 let Question from $import(../../core/cls/question)
