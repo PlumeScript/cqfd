@@ -62,7 +62,6 @@ macro sentence(w)
 	else
 		$w
 	end
-	.
 end
 
 
@@ -122,9 +121,15 @@ shuffle: macro(pool, ?alwaysTrue, ?alwaysFalse)
 			
 			return @Question(logic)
 				instruction: @sentence $given($n, ...letters) est $target($n, ...letters)
-				solution: $ a==c
-				if a != c
-					solutionTip: @sentence $given($n, ...letters) est $pool[a][d]($n, ...letters)
+				solution: do
+					isTruth: $ a==c
+					infos: do
+						explanation: if a != c
+							@sentence $given($n, ...letters) est $pool[a][d]($n, ...letters)
+						else
+							par définition
+						end
+					end
 				end
 				id: $a-$b-$c-$d
 			end
@@ -189,59 +194,215 @@ let ifThenPool = do
 		letters: 2
 		number: 1
 		valid: do
-			- macro(A, B, n) si $pages.formula($A$B = $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
-			- macro(A, B, n) si $pages.formula($A$B < $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
-			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B = $n\0cm)
-			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B \\leq $n\0cm)
+			- macro(A, B, n)
+				sentence: si $pages.formula($A$B = $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+				explanation: par définition
+			end
+			- macro(A, B, n)
+				sentence: si $pages.formula($A$B < $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+				explanation: par définition
+			end
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B = $n\0cm)
+				explanation: par définition
+			end
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B \\leq $n\0cm)
+				explanation: par définition
+			end
 		end
 		invalid: do
-			- macro(A, B, n) si $pages.formula($A$B > $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			- macro(A, B, n)
+				sentence: si $pages.formula($A$B > $n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((1.5, 0), label: $A, ?cross)
+				end
+			end
 			// Reciproques
-			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B > $n\0cm)
-			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B = $n\0cm)
-			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B < $n\0cm)
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B > $n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((0.5, 0.5), label: $A, ?cross)
+				end
+			end
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B = $n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((0.5, 0), label: $A, ?cross)
+				end
+			end
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B < $n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((-1, 0), label: $A, angle: $(-Math.pi), ?cross)
+				end
+			end
 		end
 	end
 	center: do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(A, B, C) si $pages.formula($A) est le centre du disque $pages.formula(\\mathscr D), alors $pages.formula($A \\in \\mathscr D)
-			- macro(A, B, C) si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula($C \\in [$A$B])
-			- macro(A, B, C) si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula( $A$C=$C$B)
-			- macro(A, B, C) si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula($C) est le milieu de $pages.formula([$A$B])
-			- macro(A, B, C) Si $pages.formula([$A$C]) est un rayon du cercle $pages.formula(\\mathscr C), alors   le centre de $pages.formula(\\mathscr C) est $pages.formula($A) ou $pages.formula($C)
+			- macro(A, B, C)
+				sentence: si $pages.formula($A) est le centre du disque $pages.formula(\\mathscr D), alors $pages.formula($A \\in \\mathscr D)
+				explanation: le centre est bien à moins d'un rayon... Du centre!
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula($C \\in [$A$B])
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula( $A$C=$C$B)
+				explanation: le centre du cercle est le milieu de tout diamètre
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula($C) est le milieu de $pages.formula([$A$B])
+				explanation: le centre du cercle est le milieu de tout diamètre
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula([$A$C]) est un rayon du cercle $pages.formula(\\mathscr C), alors   le centre de $pages.formula(\\mathscr C) est $pages.formula($A) ou $pages.formula($C)
+				explanation: un rayon est le segment qui relie le centre du cercle à un point du cercle
+			end
 		end
 		invalid: do
-			- macro(A, B, C) si $pages.formula($A) est le centre du cercle $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
-			- macro(A, B, C) Soit $pages.formula(\\mathscr D) un disque. Si $pages.formula($A \\in \\mathscr D), alors $pages.formula($A) est le centre de $pages.formula(\\mathscr D)
-			- macro(A, B, C) Si $pages.formula([$A$C]) est un rayon du cercle $pages.formula(\\mathscr C), alors  le centre de $pages.formula(\\mathscr C)  est $pages.formula($A)
+			- macro(A, B, C)
+				sentence: si $pages.formula($A) est le centre du cercle $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $A, ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: Soit $pages.formula(\\mathscr D) un disque. Si $pages.formula($A \\in \\mathscr D), alors $pages.formula($A) est le centre de $pages.formula(\\mathscr D)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0.5, 0.5), label: $A, ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula([$A$C]) est un rayon du cercle $pages.formula(\\mathscr C), alors  le centre de $pages.formula(\\mathscr C)  est $pages.formula($A)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Segment((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $C, ?cross)
+					- $figure2D.Dot((1, 0), label: $A, ?cross)
+				end
+			end
 		end
 	end
 	radius: do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre, alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
-			- macro(A, B, C) Si $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+				explanation: par définition
+			end
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+				explanation: par définition
+			end
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre, alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
+				explanation: tous les points du cercle sont à la même distance de son centre
+			end
 			// Reciproques
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
-
-			- macro(O, A, B) Soit $pages.formula(\\mathscr D) un disque de diamètre $pages.formula([$O$A]). Si $pages.formula($B \\in  [$O$A]) alors $pages.formula($B \\in \\mathscr D).
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
+				explanation: par définition
+			end
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
+				explanation: par définition
+			end
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
+				explanation: par définition
+			end
+			- macro(O, A, B)
+				sentence: Soit $pages.formula(\\mathscr D) un disque de diamètre $pages.formula([$O$A]). Si $pages.formula($B \\in  [$O$A]) alors $pages.formula($B \\in \\mathscr D)
+				explanation: un disque contient tous les points de son diamètre
+			end
 		end
 		invalid: do
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
-			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) passe par le centre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
-			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C)
-			- macro(A, B, C) Si $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
-			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C)
-
-			- macro(O, A, B) Soit $pages.formula(\\mathscr C) un cercle de diamètre $pages.formula([$O$A]). Si $pages.formula($B \\in  [$O$A]) alors $pages.formula($B \\in \\mathscr C)
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), ?cross)
+					- $figure2D.Segment((1, 0), (0, 1))
+					- $figure2D.Dot((1, 0), label: $O, ?cross)
+					- $figure2D.Dot((0, 1), label: $A, ?cross)
+				end
+			end
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O) est le centre de $pages.formula(\\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Segment((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $O, ?cross)
+					- $figure2D.Dot((1, 0), label: $A, ?cross)
+				end
+			end
+			- macro(O, A, _)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) passe par le centre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), ?cross)
+					- $figure2D.Segment((-2, 0), (1.5, 0))
+					- $figure2D.Dot((-2, 0), label: $O, ?cross)
+					- $figure2D.Dot((1.5, 0), label: $A, ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $C, ?cross)
+					- $figure2D.Dot((2, 0), label: $A, ?cross)
+					- $figure2D.Dot((0, 2), label: $B, ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $C, ?cross)
+					- $figure2D.Dot((0.4, -0.4), label: $A, ?cross)
+					- $figure2D.Dot((0, 0.8), label: $B,  angle:$(Math.pi/2), ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $C, ?cross)
+					- $figure2D.Dot((2, 0), label: $A, ?cross)
+					- $figure2D.Dot((0, 2), label: $B, ?cross)
+				end
+			end
+			- macro(O, A, B)
+				sentence: Soit $pages.formula(\\mathscr C) un cercle de diamètre $pages.formula([$O$A]). Si $pages.formula($B \\in  [$O$A]) alors $pages.formula($B \\in \\mathscr C)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Segment((-1, 0), (1, 0))
+					- $figure2D.Dot((-1, 0), label: $O, ?cross)
+					- $figure2D.Dot((1, 0), label: $A, ?cross)
+					- $figure2D.Dot((0.5, 0), label: $B, ?cross)
+				end
+			end
 		end
 	end
 
@@ -249,39 +410,114 @@ let ifThenPool = do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
-			- macro(A, B, C) si $pages.formula($A) est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\in [$B$C])
-			- macro(A, B, C) si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
+			- macro(A, B, C)
+				sentence: si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($A) est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\in [$B$C])
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
+				explanation: par définition
+			end
 		end
 		invalid: do
-			- macro(A, B, C) si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
-			- macro(A, B, C) si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
-			- macro(A, B, C) si $pages.formula($A) est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\notin [$B$C])
+			- macro(A, B, C)
+				sentence: si $pages.formula($A \\in [$B$C]), alors $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
+				explanation: $pages.formula($A) est "sur" de $pages.formula([$B$C])
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A) est "sur" $pages.formula([$B$C])
+				explanation: $pages.formula($A) est "en dehors" de $pages.formula([$B$C])
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($A) est "sur" $pages.formula([$B$C]), alors on écrira $pages.formula($A \\notin [$B$C])
+				explanation:  on écrira $pages.formula($A \\in [$B$C])
+			end
 		end
 	end
 	middle: do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(A, B, C) si $pages.formula($A$B=$B$C) et $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
-			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($A$B=$B$C)
-			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B \\in [$A$C])
-			- macro(A, B, C) si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B$C = $A$C \\div 2)
+			- macro(A, B, C)
+				sentence: si $pages.formula($A$B=$B$C) et $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($A$B=$B$C)
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B \\in [$A$C])
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($B) est le milieu de $pages.formula([$A$C]), alors $pages.formula($B$C = $A$C \\div 2)
+				explanation: le milieu de $pages.formula([$A$C]) est à égale distance des extrémités, soit la moitié de la longueur
+			end
 		end
 		invalid: do
-			- macro(A, B, C) si $pages.formula($A$B=$B$C), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
-			- macro(A, B, C) si $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
+			- macro(A, B, C)
+				sentence: si $pages.formula($A$B=$B$C), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
+				figure: do
+					- $figure2D.Segment((-1, 0), (1, 0))
+					- $figure2D.Dot((-1, 0), label: $A, ?cross)
+					- $figure2D.Dot((1, 0), label: $C, ?cross)
+					- $figure2D.Dot((0, 1), label: $B, ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: si $pages.formula($B \\in [$A$C]), alors $pages.formula($B) est le milieu de $pages.formula([$A$C])
+				figure: do
+					- $figure2D.Segment((-1, 0), (1, 0))
+					- $figure2D.Dot((-1, 0), label: $A, ?cross)
+					- $figure2D.Dot((1, 0), label: $C, ?cross)
+					- $figure2D.Dot((-0.5, 0), label: $B, ?cross)
+				end
+			end
 		end
 	end
 	inter: do
 		letters: 5
 		number: 0
 		valid: do
-			- macro(A, B, C, D, E) Si $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D)) alors $pages.formula($E) est un point d'intersection de $pages.formula(($A$B)) et $pages.formula(($C$D))
-			- macro(A, B, C, D, E) Si $pages.formula($E) est un point d'intersection de $pages.formula(($A$B)) et $pages.formula(($C$D)) alors $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D))
+			- macro(A, B, C, D, E)
+				sentence: Si $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D)) alors $pages.formula($E) est un point d'intersection de $pages.formula(($A$B)) et $pages.formula(($C$D))
+				explanation: par définition
+			end
+			- macro(A, B, C, D, E)
+				sentence: Si $pages.formula($E) est un point d'intersection de $pages.formula(($A$B)) et $pages.formula(($C$D)) alors $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D))
+				explanation: par définition
+			end
 		end
 		invalid: do
-			- macro(A, B, C, D, E) Si $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D)) alors $pages.formula($E) est un point d'intersection de $pages.formula([$A$B]) et $pages.formula([$C$D)]
+			- macro(A, B, C, D, E)
+				sentence: Si $pages.formula($E) est un point d'intersection de $pages.formula(($A$B)) et $pages.formula(($C$D)) alors $pages.formula($E \\in [$A$B]) et $pages.formula($E \\in [$C$D)]
+				figure: do
+					- $figure2D.Line((0, 0), (1, 0))
+					- $figure2D.Line((2, 1), (2, 2))
+					- $figure2D.Dot((0, 0), label: $A, ?cross)
+					- $figure2D.Dot((1, 0), label: $B, ?cross)
+					- $figure2D.Dot((2, 1), label: $C, angle: 0, ?cross)
+					- $figure2D.Dot((2, 2), label: $D, angle: 0, ?cross)
+					- $figure2D.Dot((2, 0), label: $E, angle: $(-Math.pi/4), ?cross)
+				end
+			end
+			- macro(A, B, C, D, E)
+				sentence: Si $pages.formula($E \\in ($A$B)) et $pages.formula($E \\in ($C$D)) alors $pages.formula($E) est un point d'intersection de $pages.formula([$A$B]) et $pages.formula([$C$D])
+				figure: do
+					- $figure2D.Line((0, 0), (1, 0))
+					- $figure2D.Line((2, 1), (2, 2))
+					- $figure2D.Dot((0, 0), label: $A, ?cross)
+					- $figure2D.Dot((1, 0), label: $B, ?cross)
+					- $figure2D.Dot((2, 1), label: $C, angle: 0, ?cross)
+					- $figure2D.Dot((2, 2), label: $D, angle: 0, ?cross)
+					- $figure2D.Dot((2, 0), label: $E, angle: $(-Math.pi/4), ?cross)
+				end
+			end
 		end
 	end
 
@@ -289,12 +525,34 @@ let ifThenPool = do
 		letters: 3
 		number: 1
 		valid: do
-			- macro(A, B, C, n) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A$B \\leq $B$C)
-			- macro(A, B, C, n) Si $pages.formula($A$B > $B$C), alors $pages.formula($A \\notin [$B$C])
+			- macro(A, B, C, n)
+				sentence: Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A$B \\leq $B$C)
+				explanation: si $pages.formula($A \\in [$B$C]), alors $pages.formula($A$B + $A$C = $B$C), donc $pages.formula($A$B \\leq $B$C)
+			end
+			- macro(A, B, C, n)
+				sentence: Si $pages.formula($A$B > $B$C), alors $pages.formula($A \\notin [$B$C])
+				explanation: par définition
+			end
 		end
 		invalid: do
-			- macro(A, B, C, n) Si $pages.formula($A$B \\leq $B$C), alors $pages.formula($A \\in [$B$C])
-			- macro(A, B, C, n) Si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A$B > $B$C)
+			- macro(A, B, C, n)
+				sentence: Si $pages.formula($A$B \\leq $B$C), alors $pages.formula($A \\in [$B$C])
+				figure: do
+					- $figure2D.Segment((0, 0), (2, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((2, 0), label: $C, ?cross)
+					- $figure2D.Dot((0.25, 0.5), label: $A, angle:$(Math.pi/2), ?cross)
+				end
+			end
+			- macro(A, B, C, n)
+				sentence: Si $pages.formula($A \\notin [$B$C]), alors $pages.formula($A$B > $B$C)
+				figure: do
+					- $figure2D.Segment((0, 0), (2, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((2, 0), label: $C, ?cross)
+					- $figure2D.Dot((0.25, 0.5), label: $A, angle:$(Math.pi/2), ?cross)
+				end
+			end
 		end
 	end
 
@@ -302,14 +560,44 @@ let ifThenPool = do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(A, B, C) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A \\in ($B$C))
-			- macro(A, B, C) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A \\in [$B$C\))
-			- macro(A, B, C) Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A \\in ($B$C))
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A \\in ($B$C))
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A \\in [$B$C\))
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A \\in ($B$C))
+			end
 		end
 		invalid: do
-			- macro(A, B, C) Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A \\in [$B$C])
-			- macro(A, B, C) Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A \\in [$B$C])
-			- macro(A, B, C) Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A \\in [$B$C\))
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A \\in [$B$C])
+				figure: do
+					- $figure2D.Line((0, 0), (2, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((2, 0), label: $C, ?cross)
+					- $figure2D.Dot((3, 0), label: $A, angle: $(Math.pi/2), ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A \\in [$B$C])
+				figure: do
+					- $figure2D.HalfLine((0, 0), (2, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((2, 0), label: $C, ?cross)
+					- $figure2D.Dot((3, 0), label: $A, angle: $(Math.pi/2), ?cross)
+				end
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A \\in [$B$C\))
+				figure: do
+					- $figure2D.Line((0, 0), (2, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((2, 0), label: $C, ?cross)
+					- $figure2D.Dot((-1, 0), label: $A, angle: $(Math.pi/2), ?cross)
+				end
+			end
 		end
 	end
 
@@ -321,13 +609,19 @@ let ifThenPool = do
 				if n1==n2
 					set n1 += 1
 				end
-				Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+				do
+					sentence: Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+					explanation: un disque est inclus dans le disque de même centre et de rayon plus grand
+				end
 			end
 			- macro(A, B, n1, n2)
 				if n1==n2
 					set n1 += 1
 				end
-				Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+				do
+					sentence: Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+					explanation: un cercle est inclus dans le disque de même centre et de rayon plus grand
+				end
 			end
 		end
 		invalid: do
@@ -335,19 +629,40 @@ let ifThenPool = do
 				if n1==n2
 					set n1 += 1
 				end
-				Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm)
+				do
+					sentence: Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm)
+					figure: do
+						- $figure2D.Circle((0, 0), (2, 0), fill: #ddd)
+						- $figure2D.Circle((0, 0), (1, 0), fill: #aaa)
+						- $figure2D.Dot((1.5, 0), label: $A, angle: $(Math.pi/4), ?cross)
+					end
+				end
 			end
 			- macro(A, B, n1, n2)
 				if n1==n2
 					set n1 += 1
 				end
-				Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm)
+				do
+					sentence: Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm)
+					figure: do
+						- $figure2D.Circle((0, 0), (2, 0))
+						- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+						- $figure2D.Dot((2, 0), label: $A, angle: $(Math.pi/4), ?cross)
+					end
+				end
 			end
 			- macro(A, B, n1, n2)
 				if n1==n2
 					set n1 += 1
 				end
-				Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+				do
+					sentence: Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
+					figure: do
+						- $figure2D.Circle((0, 0), (2, 0))
+						- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+						- $figure2D.Dot((0.5, 0.5), label: $A, angle: $(Math.pi/4), ?cross)
+					end
+				end
 			end
 		end
 	end
@@ -356,12 +671,32 @@ let ifThenPool = do
 		letters: 2
 		number: 1
 		valid: do
-			- macro(A, B, n) Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
-			- macro(A, B, n) Si $pages.formula($A) n'appartient pas au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) n'appartient pas au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+			- macro(A, B, n)
+				sentence: Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+				explanation: un cercle est inclus dans le disque de même centre et de même rayon
+			end
+			- macro(A, B, n)
+				sentence: Si $pages.formula($A) n'appartient pas au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) n'appartient pas au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+				explanation: par contraposée
+			end
 		end
 		invalid: do
-			- macro(A, B, n) Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
-			- macro(A, B, n) Si $pages.formula($A) n'appartient pas au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) n'appartient pas au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+			- macro(A, B, n)
+				sentence: Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((0.5, 0.5), label: $A, ?cross)
+				end
+			end
+			- macro(A, B, n)
+				sentence: Si $pages.formula($A) n'appartient pas au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) n'appartient pas au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((0.4, -0.4), label: $A, ?cross)
+				end
+			end
 		end
 	end
 
@@ -369,22 +704,45 @@ let ifThenPool = do
 		letters: 3
 		number: 0
 		valid: do
-			- macro(A, B, C) Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in ($B$C))
-			- macro(A, B, C) Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A\, $B\, $C) sont alignés
-
-			
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in ($B$C))
+				explanation: par définition
+			end
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in ($B$C)), alors $pages.formula($A\, $B\, $C) sont alignés
+				explanation: par définition
+			end
 			// rec false
-			- macro(A, B, C) Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A\, $B\, $C) sont alignés
-
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in [$B$C\)), alors $pages.formula($A\, $B\, $C) sont alignés
+				explanation: tous les points de $pages.formula([$B$C\\)) sont sur la droite $pages.formula(($B$C))
+			end
 			// rec false
-			- macro(A, B, C) Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A\, $B\, $C) sont alignés
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A \\in [$B$C]), alors $pages.formula($A\, $B\, $C) sont alignés
+				explanation: tous les points de $pages.formula([$B$C]) sont sur la droite $pages.formula(($B$C))
+			end
 		end
 		invalid: do
-			- macro(A, B, C) Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in [$B$C])
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in [$B$C])
+				figure: do
+					- $figure2D.Line((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((1, 0), label: $C, ?cross)
+					- $figure2D.Dot((1.5, 0), label: $A, angle: $(Math.pi/2), ?cross)
+				end
+			end
 			// rec true
-
-			- macro(A, B, C) Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in [$B$C\))
-			// rec true
+			- macro(A, B, C)
+				sentence: Si $pages.formula($A\, $B\, $C) sont alignés, alors $pages.formula($A \\in [$B$C\))
+				figure: do
+					- $figure2D.Line((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((1, 0), label: $C, ?cross)
+					- $figure2D.Dot((-0.5, 0), label: $A, angle: $(Math.pi/2), ?cross)
+				end
+			end
 		end
 	end
 

@@ -11,20 +11,41 @@ let ardoise = $import(ardoise)
 
 let figure2D = $import(figure2D)
 
+macro drawSolution(question)
+	if not question.solution.isTruth and (question.solution.infos.figure? or question.solution.infos.explanation?)
+		\s:
+	end
+
+	
+	if question.solution.infos.figure?
+		@html.Div(style: (verticalAlign: top, display: inline-flex, alignItems: center))
+			@figure2D.Canva2D(width: 150, height: 70)
+				...question.solution.infos.figure
+			end
+			if question.solution.infos.explanation?
+				\s$question.solution.infos.explanation
+			end
+		end
+	elseif question.solution.infos.explanation?
+		\s$question.solution.infos.explanation
+		.
+	else
+		.
+	end
+end
+
 logic: do
 	instruction:macro(question)
 		$question.instruction
 	end
 	solutionShort: macro(question)
-		if question.solution
-			Vrai.
+		if question.solution.isTruth
+			Vrai
 		else
-			Faux.
+			Faux
 		end
 
-		if question.solutionTip?
-			\s$question.solutionTip
-		end
+		$ drawSolution(question)
 	end
 	solution: macro(question)
 		@ardoise.quote $question.instruction
@@ -37,26 +58,7 @@ logic: do
 			end
 		end
 
-		if not question.solution.isTruth and (question.solution.infos.figure? or question.solution.infos.explanation?)
-			.\sContre-exemple:
-		end
-
-		
-		if question.solution.infos.figure?
-			@html.Div(style: (verticalAlign: top, display: inline-flex, alignItems: center))
-				@figure2D.Canva2D(width: 150, height: 70)
-					...question.solution.infos.figure
-				end
-				if question.solution.infos.explanation?
-					\s$question.solution.infos.explanation
-				end
-			end
-		elseif question.solution.infos.explanation?
-			\s@ardoise.hint $question.solution.infos.explanation
-			.
-		else
-			.
-		end
+		$ drawSolution(question)
 
 		if question.solutionTip?
 			\s$question.solutionTip
