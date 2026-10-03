@@ -7,7 +7,7 @@ Licensed under the MIT License — see LICENSE for details.
 
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
-let Node from $import(../../core/utils/tree)
+let Node, computeTreeValue from $import(../../core/utils/tree)
 let Choice from $import(../../core/parameters/set)
 let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
@@ -186,7 +186,7 @@ powPowN2: macro(...args)
 		get: macro(calc)
 			let d
 			let x = $calc.instruction.children[1]
-			let y = $calc.instruction.children[2].computeValue()
+			let y = $ computeTreeValue(calc.instruction.children[2])
 			let absy = if y>0
 				$y
 			else

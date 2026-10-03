@@ -43,3 +43,13 @@ ref Node: macro(label, ...children)
 		end
 	end
 end
+
+computeTreeValue: macro(x)
+	if type(x) == "number" or type(x) == "string" and x.isdigit()
+		return $x
+	elseif type(x) == "table" and x.type? == "treeNode"
+		return $x.computeValue
+	else
+		raise Cannot compute value of a "$type($x)".
+	end
+end
