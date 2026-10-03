@@ -107,13 +107,26 @@ ref QuestionFactoryTree: macro()
 			raise Error\: cannot add "QuestionFactoryTree" and "$ty"
 		end
 
-		if x._batch or y._batch
-			raise Cannot add batch. Use "*" instead.
-		end
-
+		// A batched tree is atomic: one draw must return its whole batch as a
+		// single question, so it joins the pool as a whole node (like "*"),
+		// while unbatched trees keep flattening into sibling leaves.
 		let result = $QuestionFactoryTree()
 
-		set result.questionFactoryList = $Table(...x.questionFactoryList, ...y.questionFactoryList)
+		if x._batch
+			run $ result.addSubTree(x, 1)
+		else
+			for child in x.questionFactoryList
+				run $ Table.append($result.questionFactoryList, child)
+			end
+		end
+		if y._batch
+			run $ result.addSubTree(y, 1)
+		else
+			for child in y.questionFactoryList
+				run $ Table.append($result.questionFactoryList, child)
+			end
+		end
+
 		return $result
 	end
 
