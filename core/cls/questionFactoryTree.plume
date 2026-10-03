@@ -116,14 +116,14 @@ ref QuestionFactoryTree: macro()
 			run $ result.addSubTree(x, 1)
 		else
 			for child in x.questionFactoryList
-				run $ Table.append($result.questionFactoryList, child)
+				run $ Table.append(result.questionFactoryList, child)
 			end
 		end
 		if y._batch
 			run $ result.addSubTree(y, 1)
 		else
 			for child in y.questionFactoryList
-				run $ Table.append($result.questionFactoryList, child)
+				run $ Table.append(result.questionFactoryList, child)
 			end
 		end
 
