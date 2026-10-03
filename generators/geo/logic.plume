@@ -8,10 +8,6 @@ Licensed under the MIT License — see LICENSE for details.
 // Dirty and rigid
 // sub-optimal letter generation
 
-// Todo: centre du cercle & milieu du diamètre
-// Centre appartient au cercle?
-// point de la corde appartient au cercle?
-// corde est diamètre? diamètre est corde?
 // Intersection entre cercles/disques de centres différents
 // corde/diamètre est segment/droite/demi-droite
 
@@ -170,6 +166,22 @@ let ifThenPool = do
 			- macro(A, B, n) si $pages.formula($A) appartient au disque de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B < $n\0cm)
 		end
 	end
+	center: do
+		letters: 3
+		number: 0
+		valid: do
+			- macro(A, B, C) si $pages.formula($A) est le centre du disque $pages.formula(\\mathscr D), alors $pages.formula($A \\in \\mathscr D)
+			- macro(A, B, C) si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula($C \\in [$A$B])
+			- macro(A, B, C) si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula( $A$C=$C$B)
+			- macro(A, B, C) si $pages.formula([$A$B]) est un diamètre du cercle $pages.formula(\\mathscr C) de centre $pages.formula($C), alors $pages.formula($C) est le milieu de $pages.formula([$A$B])
+			- macro(A, B, C) Si $pages.formula([$A$C]) est un rayon du cercle $pages.formula(\\mathscr C), alors   le centre de $pages.formula(\\mathscr C) est $pages.formula($A) ou $pages.formula($C)
+		end
+		invalid: do
+			- macro(A, B, C) si $pages.formula($A) est le centre du cercle $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
+			- macro(A, B, C) Soit $pages.formula(\\mathscr D) un disque. Si $pages.formula($A \\in \\mathscr D), alors $pages.formula($A) est le centre de $pages.formula(\\mathscr D)
+			- macro(A, B, C) Si $pages.formula([$A$C]) est un rayon du cercle $pages.formula(\\mathscr C), alors  le centre de $pages.formula(\\mathscr C)  est $pages.formula($A)
+		end
+	end
 	radius: do
 		letters: 3
 		number: 0
@@ -182,6 +194,8 @@ let ifThenPool = do
 			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($O \\in \\mathscr C)
 			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si  $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C), alors $pages.formula($A \\in \\mathscr C)
 			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula([$O$A]) est un diamètre de $pages.formula(\\mathscr C), alors $pages.formula([$O$A]) est une corde de $pages.formula(\\mathscr C) passant par son centre
+
+			- macro(O, A, B) Soit $pages.formula(\\mathscr D) un disque de diamètre $pages.formula([$O$A]). Si $pages.formula($B \\in  [$O$A]) alors $pages.formula($B \\in \\mathscr D).
 		end
 		invalid: do
 			- macro(O, A, _) Soit $pages.formula(\\mathscr C) un cercle. Si $pages.formula($O \\in \\mathscr C) et $pages.formula($A \\in \\mathscr C), alors $pages.formula([$O$A]) est un rayon de $pages.formula(\\mathscr C)
@@ -190,6 +204,8 @@ let ifThenPool = do
 			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au cercle de centre $pages.formula($C)
 			- macro(A, B, C) Si $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C), alors $pages.formula($A$C = $B$C)
 			- macro(A, B, C) Si $pages.formula($A$C = $B$C), alors $pages.formula($A) et $pages.formula($B) appartiennent au disque de centre $pages.formula($C)
+
+			- macro(O, A, B) Soit $pages.formula(\\mathscr C) un cercle de diamètre $pages.formula([$O$A]). Si $pages.formula($B \\in  [$O$A]) alors $pages.formula($B \\in \\mathscr C)
 		end
 	end
 
@@ -297,6 +313,19 @@ let ifThenPool = do
 				end
 				Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($(min(n1, n2))cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($(max(n1, n2))cm)
 			end
+		end
+	end
+
+	circleDisque: do
+		letters: 2
+		number: 1
+		valid: do
+			- macro(A, B, n) Si $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+			- macro(A, B, n) Si $pages.formula($A) n'appartient pas au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) n'appartient pas au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+		end
+		invalid: do
+			- macro(A, B, n) Si $pages.formula($A) appartient au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
+			- macro(A, B, n) Si $pages.formula($A) n'appartient pas au cercle de centre $pages.formula($B) de rayon $pages.formula($n\0cm), alors $pages.formula($A) n'appartient pas au disque de centre $pages.formula($B) de rayon $pages.formula($n\0cm)
 		end
 	end
 
