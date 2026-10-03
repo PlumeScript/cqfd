@@ -18,6 +18,8 @@ let QuestionFactory from $import(../../core/cls/questionFactory)
 let Choice from $import(../../core/parameters/set)
 let Range from $import(../../core/parameters/range)
 
+let figure2D = $import(figure2D)
+
 let letters from $import(./utils)
 
 ref lineNotationPool: do
@@ -137,16 +139,50 @@ let ifThenPool = do
 		letters: 2
 		number: 1
 		valid: do
-			- macro(A, B, n) si $pages.formula($A$B = $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			- macro(A, B, n)
+				sentence: si $pages.formula($A$B = $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+				explanation: par définition
+			end
 			// Reciproque
-			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm) alors $pages.formula($A$B = $n\0cm)
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm) alors $pages.formula($A$B = $n\0cm)
+				explanation: par définition
+			end
 		end
 		invalid: do
-			- macro(A, B, n) si $pages.formula($A$B < $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
-			- macro(A, B, n) si $pages.formula($A$B > $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+			- macro(A, B, n)
+				sentence: si $pages.formula($A$B < $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((0.5, 0.5), label: $A, ?cross)
+				end
+			end
+			- macro(A, B, n)
+				sentence: si $pages.formula($A$B > $n\0cm), alors $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((1.5, -0.5), label: $A, ?cross)
+				end
+			end
 			// Reciproques
-			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B < $n\0cm)
-			- macro(A, B, n) si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B > $n\0cm)
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B < $n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((-1, 0), label: $A, angle: $(-Math.pi), ?cross)
+				end
+			end
+			- macro(A, B, n)
+				sentence: si $pages.formula($A) appartient au cercle de centre $pages.formula($B), de rayon $pages.formula($n\0cm), alors $pages.formula($A$B > $n\0cm)
+				figure: do
+					- $figure2D.Circle((0, 0), (1, 0))
+					- $figure2D.Dot((0, 0), label: $B, ?cross)
+					- $figure2D.Dot((-1, 0), label: $A, angle: $(-Math.pi), ?cross)
+				end
+			end
 		end
 	end
 	disque: do
@@ -375,9 +411,13 @@ ifThen: do
 					$infos.invalid[i-len(infos.valid)]
 				end
 
+				let infos = $item(...List($letters), ...numbers)
 				@Question(logic)
-					instruction: @sentence $item(...List($letters), ...numbers)
-					solution: $valid
+					instruction: @sentence $infos.sentence
+					solution: do
+						isTruth: $valid
+						infos: $infos
+					end
 					id: $i
 				end
 			end

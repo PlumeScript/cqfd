@@ -5,8 +5,11 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-let pages = $import(pages)
+let html    = $import(html)
+let pages   = $import(pages)
 let ardoise = $import(ardoise)
+
+let figure2D = $import(figure2D)
 
 logic: do
 	instruction:macro(question)
@@ -27,11 +30,32 @@ logic: do
 		@ardoise.quote $question.instruction
 		\s—\s
 		@ardoise.important
-			if question.solution
-				vrai.
+			if question.solution.isTruth
+				vrai
 			else
-				faux.
+				faux
 			end
+		end
+
+		if not question.solution.isTruth and (question.solution.infos.figure? or question.solution.infos.explanation?)
+			.\sContre-exemple:
+		end
+
+		
+		if question.solution.infos.figure?
+			@html.Div(style: (verticalAlign: top, display: inline-flex, alignItems: center))
+				@figure2D.Canva2D(width: 150, height: 70)
+					...question.solution.infos.figure
+				end
+				if question.solution.infos.explanation?
+					\s$question.solution.infos.explanation
+				end
+			end
+		elseif question.solution.infos.explanation?
+			\s@ardoise.hint $question.solution.infos.explanation
+			.
+		else
+			.
 		end
 
 		if question.solutionTip?
