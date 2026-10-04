@@ -71,8 +71,15 @@ boulangerie: @QuestionFactory
 					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
 				end
 			end
-			renderInstructions: macro(question)
-				Le ticket de caisse d'une boulangerie indique :
+			// getName passes the "je" table when the question has no name,
+			// otherwise the il/elle table (nameFirst = capitalized name).
+			// "est allé(e)" is built here: getName.went is not gendered.
+			renderInstructions: macro(name, question)
+				if name.name == "je"
+					Je suis allé à la boulangerie, mon ticket de caisse indique :
+				else
+					$name.nameFirst $(name.name == "elle" and "est allée" or "est allé") à la boulangerie, son ticket de caisse indique :
+				end
 				$listItems($question)
 				. Quel est le montant total à payer ?
 			end
