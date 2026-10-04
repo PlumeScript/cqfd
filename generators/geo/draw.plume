@@ -420,6 +420,43 @@ draw3CircleDot: @QuestionFactory
 	end
 end
 
+drawDot2Circle: @QuestionFactory
+	parameters: $Table()
+	hyperParameters: do
+		- $Range(2, 6)
+		- $Range(2, 6)
+		- $Range(0, 80)
+		- $Range(30, 80)
+		- $Range(30, 80)
+		- $letters(3)
+	end
+	get: macro(r1, r2, a1, a2, a3, letters)
+		let _A, _B, _C = $letters
+
+		let center = $figure2D.Vect2D()
+		let A = $figure2D.Vect2D(0, 0)
+		let B = $figure2D.Vect2D($r1, 0)
+		let C = $figure2D.Vect2D($(r1+r2), 0)
+
+		@Question(draw)
+			description: Sans utiliser le compas, placer $pages.formula($_A\, $_B\, $_C) tel que $pages.formula($_C) appartienne au cercle de centre $pages.formula($_A) et de rayon $pages.formula($r1\0cm) et au cercle de centre $pages.formula($_B) et de rayon $pages.formula($r2\0cm).
+			figure: do
+				- $ figure2D.Segment(A, B, style: (stroke: (strokeDasharray: "5")))
+				- $ figure2D.Segment(B, C, style: (stroke: (strokeDasharray: "5")))
+
+
+				- $ figure2D.Dot((A+B)/2, label: r1.."cm", angle:(Math.pi/2))
+				- $ figure2D.Dot((B+C)/2, label: r2.."cm", angle:(Math.pi/2))
+
+				- $ figure2D.Dot(A, label: _A, ?cross)
+				- $ figure2D.Dot(B, label: _B, ?cross)
+				- $ figure2D.Dot(C, label: _C, ?cross)
+
+			end
+		end
+	end
+end
+
 draw3DotLine: macro(?line, ?halfLine, ?segment, ?notin)
 	if not line and not halfLine and not segment
 		raise Provide at least one flag.
