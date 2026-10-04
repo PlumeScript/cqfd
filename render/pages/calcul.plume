@@ -315,3 +315,14 @@ pbMulX: do
 		$ question.context.sentence.a[start+question.instructions.depth](pages.formula(question.solution))
 	end
 end
+
+// wip
+pbEvalLin: do
+	instruction:macro(question)
+		$ question.context.renderInstructions(question)
+	end
+	solution: macro(question)
+		$pages.formula($renderLatexAST($question.calcul) = $question.solution)\s
+		$ question.context.renderSolution(question)
+	end
+end
