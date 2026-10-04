@@ -14,6 +14,9 @@ macro cap(x)
 	$x.sub(1).upper()$x.sub(2, -1)
 	end
 
+// Baker: money on arrival, money spent at the bakery, money left on exit;
+// the known pair is (spent, left) with isLoss, or (market, day total)
+// without; trap = unit price.
 boulangerie: @QuestionFactory
 	parameters: do
 		item: @Choice

@@ -110,8 +110,13 @@ pbCalcN2: macro(context, names:, ?trap)
 	end
 end
 
-// Problem class: A * B * C * ... = Z
-pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?trap)
+// Problem class: a chain of `depth` multiplications over the context's
+// vocabulary (matrioska). The context question carries `start` (top level),
+// `values` (the drawn factors) and the rendering; this layer hides `unknown`:
+//   unknown = depth+1 → the total is hidden (multiplication) — every context;
+//   unknown = 1..depth → a factor is hidden, the total is given (division) —
+//   only contexts that set `division` (currently `train` only, #129).
+pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?trap, ?division)
 	if depth
 		set minDepth = $depth
 		set maxDepth = $depth
@@ -133,28 +138,49 @@ pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?t
 		end
 
 		validate: macro(unknown:, depth:)
-			// TODO: support division
-			// return $ unknown <=depth+1
-			return $ unknown == depth+1
+			// the hidden slot is one of the depth+1 chain positions
+			return $ unknown <= depth+1
 		end
 
 		get: macro(unknown:, depth:, context:, name:)
-			let calcul = $ Node("number", Table.at(context.values, depth+1))
-			let result = $ Table.at(context.values, depth+1)
-			for i in seq(depth, 1, -1)
-				set calcul = $ Node("*", context.values[i], calcul)
-				set result *= $ context.values[i]
+			// division only where the context supports it
+			if unknown <= depth and not( context.division? and division)
+				return
+			end
+			// the chain must fit in the 4-level vocabulary
+			if context.start + depth > context.vocSize
+				return
 			end
 
-			let values = $Table(...context.values)
-			set values[unknown+1] = $ result
+			let total = $ context.values[1]
+			let calcul = $ Node("number", context.values[1])
+			for i in seq(2, depth+1)
+				set total *= $ context.values[i]
+				set calcul = $ Node("*", calcul, context.values[i])
+			end
 
-			@Question(pbMulX)
+			let solution = if unknown <= depth
+				$ context.values[unknown]
+			else
+				$ total
+			end
+
+			// division: total ÷ the known factors (ascending, skipping unknown)
+			if unknown <= depth
+				set calcul = $ Node("number", total)
+				for i in seq(1, depth+1)
+					if i != unknown
+						set calcul = $ Node("-:", calcul, context.values[i])
+					end
+				end
+			end
+
+			return @Question(pbMulX)
 				trap: $trap
 				context: $context
-				values: $values
+				total: $total
 				calcul: $calcul
-				solution: $values[unknown+1]
+				solution: $solution
 				instructions: do
 					unknown: $unknown
 					depth: $depth
