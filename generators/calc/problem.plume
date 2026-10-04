@@ -165,3 +165,98 @@ pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?t
 		end
 	end
 end
+
+// ax+bz+cz
+pbEvalLin: macro(context, minItemCount:1, maxItemCount: 3, minDiff1: 0, maxDiff1:3, names:, ?trap)
+	@QuestionFactory
+		parameters: do
+			- $ Range(minItemCount, maxItemCount)
+			- $ Range(minDiff1, maxDiff1)
+			- $Range(0, 1)
+			- $Range(0, 2)
+			- $Range(0, 2)
+		end
+		hyperParameters: do
+			context: $context
+			name: if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+		validate: macro(itemCount, diff1, context:, name:, ...select)
+			if itemCount==1
+				return $ select[1] != 0
+			end
+			for i in select
+				if i==0
+					set diff1 -= 1
+				end
+				if diff1 == 0
+					return $ false
+				end
+			end
+			return $ true
+		end
+		get: macro(itemCount, _, context:, name:, ...select)
+			let result = 0
+
+			let items = for i in seq(itemCount)
+				let item = $ context.items[i]
+				- do
+					name: $item.name
+					namePlural: $item.namePlural
+					coeff: $item.coeff
+					let count = if select[i]==0
+						1
+					elseif select[i]==2
+						$ -item.count
+					else
+						$item.count
+					end
+					if select[i] != 0 and count == -1 or count == 1
+						set count *= 2
+					end
+					count: $count
+
+					set result += $ count * item.coeff
+				end
+			end
+
+			let tip = if items[1].count > 1
+				$Node(*, $items[1].count, $items[1].coeff)
+			else
+				$items[1].coeff
+			end
+			for i in seq(2, itemCount)
+				let opp
+				let count =  $items[i].count
+				if count < 0
+					set opp = -
+					set count *= -1
+				else
+					set opp = +
+				end
+
+				let right = if count > 1
+					$Node(*, $count, $items[i].coeff)
+				else
+					$items[i].coeff
+				end
+				set tip = $Node($opp, $tip, $right)
+			end
+
+			if result < 0
+				return
+			end
+
+			return @Question(pbEvalLin)
+				items: $items
+				context: $context
+				solution: $result
+				calcul: $tip
+				id: $maxItemCount-$Table.join(...select)
+			end
+		end
+	end
+end
