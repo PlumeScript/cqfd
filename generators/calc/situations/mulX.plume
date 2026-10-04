@@ -12,12 +12,33 @@ let Choice from $import(../../../core/parameters/set)
 
 let r = $Range(2, 10)
 
-// Per-context sentence templates: one explicit string per level, so
-// elision ("d'élèves"), plural ("pépites de caramel") and the part-whole
-// verb ("Chaque wagon a") stay correct. Index = level in `voc`.
+// matrioska (rendered by pbMulX, problem.plume): a chain of `depth`
+// multiplications over the context's 4-level vocabulary (level 1 = top).
+// Every template list is 4 slots wide, index = level, so the (start, depth)
+// arithmetic needs no per-context offset:
+//   top[level]    the count of level `level`           (level = start)
+//   link[level]   the count of level `level`           (start+1 .. start+depth; slot 1 = dummy)
+//   ask[level]    the question about the total         (level = start+depth; slot 1 = dummy)
+//   answer[level] the answer about the total           (level = start+depth; slot 1 = dummy)
+// pbMulX hides `unknown`: unknown = depth+1 → the total is hidden
+// (multiplication, every context); unknown = 1..depth → a factor is hidden
+// and the total is given (division — only contexts with `division` set,
+// currently `train` only). The trap is the level just below the target
+// (start+depth+1): a link the question never uses. `train` (#129): a named
+// « chef de ligne » character (ma/sa, mes/ses) and per-level division prose
+// — in trainSentences below; the context rejects start > 2.
+
+macro cap(x)
+	$x.sub(1).upper()$x.sub(2, -1)
+	end
+
+// Per-context sentence templates (the 9 generic contexts): one explicit
+// string per level, so elision (« d'élèves »), plurals (« pépites de
+// caramel ») and the part-whole verb (« Chaque wagon a ») stay correct.
 let sentences = do
+	// train: gare -> train -> wagon -> roue (named "chef de ligne" + division, #129 — kept for key completeness, unused by train)
 	train: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n gares.
 			end
@@ -27,8 +48,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n wagons.
 			end
+			- macro(n)
+				Il y a $n roues.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Dans chaque gare, il y a $n trains.
 			end
@@ -39,7 +65,7 @@ let sentences = do
 				Chaque wagon a $n roues.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -52,7 +78,7 @@ let sentences = do
 				En tout, combien y a-t-il de roues\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -66,8 +92,9 @@ let sentences = do
 			end
 		end
 	end
+	// chocolat: caisse -> boîte -> chocolat -> pépite de caramel
 	chocolat: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n caisses.
 			end
@@ -77,8 +104,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n chocolats.
 			end
+			- macro(n)
+				Il y a $n pépites de caramel.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Dans chaque caisse, il y a $n boîtes.
 			end
@@ -89,7 +121,7 @@ let sentences = do
 				Dans chaque chocolat, il y a $n pépites de caramel.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -102,7 +134,7 @@ let sentences = do
 				En tout, combien y a-t-il de pépites de caramel\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -116,8 +148,9 @@ let sentences = do
 			end
 		end
 	end
+	// collège: collège -> bâtiment -> classe -> élève
 	$("collège"): do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n collèges.
 			end
@@ -127,8 +160,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n classes.
 			end
+			- macro(n)
+				Il y a $n élèves.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Chaque collège a $n bâtiments.
 			end
@@ -139,7 +177,7 @@ let sentences = do
 				Dans chaque classe, il y a $n élèves.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -152,7 +190,7 @@ let sentences = do
 				En tout, combien y a-t-il d'élèves\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -166,8 +204,9 @@ let sentences = do
 			end
 		end
 	end
+	// arbre: arbre -> branche -> nid -> œuf
 	arbre: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n arbres.
 			end
@@ -177,8 +216,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n nids.
 			end
+			- macro(n)
+				Il y a $n œufs.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Chaque arbre a $n branches.
 			end
@@ -189,7 +233,7 @@ let sentences = do
 				Chaque nid a $n œufs.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -202,7 +246,7 @@ let sentences = do
 				En tout, combien y a-t-il d'œufs\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -216,8 +260,9 @@ let sentences = do
 			end
 		end
 	end
+	// ville: ville -> parking -> voiture -> siège
 	ville: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n villes.
 			end
@@ -227,8 +272,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n voitures.
 			end
+			- macro(n)
+				Il y a $n sièges.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Dans chaque ville, il y a $n parkings.
 			end
@@ -239,7 +289,7 @@ let sentences = do
 				Chaque voiture a $n sièges.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -252,7 +302,7 @@ let sentences = do
 				En tout, combien y a-t-il de sièges\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -266,8 +316,9 @@ let sentences = do
 			end
 		end
 	end
+	// magasin: magasin -> piano -> touche -> corde
 	magasin: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n magasins.
 			end
@@ -277,8 +328,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n touches.
 			end
+			- macro(n)
+				Il y a $n cordes.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Dans chaque magasin, il y a $n pianos.
 			end
@@ -289,7 +345,7 @@ let sentences = do
 				Chaque touche a $n cordes.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -302,7 +358,7 @@ let sentences = do
 				En tout, combien y a-t-il de cordes\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -316,8 +372,9 @@ let sentences = do
 			end
 		end
 	end
+	// salle: salle -> aquarium -> poulpe -> tentacule
 	salle: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n salles.
 			end
@@ -327,8 +384,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n poulpes.
 			end
+			- macro(n)
+				Il y a $n tentacules.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Dans chaque salle, il y a $n aquariums.
 			end
@@ -339,7 +401,7 @@ let sentences = do
 				Chaque poulpe a $n tentacules.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -352,7 +414,7 @@ let sentences = do
 				En tout, combien y a-t-il de tentacules\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -366,8 +428,9 @@ let sentences = do
 			end
 		end
 	end
+	// caisse: caisse -> pack -> brique -> litre de jus
 	caisse: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n caisses.
 			end
@@ -377,8 +440,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n briques.
 			end
+			- macro(n)
+				Il y a $n litres de jus.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Dans chaque caisse, il y a $n packs.
 			end
@@ -389,7 +457,7 @@ let sentences = do
 				Dans chaque brique, il y a $n litres de jus.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -402,7 +470,7 @@ let sentences = do
 				En tout, combien y a-t-il de litres de jus\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -416,8 +484,9 @@ let sentences = do
 			end
 		end
 	end
+	// haras: haras -> pré -> licorne -> crin
 	haras: do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n haras.
 			end
@@ -427,8 +496,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n licornes.
 			end
+			- macro(n)
+				Il y a $n crins.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Dans chaque haras, il y a $n prés.
 			end
@@ -439,7 +513,7 @@ let sentences = do
 				Chaque licorne a $n crins.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -452,7 +526,7 @@ let sentences = do
 				En tout, combien y a-t-il de crins\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -466,8 +540,9 @@ let sentences = do
 			end
 		end
 	end
+	// étoile: étoile -> planète -> lune -> cratère
 	$("étoile"): do
-		starts: do
+		top: do
 			- macro(n)
 				Il y a $n étoiles.
 			end
@@ -477,8 +552,13 @@ let sentences = do
 			- macro(n)
 				Il y a $n lunes.
 			end
+			- macro(n)
+				Il y a $n cratères.
+			end
 		end
-		trans: do
+		link: do
+			- macro(n)
+			end
 			- macro(n)
 				Chaque étoile a $n planètes.
 			end
@@ -489,7 +569,7 @@ let sentences = do
 				Chaque lune a $n cratères.
 			end
 		end
-		q: do
+		ask: do
 			- macro()
 			end
 			- macro()
@@ -502,7 +582,7 @@ let sentences = do
 				En tout, combien y a-t-il de cratères\0?
 			end
 		end
-		a: do
+		answer: do
 			- macro(n)
 			end
 			- macro(n)
@@ -518,9 +598,229 @@ let sentences = do
 	end
 end
 
+// train (#129): the named « chef de ligne » prose, same 4-slot indexing
+// (index = level: gare=1, train=2, wagon=3, roue=4). `n` is the
+// already-rendered count (formula); `ligne`/`mesTrains` are the
+// name-dependent possessives (ma/sa, mes/ses).
+let trainSentences = do
+	top: do
+		- macro(n, ligne, mesTrains)
+			$cap($ligne) ligne dessert $n gares.
+		end
+		- macro(n, ligne, mesTrains)
+			$cap($ligne) ligne a $n trains en service.
+		end
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+		end
+	end
+	link: do
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque gare reçoit $n trains.
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque train est composé de $n wagons.
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque wagon a $n roues.
+		end
+	end
+	// the level just below the target: a link the question never uses
+	trap: do
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque train a $n wagons.
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque wagon a $n roues.
+		end
+	end
+	total: do
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+			En tout, il y a $n trains sur $ligne ligne.
+		end
+		- macro(n, ligne, mesTrains)
+			En tout, il y a $n wagons sur $ligne ligne.
+		end
+		- macro(n, ligne, mesTrains)
+			En tout, il y a $n roues sur $ligne ligne.
+		end
+	end
+	askMult: do
+		- macro(ligne, mesTrains)
+		end
+		- macro(ligne, mesTrains)
+			En tout, combien de trains circulent sur $ligne ligne\0?
+		end
+		- macro(ligne, mesTrains)
+			En tout, combien de wagons circulent sur $ligne ligne\0?
+		end
+		- macro(ligne, mesTrains)
+			En tout, combien de roues portent $mesTrains trains\0?
+		end
+	end
+	askDivTop: do
+		- macro(ligne, mesTrains)
+			Combien de gares dessert $ligne ligne\0?
+		end
+		- macro(ligne, mesTrains)
+			Combien de trains $ligne ligne a-t-elle en service\0?
+		end
+		- macro(ligne, mesTrains)
+		end
+		- macro(ligne, mesTrains)
+		end
+	end
+	askDiv: do
+		- macro(ligne, mesTrains)
+		end
+		- macro(ligne, mesTrains)
+			Combien de trains y a-t-il dans chaque gare\0?
+		end
+		- macro(ligne, mesTrains)
+			Combien de wagons y a-t-il dans chaque train\0?
+		end
+		- macro(ligne, mesTrains)
+			Combien de roues y a-t-il sur chaque wagon\0?
+		end
+	end
+	answerMult: do
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+			En tout, $n trains circulent sur $ligne ligne.
+		end
+		- macro(n, ligne, mesTrains)
+			En tout, $n wagons circulent sur $ligne ligne.
+		end
+		- macro(n, ligne, mesTrains)
+			En tout, $mesTrains trains portent $n roues.
+		end
+	end
+	answerDivTop: do
+		- macro(n, ligne, mesTrains)
+			$cap($ligne) ligne dessert donc $n gares.
+		end
+		- macro(n, ligne, mesTrains)
+			$cap($ligne) ligne a donc $n trains en service.
+		end
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+		end
+	end
+	answerDiv: do
+		- macro(n, ligne, mesTrains)
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque gare reçoit donc $n trains.
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque train est donc composé de $n wagons.
+		end
+		- macro(n, ligne, mesTrains)
+			Chaque wagon a donc $n roues.
+		end
+	end
+end
+
+// The 9 generic contexts: the sentence table does the work; `name` is
+// unused here (kept for the shared (question, name, unknown, depth, start,
+// ...) signature of renderInstructions/renderSolution).
+macro genericInstructions(question, name, unknown, depth, start, trap, m)
+	$ question.context.sentence.top[start](m(question.context.values[1]))
+	for i in seq(1, depth)
+		\s$ question.context.sentence.link[start+i](m(question.context.values[i+1]))
+	end
+	// trap: the level just below the target, useless for the answer
+	if trap and start+depth+1 <= question.context.vocSize
+		\s$ question.context.sentence.link[start+depth+1](m(question.context.values[depth+2]))
+	end
+	\s$ question.context.sentence.ask[start+depth]()
+end
+
+macro genericSolution(question, name, unknown, depth, start, m)
+	$ question.context.sentence.answer[start+depth](m(question.solution))
+end
+
+// train (#129): intro (named chef de ligne) -> top (if the top count is
+// known) -> links (skipping the hidden factor) -> total (division only) ->
+// trap -> question (the total, or the hidden top / per-level count).
+macro trainInstructions(question, name, unknown, depth, start, trap, m)
+	let ligne = if name.name == "je"
+		ma
+	else
+		sa
+	end
+	let mesTrains = if name.name == "je"
+		mes
+	else
+		ses
+	end
+	let intro = if name.name == "je"
+		Je suis chef de ligne.
+	else
+		$cap($name.nameFirst) est chef de ligne.
+	end
+	$intro
+	if unknown > 1
+		\s$ trainSentences.top[start](m(question.context.values[1]), ligne, mesTrains)
+	end
+	for i in seq(1, depth)
+		if i+1 != unknown
+			\s$ trainSentences.link[start+i](m(question.context.values[i+1]), ligne, mesTrains)
+		end
+	end
+	if unknown <= depth
+		\s$ trainSentences.total[start+depth](m(question.total), ligne, mesTrains)
+	end
+	if trap and start+depth+1 <= question.context.vocSize
+		\s$ trainSentences.trap[start+depth+1](m(question.context.values[depth+2]), ligne, mesTrains)
+	end
+	if unknown > depth
+		\s$ trainSentences.askMult[start+depth](ligne, mesTrains)
+	else
+		if unknown == 1
+			\s$ trainSentences.askDivTop[start](ligne, mesTrains)
+		else
+			\s$ trainSentences.askDiv[start+unknown-1](ligne, mesTrains)
+		end
+	end
+end
+
+macro trainSolution(question, name, unknown, depth, start, m)
+	let ligne = if name.name == "je"
+		ma
+	else
+		sa
+	end
+	let mesTrains = if name.name == "je"
+		mes
+	else
+		ses
+	end
+	if unknown > depth
+		$ trainSentences.answerMult[start+depth](m(question.solution), ligne, mesTrains)
+	else
+		if unknown == 1
+			$ trainSentences.answerDivTop[start](m(question.solution), ligne, mesTrains)
+		else
+			$ trainSentences.answerDiv[start+unknown-1](m(question.solution), ligne, mesTrains)
+		end
+	end
+end
+
 matrioska: @QuestionFactory
 	parameters: do
-		- $Choice(train, chocolat, collège, arbre, ville, magasin, salle, caisse, haras, étoile)
+		- $Choice(train)
 		- $r
 	end
 	hyperParameters: do
@@ -530,7 +830,12 @@ matrioska: @QuestionFactory
 		end
 	end
 	get: macro(context, start:, ...values)
-		@Question(pbParameters)
+		// the train division prose only covers start 1..2 (gare / train tops)
+		if context == "train" and start > 2
+			return
+		end
+		return @Question(pbParameters)
+			contextName: $context
 			voc: if context == "train"
 				- gare
 				- train
@@ -582,9 +887,21 @@ matrioska: @QuestionFactory
 				- lune
 				- cratère
 			end
+			vocSize: 4
 			values: $values
 			start: $start
 			sentence: $sentences[context]
+			division: $(context == "train")
+			renderInstructions: if context == "train"
+				$trainInstructions
+			else
+				$genericInstructions
+			end
+			renderSolution: if context == "train"
+				$trainSolution
+			else
+				$genericSolution
+			end
 		end
 	end
 end

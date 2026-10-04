@@ -288,31 +288,75 @@ pbCalcN2: do
 end
 
 pbMulX: do
+	macro cap(x)
+		$x.sub(1).upper()$x.sub(2, -1)
+	end
+	macro getName(question)
+		if question.name?
+			nameFirst: $question.name[1]
+			name: if question.name[2] == "m"
+				il
+			else
+				elle
+			end
+			haveFirst: $question.name[1] a
+			have: if question.name[2] == "m"
+				il a
+			else
+				elle a
+			end
+			// "en" form of the conjugated verb: "il en a" / "j'en ai"
+			haveEnFirst: $question.name[1] en a
+			haveEn: if question.name[2] == "m"
+				il en a
+			else
+				elle en a
+			end
+			hadFirst: $question.name[1] avait
+			had: if question.name[2] == "m"
+				il avait
+			else
+				elle avait
+			end
+			// openings conjugated with être, third person
+			arrived: $question.name[1] est arrivé
+			went: est allé
+			alsoWent: est aussi passé
+			qhave: if question.name[2] == "m"
+				a-t-il
+			else
+				a-t-elle
+			end
+			qhad: if question.name[2] == "m"
+				avait-il
+			else
+				avait-elle
+			end
+			indirect: lui
+		else
+			nameFirst: je
+			name: je
+			have: j'ai
+			haveFirst: j'ai
+			haveEn: j'en ai
+			had: j'avais
+			hadFirst: j'avais
+			qhave: ai-je
+			qhad: avais-je
+			indirect: me
+			// openings conjugated with être, first person
+			arrived: je suis arrivé
+			went: suis allé
+			alsoWent: suis aussi passé
+		end
+	end
 	instruction:macro(question)
-		let start = $ question.context.start
-		if start + question.instructions.depth > len(question.context.voc)
-			set start = $ len(question.context.voc) - question.instructions.depth
-		end
-		let depth = $question.instructions.depth
-		let sent = $question.context.sentence
-		$ sent.starts[start](pages.formula(question.values[1]))
-		for i in seq(1, depth)
-			\s$ sent.trans[start+i-1](pages.formula(question.values[i+1]))
-		end
-		// trap: the level below the target, useless for the answer
-		if question.trap and start+depth+1 <= len(question.context.voc) and depth+2 <= len(question.context.values)
-			\s$ sent.trans[start+depth](pages.formula(question.context.values[depth+2]))
-		end
-		\s$ sent.q[start+depth]()
+		// the factory rejected the invalid (start, depth) pairs: no clamp needed
+		$ question.context.renderInstructions(question, getName(question), question.instructions.unknown, question.instructions.depth, question.context.start, question.trap, pages.formula)
 	end
 	solution: macro(question)
-		let start = $ question.context.start
-		if start + question.instructions.depth > len(question.context.voc)
-			set start = $ len(question.context.voc) - question.instructions.depth
-		end
-
-		$pages.formula($renderLatexAST($question.calcul) = $question.solution).\s
-		$ question.context.sentence.a[start+question.instructions.depth](pages.formula(question.solution))
+		$pages.formula($renderLatexAST($question.calcul) = $question.solution)\s
+		$ question.context.renderSolution(question, getName(question), question.instructions.unknown, question.instructions.depth, question.context.start, pages.formula)
 	end
 end
 

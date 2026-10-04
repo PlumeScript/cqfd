@@ -1,0 +1,49 @@
+// L1 driver: draw pbMulX questions and dump structured text for the python
+// test. Pass 1 (Q1-): trap: true. Pass 2 (Q2-): no trap. The trap flag is
+// per pass, so it is not repeated in the META line.
+let pbMulX from $import(../generators/calc/problem)
+let matrioska from $import(../generators/calc/situations/mulX)
+let calcRender = $import(../render/pages/calcul)
+
+let names = do
+	- 0
+	- do
+		- Pierre
+		- m
+	end
+	- do
+		- Sophie
+		- f
+	end
+end
+
+let factory1 = $ pbMulX($matrioska, names: $names, minDepth: 1, maxDepth: 3, trap: true)
+let factory2 = $ pbMulX($matrioska, names: $names, minDepth: 1, maxDepth: 3)
+
+for i in seq(1, 500)
+	let q = $ factory1.get(i)
+	if $q == empty
+		continue
+	end
+	==Q1-$i==
+	==META|ctx:$q.context.contextName|start:$q.context.start|u:$q.instructions.unknown|d:$q.instructions.depth|vals:$q.context.values[1],$q.context.values[2],$q.context.values[3],$q.context.values[4],$q.context.values[5]|total:$q.total|sol:$q.solution==
+	==I==
+	$calcRender.pbMulX.instruction($q)
+	==S==
+	$calcRender.pbMulX.solution($q)
+	==END==
+end
+for i in seq(1, 500)
+	let q = $ factory2.get(i)
+	if $q == empty
+		continue
+	end
+	==Q2-$i==
+	==META|ctx:$q.context.contextName|start:$q.context.start|u:$q.instructions.unknown|d:$q.instructions.depth|vals:$q.context.values[1],$q.context.values[2],$q.context.values[3],$q.context.values[4],$q.context.values[5]|total:$q.total|sol:$q.solution==
+	==I==
+	$calcRender.pbMulX.instruction($q)
+	==S==
+	$calcRender.pbMulX.solution($q)
+	==END==
+end
+==DONE==
