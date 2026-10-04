@@ -490,3 +490,586 @@ maisonChocolat: @QuestionFactory
 		end
 	end
 end
+
+// Piggy bank: money inside, withdrawals (loss) or deposits (gain);
+// trap = price of the piggy bank (euros, like the money).
+tirelire: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(20, 60)
+		delta: $Range(5, 10)
+		price: $Range(5, 20)
+	end
+
+	get: macro(initial:, delta:, price:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				let possessif = if name.name == "je"
+					ma
+				else
+					sa
+				end
+				set trap = if trap
+					\sLa tirelire a coûté $m($price)€.
+				end
+				if isLoss
+					if unknow == "x"
+						Cette semaine, $name.haveFirst retiré $m($delta)€ de $possessif tirelire.$trap
+						\sIl $name.indirect reste $m($rest)€. Combien d'argent $name.qhad dans $possessif tirelire au début de la semaine?
+					elseif unknow == "y"
+						Au début de la semaine, $name.hadFirst $m($initial)€ dans $possessif tirelire.$trap
+						\sMaintenant, il $name.indirect reste $m($rest)€. Combien d'argent $name.qhave retiré?
+					elseif unknow == "z"
+						Au début de la semaine, $name.hadFirst $m($initial)€ dans $possessif tirelire.$trap
+						\sCette semaine, $name.haveFirst retiré $m($delta)€. Combien d'argent $name.indirect reste-t-il?
+					end
+				else
+					if unknow == "x"
+						Cette semaine, $name.haveFirst ajouté $m($delta)€ à $possessif tirelire.$trap
+						\sMaintenant, elle contient $m($now)€. Combien d'argent contenait-elle au début de la semaine?
+					elseif unknow == "y"
+						Au début de la semaine, $possessif tirelire contenait $m($initial)€.$trap
+						\sMaintenant, elle contient $m($now)€. Combien d'argent $name.qhave ajouté?
+					elseif unknow == "z"
+						Au début de la semaine, $possessif tirelire contenait $m($initial)€.$trap
+						\sCette semaine, $name.haveFirst ajouté $m($delta)€ à la tirelire. Combien d'argent contient-elle maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				let possessif = if name.name == "je"
+					ma
+				else
+					sa
+				end
+				if isLoss
+					if unknow == "x"
+						Au début de la semaine, $name.hadFirst $m($initial)€ dans $possessif tirelire.
+					elseif unknow == "y"
+						$cap($name.haveFirst) retiré $m($delta)€ de $possessif tirelire.
+					elseif unknow == "z"
+						Il $name.indirect reste $m($rest)€ dans $possessif tirelire.
+					end
+				else
+					if unknow == "x"
+						Au début de la semaine, $possessif tirelire contenait $m($initial)€.
+					elseif unknow == "y"
+						$cap($name.haveFirst) ajouté $m($delta)€ à $possessif tirelire.
+					elseif unknow == "z"
+						Maintenant, $possessif tirelire contient $m($now)€.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Thermometer: outside temperature, drop (loss) or rise (gain);
+// trap = max range of the thermometer (degrees, like the temperature).
+thermometre: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(15, 40)
+		delta: $Range(2, 10)
+		maxTemp: $Range(50, 100)
+	end
+
+	get: macro(initial:, delta:, maxTemp:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sLe thermomètre peut mesurer jusqu'à $m($maxTemp) °C.
+				end
+				if isLoss
+					if unknow == "x"
+						La température a baissé de $m($delta) °C et est maintenant de $m($rest) °C.$trap
+						\sCombien faisait-il au début de la journée?
+					elseif unknow == "y"
+						Au début de la journée, la température était de $m($initial) °C.$trap
+						\sMaintenant, elle est de $m($rest) °C. De combien de degrés a-t-elle baissé?
+					elseif unknow == "z"
+						Au début de la journée, la température était de $m($initial) °C.$trap
+						\sElle a baissé de $m($delta) °C. Combien fait-il maintenant?
+					end
+				else
+					if unknow == "x"
+						Maintenant, la température est de $m($now) °C.$trap
+						\sDepuis le matin, elle a monté de $m($delta) °C. Combien faisait-il ce matin?
+					elseif unknow == "y"
+						Ce matin, la température était de $m($initial) °C.$trap
+						\sMaintenant, elle est de $m($now) °C. De combien de degrés a-t-elle monté?
+					elseif unknow == "z"
+						Ce matin, la température était de $m($initial) °C.$trap
+						\sDepuis, elle a monté de $m($delta) °C. Combien fait-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au début de la journée, la température était de $m($initial) °C.
+					elseif unknow == "y"
+						La température a baissé de $m($delta) °C.
+					elseif unknow == "z"
+						Maintenant, la température est de $m($rest) °C.
+					end
+				else
+					if unknow == "x"
+						Ce matin, la température était de $m($initial) °C.
+					elseif unknow == "y"
+						La température a monté de $m($delta) °C.
+					elseif unknow == "z"
+						Maintenant, la température est de $m($now) °C.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Elevator: current floor, going down (loss) or going up (gain);
+// trap = max number of floors of the building (floors, like the levels).
+ascenseur: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(20, 60)
+		delta: $Range(3, 10)
+		maxFloors: $Range(80, 120)
+	end
+
+	get: macro(initial:, delta:, maxFloors:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sL'immeuble compte au maximum $m($maxFloors) étages.
+				end
+				if isLoss
+					if unknow == "x"
+						L'ascenseur est descendu de $m($delta) étages et s'est arrêté au $m($rest)e étage.$trap
+						\sÀ quel étage était-il au départ?
+					elseif unknow == "y"
+						L'ascenseur était au $m($initial)e étage.$trap
+						\sMaintenant, il est au $m($rest)e étage. De combien d'étages est-il descendu?
+					elseif unknow == "z"
+						L'ascenseur était au $m($initial)e étage.$trap
+						\sIl est descendu de $m($delta) étages. À quel étage est-il maintenant?
+					end
+				else
+					if unknow == "x"
+						L'ascenseur est monté de $m($delta) étages et s'est arrêté au $m($now)e étage.$trap
+						\sÀ quel étage était-il au départ?
+					elseif unknow == "y"
+						L'ascenseur était au $m($initial)e étage.$trap
+						\sMaintenant, il est au $m($now)e étage. De combien d'étages est-il monté?
+					elseif unknow == "z"
+						L'ascenseur était au $m($initial)e étage.$trap
+						\sIl est monté de $m($delta) étages. À quel étage est-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au départ, l'ascenseur était au $m($initial)e étage.
+					elseif unknow == "y"
+						L'ascenseur est descendu de $m($delta) étages.
+					elseif unknow == "z"
+						Maintenant, l'ascenseur est au $m($rest)e étage.
+					end
+				else
+					if unknow == "x"
+						Au départ, l'ascenseur était au $m($initial)e étage.
+					elseif unknow == "y"
+						L'ascenseur est monté de $m($delta) étages.
+					elseif unknow == "z"
+						Maintenant, l'ascenseur est au $m($now)e étage.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Cross-country run: loss = km left of a course of known length
+// (x = length, y = km done, z = km left); gain = two-part run
+// (x = km done before part 2, y = length of part 2, z = km done in total);
+// trap = average running speed (km/h, like the distances).
+course: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(20, 60)
+		delta: $Range(5, 15)
+		speed: $Range(8, 14)
+	end
+
+	get: macro(initial:, delta:, speed:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sLa vitesse moyenne des coureurs est de $m($speed) km/h.
+				end
+				if isLoss
+					if unknow == "x"
+						$cap($name.haveFirst) déjà couru $m($delta) km et il $name.indirect reste $m($rest) km à faire.$trap
+						\sQuelle est la longueur totale de la course?
+					elseif unknow == "y"
+						La course fait $m($initial) km et il $name.indirect reste $m($rest) km à faire.$trap
+						\sCombien de km $name.qhave déjà courus?
+					elseif unknow == "z"
+						La course fait $m($initial) km.$trap
+						\s$cap($name.haveFirst) déjà couru $m($delta) km. Combien de km $name.indirect reste-t-il?
+					end
+				else
+					if unknow == "x"
+						Après la deuxième étape, $name.haveFirst parcouru $m($now) km en tout.$trap
+						\sCette étape a fait $m($delta) km. Combien de km $name.qhad déjà parcourus avant cette étape?
+					elseif unknow == "y"
+						Avant la deuxième étape, $name.hadFirst parcouru $m($initial) km.$trap
+						\sAprès, $name.haveFirst parcouru $m($now) km en tout. Quelle est la longueur de la deuxième étape?
+					elseif unknow == "z"
+						Avant la deuxième étape, $name.hadFirst parcouru $m($initial) km.$trap
+						\sCette étape a fait $m($delta) km. Combien de km $name.qhave parcourus en tout?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						La course fait $m($initial) km en tout.
+					elseif unknow == "y"
+						$cap($name.haveFirst) déjà couru $m($delta) km.
+					elseif unknow == "z"
+						Il $name.indirect reste $m($rest) km à faire.
+					end
+				else
+					if unknow == "x"
+						Avant la deuxième étape, $name.hadFirst déjà parcouru $m($initial) km.
+					elseif unknow == "y"
+						La deuxième étape a fait $m($delta) km.
+					elseif unknow == "z"
+						En tout, $name.haveFirst parcouru $m($now) km.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Video game: score, points lost in a duel (loss) or points won in a level
+// (gain); trap = points awarded per game won (points, like the score).
+score: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(20, 60)
+		delta: $Range(2, 10)
+		perGame: $Range(4, 15)
+	end
+
+	get: macro(initial:, delta:, perGame:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				let possessif = if name.name == "je"
+					mon
+				else
+					son
+				end
+				set trap = if trap
+					\sCe jeu rapporte $m($perGame) points par partie gagnée.
+				end
+				if isLoss
+					if unknow == "x"
+						$cap($name.haveFirst) perdu $m($delta) points.$trap
+						\s$cap($possessif) score est maintenant de $m($rest) points. Combien de points $name.qhad avant?
+					elseif unknow == "y"
+						Avant le duel, $possessif score était de $m($initial) points.$trap
+						\sMaintenant, il est de $m($rest) points. Combien de points $name.qhave perdus?
+					elseif unknow == "z"
+						Avant le duel, $possessif score était de $m($initial) points.$trap
+						\s$cap($name.haveFirst) perdu $m($delta) points. Quel est $possessif score maintenant?
+					end
+				else
+					if unknow == "x"
+						Après le niveau, $possessif score est de $m($now) points.$trap
+						\s$cap($name.haveFirst) gagné $m($delta) points. Combien de points $name.qhad avant?
+					elseif unknow == "y"
+						Avant le niveau, $possessif score était de $m($initial) points.$trap
+						\sMaintenant, il est de $m($now) points. Combien de points $name.qhave gagnés?
+					elseif unknow == "z"
+						Avant le niveau, $possessif score était de $m($initial) points.$trap
+						\s$cap($name.haveFirst) gagné $m($delta) points. Combien de points $name.qhave maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				let possessif = if name.name == "je"
+					mon
+				else
+					son
+				end
+				if isLoss
+					if unknow == "x"
+						Avant le duel, $possessif score était de $m($initial) points.
+					elseif unknow == "y"
+						$cap($name.haveFirst) perdu $m($delta) points.
+					elseif unknow == "z"
+						Maintenant, $possessif score est de $m($rest) points.
+					end
+				else
+					if unknow == "x"
+						Avant le niveau, $possessif score était de $m($initial) points.
+					elseif unknow == "y"
+						$cap($name.haveFirst) gagné $m($delta) points.
+					elseif unknow == "z"
+						Maintenant, $possessif score est de $m($now) points.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Sock monster under the bed: socks in the drawer, eaten (loss) or given
+// back (gain); trap = number of monsters living under the bed.
+monstreChaussettes: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(10, 30)
+		delta: $Range(2, 8)
+		monsters: $Range(2, 6)
+	end
+
+	get: macro(initial:, delta:, monsters:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sEn réalité, il y a $m($monsters) monstres sous le lit.
+				end
+				if isLoss
+					if unknow == "x"
+						Le monstre sous le lit a mangé $m($delta) chaussettes.$trap
+						\sIl reste $m($rest) chaussettes dans le tiroir. Combien de chaussettes y avait-il au départ?
+					elseif unknow == "y"
+						Au départ, le tiroir contenait $m($initial) chaussettes.$trap
+						\sMaintenant, il n'en reste que $m($rest). Combien de chaussettes le monstre a-t-il mangées?
+					elseif unknow == "z"
+						Le tiroir contenait $m($initial) chaussettes.$trap
+						\sLe monstre en a mangé $m($delta). Combien de chaussettes reste-t-il?
+					end
+				else
+					if unknow == "x"
+						Le monstre a rendu $m($delta) chaussettes.$trap
+						\sMaintenant, il y a $m($now) chaussettes dans le tiroir. Combien de chaussettes y avait-il au départ?
+					elseif unknow == "y"
+						Au départ, le tiroir contenait $m($initial) chaussettes.$trap
+						\sMaintenant, il y en a $m($now). Combien de chaussettes le monstre a-t-il rendues?
+					elseif unknow == "z"
+						Le tiroir contenait $m($initial) chaussettes.$trap
+						\sLe monstre en a rendu $m($delta). Combien de chaussettes y a-t-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au départ, il y avait $m($initial) chaussettes dans le tiroir.
+					elseif unknow == "y"
+						Le monstre a mangé $m($delta) chaussettes.
+					elseif unknow == "z"
+						Il reste $m($rest) chaussettes dans le tiroir.
+					end
+				else
+					if unknow == "x"
+						Au départ, il y avait $m($initial) chaussettes dans le tiroir.
+					elseif unknow == "y"
+						Le monstre a rendu $m($delta) chaussettes.
+					elseif unknow == "z"
+						Il y a maintenant $m($now) chaussettes dans le tiroir.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Space station: crew on board, returned to Earth (loss) or arrived by
+// shuttle (gain); trap = station capacity (astronauts, like the crew).
+stationSpatiale: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(12, 40)
+		delta: $Range(2, 8)
+		capacity: $Range(60, 100)
+	end
+
+	get: macro(initial:, delta:, capacity:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sLa station peut accueillir au maximum $m($capacity) astronautes.
+				end
+				if isLoss
+					if unknow == "x"
+						$m($delta) astronautes sont retournés sur Terre.$trap
+						\sIl reste $m($rest) astronautes dans la station. Combien d'astronautes y avait-il avant?
+					elseif unknow == "y"
+						Avant, il y avait $m($initial) astronautes dans la station.$trap
+						\sMaintenant, il n'y en reste que $m($rest). Combien d'astronautes sont retournés sur Terre?
+					elseif unknow == "z"
+						Il y avait $m($initial) astronautes dans la station.$trap
+						\s$m($delta) astronautes sont retournés sur Terre. Combien d'astronautes reste-t-il dans la station?
+					end
+				else
+					if unknow == "x"
+						$m($delta) astronautes sont arrivés par navette.$trap
+						\sIl y en a maintenant $m($now) dans la station. Combien d'astronautes y avait-il avant?
+					elseif unknow == "y"
+						Avant, il y avait $m($initial) astronautes dans la station.$trap
+						\sMaintenant, il y en a $m($now). Combien d'astronautes sont arrivés par navette?
+					elseif unknow == "z"
+						Il y avait $m($initial) astronautes dans la station.$trap
+						\s$m($delta) astronautes sont arrivés par navette. Combien d'astronautes y a-t-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Avant, il y avait $m($initial) astronautes dans la station.
+					elseif unknow == "y"
+						$m($delta) astronautes sont retournés sur Terre.
+					elseif unknow == "z"
+						Il reste $m($rest) astronautes dans la station.
+					end
+				else
+					if unknow == "x"
+						Avant, il y avait $m($initial) astronautes dans la station.
+					elseif unknow == "y"
+						$m($delta) astronautes sont arrivés par navette.
+					elseif unknow == "z"
+						Il y a maintenant $m($now) astronautes dans la station.
+					end
+				end
+			end
+		end
+	end
+end
+
+// Bear and honey: honey pots in the cellar, emptied by the bear (loss) or
+// brought by the bees (gain); trap = empty jars in the attic (pots, like
+// the honey pots, other room, so they are clearly not the emptied ones).
+oursMiel: @QuestionFactory
+	parameters: do
+	end
+	hyperParameters: do
+		initial: $Range(8, 25)
+		delta: $Range(2, 6)
+		emptyJars: $Range(5, 20)
+	end
+
+	get: macro(initial:, delta:, emptyJars:)
+		let rest = $(initial - delta)
+		let now = $(initial + delta)
+		@Question(pbParameters)
+			values: do
+				x: $initial
+				y: $delta
+			end
+			renderInstructions: macro(name, isLoss, unknow, trap, m)
+				set trap = if trap
+					\sLe grenier contient $m($emptyJars) pots vides, pour les confitures.
+				end
+				if isLoss
+					if unknow == "x"
+						L'ours a vidé $m($delta) pots de miel.$trap
+						\sIl en reste $m($rest) dans la cave. Combien de pots de miel y avait-il au départ?
+					elseif unknow == "y"
+						Au départ, il y avait $m($initial) pots de miel dans la cave.$trap
+						\sMaintenant, il n'en reste que $m($rest). Combien de pots de miel l'ours a-t-il vidés?
+					elseif unknow == "z"
+						Il y avait $m($initial) pots de miel dans la cave.$trap
+						\sL'ours en a vidé $m($delta). Combien de pots de miel reste-t-il?
+					end
+				else
+					if unknow == "x"
+						Les abeilles ont rapporté $m($delta) pots de miel.$trap
+						\sIl y en a maintenant $m($now) dans la cave. Combien de pots de miel y avait-il au départ?
+					elseif unknow == "y"
+						Au départ, il y avait $m($initial) pots de miel dans la cave.$trap
+						\sMaintenant, il y en a $m($now). Combien de pots de miel les abeilles ont-elles rapportés?
+					elseif unknow == "z"
+						Il y avait $m($initial) pots de miel dans la cave.$trap
+						\sLes abeilles en ont rapporté $m($delta). Combien de pots de miel y a-t-il maintenant?
+					end
+				end
+			end
+			renderSolution: macro(name, isLoss, unknow, m)
+				if isLoss
+					if unknow == "x"
+						Au départ, il y avait $m($initial) pots de miel dans la cave.
+					elseif unknow == "y"
+						L'ours a vidé $m($delta) pots de miel.
+					elseif unknow == "z"
+						Il reste $m($rest) pots de miel dans la cave.
+					end
+				else
+					if unknow == "x"
+						Au départ, il y avait $m($initial) pots de miel dans la cave.
+					elseif unknow == "y"
+						Les abeilles ont rapporté $m($delta) pots de miel.
+					elseif unknow == "z"
+						Il y a maintenant $m($now) pots de miel dans la cave.
+					end
+				end
+			end
+		end
+	end
+end
