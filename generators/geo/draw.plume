@@ -7,6 +7,8 @@ Licensed under the MIT License — see LICENSE for details.
 
 
 // Todo: point hors cercle & hors disque OU hors cercle mais dans disque
+// Todo: aligner convention d'appel entre drawLine et drawSegment/drawCircle
+
 
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
@@ -18,40 +20,58 @@ let letters from $import(./utils)
 
 let pages = $import(pages) // Should be in render
 
-drawLine: @QuestionFactory
-	parameters: $Table()
-	hyperParameters: do
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $letters(2)
+drawLine: macro(?byname, ?bydef)
+	if not bydef
+		set byname = $true
 	end
-	get: macro(a, b, c, d, letters)
-		if a==c and b==d
-			set a += 1
+	@QuestionFactory
+		parameters: do
+			- @Choice
+				if byname
+					- byname
+				end
+				if bydef
+					- bydef
+				end
+			end
 		end
-		let A = $figure2D.Vect2D($a, $b)
-		let B = $figure2D.Vect2D($c, $d)
-		let _A, _B = $letters
+		hyperParameters: do
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $letters(2)
+		end
+		get: macro(variant, a, b, c, d, letters)
+			if a==c and b==d
+				set a += 1
+			end
+			let A = $figure2D.Vect2D($a, $b)
+			let B = $figure2D.Vect2D($c, $d)
+			let _A, _B = $letters
 
-		@Question(draw)
-			description: Tracer une droite $pages.formula(($_A$_B)).
-			figure: do
-				- $ figure2D.Line(A, B)
-				- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
-				- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
-				- $ figure2D.Dot(B+(B-A)/2) // extend canva
-				- $ figure2D.Dot(A+(A-B)/2) // extend canva
+			@Question(draw)
+				description: if variant == "byname"
+					Tracer une droite $pages.formula(($_A$_B)).
+				else
+					Placer $pages.formula($_A) et $pages.formula($_B), puis l'ensemble des points alignés avec $pages.formula($_A) et $pages.formula($_B).
+				end
+				figure: do
+					- $ figure2D.Line(A, B)
+					- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
+					- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
+					- $ figure2D.Dot(B+(B-A)/2) // extend canva
+					- $ figure2D.Dot(A+(A-B)/2) // extend canva
+				end
 			end
 		end
 	end
 end
 
 
-drawSegment: macro(?length, ?segment, ?middle, ?dotin)
-	if not length and not segment and not dotin
-		raise Must provide at least "length" or "segment"
+drawSegment: macro(?length, ?segment, ?middle, ?dotin, ?bydef)
+	if not length and not segment and not dotin and not bydef
+		raise Must provide at least "length" or "segment" or "dotin" or "bydef"
 	end
 
 	@QuestionFactory
@@ -64,6 +84,9 @@ drawSegment: macro(?length, ?segment, ?middle, ?dotin)
 				if dotin
 					- 2
 					- 3
+				end
+				if bydef
+					- 4
 				end
 			end
 		end
@@ -86,21 +109,25 @@ drawSegment: macro(?length, ?segment, ?middle, ?dotin)
 
 			@Question(draw)
 				description: do
-					if segment and length
-						Tracer un segment $pages.formula([$_A$_B]) de longeur $pages.formula($l\0cm)
-					elseif length
-						Placer $pages.formula($_A) et $pages.formula($_B) tel que $pages.formula($_A$_B=$l\0cm)
+					if dot== 4
+						Placer $pages.formula($_A) et $pages.formula($_B), puis l'ensemble des points entre $pages.formula($_A) et $pages.formula($_B).
 					else
-						Tracer un segment $pages.formula([$_A$_B])
+						if segment and length
+							Tracer un segment $pages.formula([$_A$_B]) de longeur $pages.formula($l\0cm)
+						elseif length
+							Placer $pages.formula($_A) et $pages.formula($_B) tel que $pages.formula($_A$_B=$l\0cm)
+						else
+							Tracer un segment $pages.formula([$_A$_B])
+						end
+						if dot == 1
+							\set placer son milieu $pages.formula($_C)
+						elseif dot == 2
+							\set placer $pages.formula($_C \\in [$_A$_B])
+						elseif dot == 3
+							\set placer $pages.formula($_C \\notin [$_A$_B])
+						end
+						.
 					end
-					if dot == 1
-						\set placer son milieu $pages.formula($_C)
-					elseif dot == 2
-						\set placer $pages.formula($_C \\in [$_A$_B])
-					elseif dot == 3
-						\set placer $pages.formula($_C \\notin [$_A$_B])
-					end
-					.
 				end
 
 				figure: do
@@ -277,7 +304,7 @@ drawCircleIntersection: macro(?zero, ?one, ?two, ?infinite)
 	end
 end
 
-drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin)
+drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin, ?bydef)
 	@QuestionFactory
 		parameters: do
 			disque: if disque
@@ -300,14 +327,18 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin)
 					- 4
 					- 5
 				end
+				if bydef
+					- 6
+				end
 			end
 		end
 		hyperParameters: do
 			- $letters(3)
 			- $Range(0, 180)
 			- $Range(40,  80)
+			- $Range(3,  8)
 		end
-		get: macro(letters, angle1, angle2, disque:, radius:)
+		get: macro(letters, angle1, angle2, r, disque:, radius:)
 			let _A, _B, _C = $letters
 
 			@Question(draw)
@@ -316,18 +347,26 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin)
 				else
 					cercle
 				end
-				description: if radius == 2
-					Tracer un $name et son diamètre $pages.formula([$_A$_B]).
-				elseif radius == 1
-					Tracer un $name de centre $pages.formula($_A) et un rayon $pages.formula([$_A$_B]).
-				elseif radius == 3
-					Tracer un $name de centre $pages.formula($_A) et une corde $pages.formula([$_B$_C]).
-				elseif radius == 4
-					Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\in \\mathscr C).
-				elseif radius == 5
-					Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\notin \\mathscr C).
+				description: if radius == 6
+					if disque == 1
+						Placer $pages.formula($_A), puis l'ensemble des points situés à $pages.formula($r\0cm) ou moins de $pages.formula($_A).
+					else
+						Placer $pages.formula($_A), puis l'ensemble des points situés à exactement $pages.formula($r\0cm) de $pages.formula($_A).
+					end
 				else
-					Tracer un $name de centre $pages.formula($_A).
+					if radius == 2
+						Tracer un $name et son diamètre $pages.formula([$_A$_B]).
+					elseif radius == 1
+						Tracer un $name de centre $pages.formula($_A) et un rayon $pages.formula([$_A$_B]).
+					elseif radius == 3
+						Tracer un $name de centre $pages.formula($_A) et une corde $pages.formula([$_B$_C]).
+					elseif radius == 4
+						Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\in \\mathscr C).
+					elseif radius == 5
+						Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\notin \\mathscr C).
+					else
+						Tracer un $name de centre $pages.formula($_A).
+					end
 				end
 
 				let center = $figure2D.Vect2D(0, 0)
