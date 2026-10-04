@@ -257,6 +257,11 @@ pbEvalLin: macro(context, minItemCount:2, maxItemCount: 3, maxOnes: 2, names:, ?
 				- do
 					name: $item.name
 					namePlural: $item.namePlural
+					// display labels, copied as-is: the situation's itemLine
+					// renders the unit and the negative labels
+					negS: $item.negS
+					negP: $item.negP
+					unit: $item.unit
 					dec: $item.dec
 					count: $count
 				end

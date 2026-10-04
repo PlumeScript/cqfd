@@ -10,22 +10,28 @@ let QuestionFactory from $import(../../../core/cls/questionFactory)
 let Range from $import(../../../core/parameters/range)
 let Choice, ChoiceSet from $import(../../../core/parameters/set)
 
-// Boulangerie context for pbEvalLin: three distinct products drawn among
-// four, each with a price interpolated in [minU..maxU] units of
-// 10^-digit euro, rounded up to the unit, and a shop count (>= 1).
-// Prices are kept in integer tenths of euro (`dec`) so the pbEvalLin
-// total stays exact; the display price is dec/10.
+// pbEvalLin contexts: three items drawn among the context's catalog, each
+// with a price interpolated in [minU..maxU] units of 10^-digit euro (rounded
+// up, kept in integer tenths of euro in `dec` so the total stays exact) and
+// a shop count (>= 1). Each catalog item carries its display fields:
+//   unit   the price label ("pièce", "le kilo", "le pot");
+//   negS   the label of a single negative unit (a refund line or a coupon);
+//   negP   the label of several negative units.
+// A "le kilo" item is always sold by the kilo ("N kg de <plural>"), positive
+// or refunded, never by the piece.
 macro itemLine(item)
 	let n = $(Number.abs(item.count))
 	let price = $(Number(item.dec/10).localize())
-	if item.count < 0
-		if n == 1
-			$n coupon de réduction ($price € pièce)
+	if item.unit == "le kilo"
+		if item.count < 0
+			$n kg de $item.negP ($price € le kilo)
 		else
-			$n coupons de réduction ($price € pièce)
+			$n kg de $item.namePlural ($price € le kilo)
 		end
+	elseif item.count < 0
+		$n $(n == 1 and item.negS or item.negP) ($price € $item.unit)
 	else
-		$n $(n == 1 and item.name or item.namePlural) ($price € pièce)
+		$n $(n == 1 and item.name or item.namePlural) ($price € $item.unit)
 	end
 end
 
@@ -39,12 +45,14 @@ macro listItems(question)
 	end
 end
 
+// Boulangerie: three distinct products drawn among four; the negative term
+// is a discount coupon.
 boulangerie: @QuestionFactory
 	let infos = do
-		- (name: baguette, namePlural: baguettes, minU: 5, maxU: 10, digit: 1, countMax: 20)
-		- (name: croissant, namePlural: croissants, minU: 8, maxU: 12, digit: 1, countMax: 20)
-		- (name: pain au chocolat, namePlural: pains au chocolat, minU: 8, maxU: 12, digit: 1, countMax: 20)
-		- (name: gâteau, namePlural: gâteaux, minU: 10, maxU: 50, digit: 0, countMax: 5)
+		- (name: baguette, namePlural: baguettes, negS: coupon de réduction, negP: coupons de réduction, unit: pièce, minU: 5, maxU: 10, digit: 1, countMax: 20)
+		- (name: croissant, namePlural: croissants, negS: coupon de réduction, negP: coupons de réduction, unit: pièce, minU: 8, maxU: 12, digit: 1, countMax: 20)
+		- (name: pain au chocolat, namePlural: pains au chocolat, negS: coupon de réduction, negP: coupons de réduction, unit: pièce, minU: 8, maxU: 12, digit: 1, countMax: 20)
+		- (name: gâteau, namePlural: gâteaux, negS: coupon de réduction, negP: coupons de réduction, unit: pièce, minU: 10, maxU: 50, digit: 0, countMax: 5)
 	end
 	parameters: do
 		items: @ChoiceSet(3)
@@ -62,11 +70,15 @@ boulangerie: @QuestionFactory
 	end
 	get: macro(items:, ...vars)
 		@Question(pbParameters)
+			contextName: boulangerie
 			items: for i, item in enumerate(items)
 				let info = $infos[item]
 				- do
 					name: $info.name
 					namePlural: $info.namePlural
+					negS: $info.negS
+					negP: $info.negP
+					unit: $info.unit
 					dec: $ (info.minU + (info.maxU - info.minU) * vars[i] / 100).ceil() * 10^(1 - info.digit)
 					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
 				end
@@ -79,6 +91,282 @@ boulangerie: @QuestionFactory
 					Je suis allé à la boulangerie, mon ticket de caisse indique :
 				else
 					$name.nameFirst $(name.name == "elle" and "est allée" or "est allé") à la boulangerie, son ticket de caisse indique :
+				end
+				$listItems($question)
+				. Quel est le montant total à payer ?
+			end
+			renderSolution: macro(question)
+				Le montant total à payer est de $(Number(question.solution).localize()) €.
+			end
+		end
+	end
+end
+
+// Papeterie: three school supplies drawn among five; the negative term is
+// the student-card coupon (the same label for every item).
+papeterie: @QuestionFactory
+	let infos = do
+		- (name: cahier, namePlural: cahiers, negS: coupon de la carte élève, negP: coupons de la carte élève, unit: pièce, minU: 22, maxU: 35, digit: 1, countMax: 6)
+		- (name: règle, namePlural: règles, negS: coupon de la carte élève, negP: coupons de la carte élève, unit: pièce, minU: 15, maxU: 25, digit: 1, countMax: 5)
+		- (name: crayon à papier, namePlural: crayons à papier, negS: coupon de la carte élève, negP: coupons de la carte élève, unit: pièce, minU: 8, maxU: 15, digit: 1, countMax: 10)
+		- (name: gomme, namePlural: gommes, negS: coupon de la carte élève, negP: coupons de la carte élève, unit: pièce, minU: 10, maxU: 20, digit: 1, countMax: 8)
+		- (name: tube de colle, namePlural: tubes de colle, negS: coupon de la carte élève, negP: coupons de la carte élève, unit: pièce, minU: 15, maxU: 40, digit: 1, countMax: 4)
+	end
+	parameters: do
+		items: @ChoiceSet(3)
+			- 1
+			- 2
+			- 3
+			- 4
+			- 5
+		end
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+	end
+	get: macro(items:, ...vars)
+		@Question(pbParameters)
+			contextName: papeterie
+			items: for i, item in enumerate(items)
+				let info = $infos[item]
+				- do
+					name: $info.name
+					namePlural: $info.namePlural
+					negS: $info.negS
+					negP: $info.negP
+					unit: $info.unit
+					dec: $ (info.minU + (info.maxU - info.minU) * vars[i] / 100).ceil() * 10^(1 - info.digit)
+					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
+				end
+			end
+			renderInstructions: macro(name, question)
+				if name.name == "je"
+					J'ai fait mes fournitures scolaires à la papeterie. Mon ticket de caisse indique :
+				else
+					$name.nameFirst a fait ses fournitures scolaires à la papeterie. Son ticket de caisse indique :
+				end
+				$listItems($question)
+				. Quel est le montant total à payer ?
+			end
+			renderSolution: macro(question)
+				Le montant total à payer est de $(Number(question.solution).localize()) €.
+			end
+		end
+	end
+end
+
+// Dino-shop (loufoque): three items drawn among four; the negative term is a
+// refund ("rendu/rendus"), the baby T-rex pushes the total into the hundreds.
+dinoshop: @QuestionFactory
+	let infos = do
+		- (name: baby T-rex, namePlural: baby T-rex, negS: baby T-rex rendu, negP: baby T-rex rendus, unit: pièce, minU: 1500, maxU: 3500, digit: 1, countMax: 2)
+		- (name: sac de viande préhistorique, namePlural: sacs de viande préhistorique, negS: sac de viande préhistorique rendu, negP: sacs de viande préhistorique rendus, unit: pièce, minU: 60, maxU: 120, digit: 1, countMax: 8)
+		- (name: os à mâcher, namePlural: os à mâcher, negS: os à mâcher cassé rendu, negP: os à mâcher cassés rendus, unit: pièce, minU: 50, maxU: 100, digit: 1, countMax: 6)
+		- (name: jus de dinosaure, namePlural: jus de dinosaure, negS: jus de dinosaure rendu, negP: jus de dinosaure rendus, unit: pièce, minU: 30, maxU: 60, digit: 1, countMax: 4)
+	end
+	parameters: do
+		items: @ChoiceSet(3)
+			- 1
+			- 2
+			- 3
+			- 4
+		end
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+	end
+	get: macro(items:, ...vars)
+		@Question(pbParameters)
+			contextName: dinoshop
+			items: for i, item in enumerate(items)
+				let info = $infos[item]
+				- do
+					name: $info.name
+					namePlural: $info.namePlural
+					negS: $info.negS
+					negP: $info.negP
+					unit: $info.unit
+					dec: $ (info.minU + (info.maxU - info.minU) * vars[i] / 100).ceil() * 10^(1 - info.digit)
+					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
+				end
+			end
+			renderInstructions: macro(name, question)
+				if name.name == "je"
+					Je suis allé au dino-shop, mon ticket de caisse indique :
+				else
+					$name.nameFirst $(name.name == "elle" and "est allée" or "est allé") au dino-shop, son ticket de caisse indique :
+				end
+				$listItems($question)
+				. Quel est le montant total à payer ?
+			end
+			renderSolution: macro(question)
+				Le montant total à payer est de $(Number(question.solution).localize()) €.
+			end
+		end
+	end
+end
+
+// Cinema: three items drawn among four; the negative term is the refund of
+// an unused ticket or snack ("rendu/rendue(s)").
+cinema: @QuestionFactory
+	let infos = do
+		- (name: place, namePlural: places, negS: place rendue, negP: places rendues, unit: pièce, minU: 80, maxU: 110, digit: 1, countMax: 4)
+		- (name: popcorn, namePlural: popcorns, negS: popcorn rendu, negP: popcorns rendus, unit: pièce, minU: 40, maxU: 70, digit: 1, countMax: 3)
+		- (name: soda, namePlural: sodas, negS: soda rendu, negP: sodas rendus, unit: pièce, minU: 35, maxU: 50, digit: 1, countMax: 3)
+		- (name: bonbon, namePlural: bonbons, negS: bonbon rendu, negP: bonbons rendus, unit: pièce, minU: 20, maxU: 35, digit: 1, countMax: 4)
+	end
+	parameters: do
+		items: @ChoiceSet(3)
+			- 1
+			- 2
+			- 3
+			- 4
+		end
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+	end
+	get: macro(items:, ...vars)
+		@Question(pbParameters)
+			contextName: cinema
+			items: for i, item in enumerate(items)
+				let info = $infos[item]
+				- do
+					name: $info.name
+					namePlural: $info.namePlural
+					negS: $info.negS
+					negP: $info.negP
+					unit: $info.unit
+					dec: $ (info.minU + (info.maxU - info.minU) * vars[i] / 100).ceil() * 10^(1 - info.digit)
+					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
+				end
+			end
+			renderInstructions: macro(name, question)
+				if name.name == "je"
+					Je suis allé au cinéma, mon ticket de caisse indique :
+				else
+					$name.nameFirst $(name.name == "elle" and "est allée" or "est allé") au cinéma, son ticket de caisse indique :
+				end
+				$listItems($question)
+				. Quel est le montant total à payer ?
+			end
+			renderSolution: macro(question)
+				Le montant total à payer est de $(Number(question.solution).localize()) €.
+			end
+		end
+	end
+end
+
+// Marche: three items drawn among five, mixing units (the kilo, the piece,
+// the pot); the negative term is damaged goods given back to the seller.
+marche: @QuestionFactory
+	let infos = do
+		- (name: pomme, namePlural: pommes, negS: pommes abîmées rendues, negP: pommes abîmées rendues, unit: le kilo, minU: 20, maxU: 35, digit: 1, countMax: 5)
+		- (name: fraise, namePlural: fraises, negS: fraises abîmées rendues, negP: fraises abîmées rendues, unit: le kilo, minU: 50, maxU: 80, digit: 1, countMax: 4)
+		- (name: tomate, namePlural: tomates, negS: tomates abîmées rendues, negP: tomates abîmées rendues, unit: le kilo, minU: 30, maxU: 50, digit: 1, countMax: 4)
+		- (name: melon, namePlural: melons, negS: melon abîmé rendu, negP: melons abîmés rendus, unit: pièce, minU: 40, maxU: 70, digit: 1, countMax: 3)
+		- (name: pot de miel, namePlural: pots de miel, negS: pot de miel fêlé rendu, negP: pots de miel fêlés rendus, unit: le pot, minU: 30, maxU: 60, digit: 1, countMax: 3)
+	end
+	parameters: do
+		items: @ChoiceSet(3)
+			- 1
+			- 2
+			- 3
+			- 4
+			- 5
+		end
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+	end
+	get: macro(items:, ...vars)
+		@Question(pbParameters)
+			contextName: marche
+			items: for i, item in enumerate(items)
+				let info = $infos[item]
+				- do
+					name: $info.name
+					namePlural: $info.namePlural
+					negS: $info.negS
+					negP: $info.negP
+					unit: $info.unit
+					dec: $ (info.minU + (info.maxU - info.minU) * vars[i] / 100).ceil() * 10^(1 - info.digit)
+					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
+				end
+			end
+			renderInstructions: macro(name, question)
+				if name.name == "je"
+					J'ai fait mes courses au marché. Mon ticket indique :
+				else
+					$name.nameFirst a fait ses courses au marché. Son ticket indique :
+				end
+				$listItems($question)
+				. Quel est le montant total à payer ?
+			end
+			renderSolution: macro(question)
+				Le montant total à payer est de $(Number(question.solution).localize()) €.
+			end
+		end
+	end
+end
+
+// Librairie: three books drawn among five; the negative term is the return
+// of an untouched book ("rendu/rendue(s)").
+librairie: @QuestionFactory
+	let infos = do
+		- (name: roman, namePlural: romans, negS: roman rendu, negP: romans rendus, unit: pièce, minU: 65, maxU: 100, digit: 1, countMax: 5)
+		- (name: bande dessinée, namePlural: bandes dessinées, negS: bande dessinée rendue, negP: bandes dessinées rendues, unit: pièce, minU: 70, maxU: 120, digit: 1, countMax: 5)
+		- (name: magazine, namePlural: magazines, negS: magazine rendu, negP: magazines rendus, unit: pièce, minU: 50, maxU: 80, digit: 1, countMax: 4)
+		- (name: atlas, namePlural: atlas, negS: atlas rendu, negP: atlas rendu, unit: pièce, minU: 120, maxU: 200, digit: 1, countMax: 2)
+		- (name: livre de cuisine, namePlural: livres de cuisine, negS: livre de cuisine rendu, negP: livres de cuisine rendus, unit: pièce, minU: 150, maxU: 250, digit: 1, countMax: 2)
+	end
+	parameters: do
+		items: @ChoiceSet(3)
+			- 1
+			- 2
+			- 3
+			- 4
+			- 5
+		end
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+	end
+	get: macro(items:, ...vars)
+		@Question(pbParameters)
+			contextName: librairie
+			items: for i, item in enumerate(items)
+				let info = $infos[item]
+				- do
+					name: $info.name
+					namePlural: $info.namePlural
+					negS: $info.negS
+					negP: $info.negP
+					unit: $info.unit
+					dec: $ (info.minU + (info.maxU - info.minU) * vars[i] / 100).ceil() * 10^(1 - info.digit)
+					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
+				end
+			end
+			renderInstructions: macro(name, question)
+				if name.name == "je"
+					J'ai acheté des livres à la librairie. Mon ticket de caisse indique :
+				else
+					$name.nameFirst a acheté des livres à la librairie. Son ticket de caisse indique :
 				end
 				$listItems($question)
 				. Quel est le montant total à payer ?

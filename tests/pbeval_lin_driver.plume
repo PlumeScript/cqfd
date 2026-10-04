@@ -1,8 +1,10 @@
-// L1 driver: draw pbEvalLin questions (boulangerie context) and dump
-// structured text for the python test. Pass 1 = no name (je form),
-// pass 2 = named (Marc m / Lise f, drawn per question).
+// L1 driver: draw pbEvalLin questions over the six situations (boulangerie,
+// papeterie, dinoshop, cinema, marche, librairie) and dump structured text
+// for the python test. Pass 1 = no name (je form), pass 2 = named (Marc m /
+// Lise f, drawn per question). The context name is carried by the context
+// question (contextName), echoed in the Q marker and the META line.
 let pbEvalLin from $import(../generators/calc/problem)
-let boulangerie from $import(../generators/calc/situations/pbEvalLin)
+let boulangerie, papeterie, dinoshop, cinema, marche, librairie from $import(../generators/calc/situations/pbEvalLin)
 let calcRender = $import(../render/pages/calcul)
 
 let nameMarc = do
@@ -17,12 +19,23 @@ let names = do
 	- $nameMarc
 	- $nameLise
 end
-let factory = $ pbEvalLin($boulangerie)
-let factoryN = $ pbEvalLin($boulangerie, names: $names)
+
+let fBoulangerie = $ pbEvalLin($boulangerie)
+let fBoulangerieN = $ pbEvalLin($boulangerie, names: $names)
+let fPapeterie = $ pbEvalLin($papeterie)
+let fPapeterieN = $ pbEvalLin($papeterie, names: $names)
+let fDinoshop = $ pbEvalLin($dinoshop)
+let fDinoshopN = $ pbEvalLin($dinoshop, names: $names)
+let fCinema = $ pbEvalLin($cinema)
+let fCinemaN = $ pbEvalLin($cinema, names: $names)
+let fMarche = $ pbEvalLin($marche)
+let fMarcheN = $ pbEvalLin($marche, names: $names)
+let fLibrairie = $ pbEvalLin($librairie)
+let fLibrairieN = $ pbEvalLin($librairie, names: $names)
 
 macro dump(pass, idx, q)
-	==Q-$pass-$idx==
-	==META|who:$(q.name? and q.name[1] or 0)|n:$len($q.items)|c1:$q.items[1].count|d1:$q.items[1].dec|c2:$q.items[2].count|d2:$q.items[2].dec|c3:$(len($q.items) >= 3 and $q.items[3].count or 0)|d3:$(len($q.items) >= 3 and $q.items[3].dec or 0)|nm1:$q.items[1].name|pl1:$q.items[1].namePlural|nm2:$q.items[2].name|pl2:$q.items[2].namePlural|nm3:$(len($q.items) >= 3 and $q.items[3].name or 0)|pl3:$(len($q.items) >= 3 and $q.items[3].namePlural or 0)|sol:$q.solution|id:$q.id==
+	==Q-$pass-$idx-$q.context.contextName==
+	==META|ctx:$q.context.contextName|who:$(q.name? and q.name[1] or 0)|n:$len($q.items)|c1:$q.items[1].count|d1:$q.items[1].dec|c2:$q.items[2].count|d2:$q.items[2].dec|c3:$(len($q.items) >= 3 and $q.items[3].count or 0)|d3:$(len($q.items) >= 3 and $q.items[3].dec or 0)|nm1:$q.items[1].name|pl1:$q.items[1].namePlural|nm2:$q.items[2].name|pl2:$q.items[2].namePlural|nm3:$(len($q.items) >= 3 and $q.items[3].name or 0)|pl3:$(len($q.items) >= 3 and $q.items[3].namePlural or 0)|u1:$q.items[1].unit|u2:$q.items[2].unit|u3:$(len($q.items) >= 3 and $q.items[3].unit or 0)|ns1:$q.items[1].negS|np1:$q.items[1].negP|ns2:$q.items[2].negS|np2:$q.items[2].negP|ns3:$(len($q.items) >= 3 and $q.items[3].negS or 0)|np3:$(len($q.items) >= 3 and $q.items[3].negP or 0)|sol:$q.solution|id:$q.id==
 	==I==
 	$calcRender.pbEvalLin.instruction($q)
 	==S==
@@ -30,15 +43,85 @@ macro dump(pass, idx, q)
 	==END==
 end
 
-for i in seq(1, 300)
-	let q = $ factory.get(i)
+for i in seq(1, 60)
+	let q = $ fBoulangerie.get(i)
 	if q == empty
 		continue
 	end
 	$dump(1, $i, $q)
 end
-for i in seq(1, 150)
-	let q = $ factoryN.get(i)
+for i in seq(1, 60)
+	let q = $ fBoulangerieN.get(i)
+	if q == empty
+		continue
+	end
+	$dump(2, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fPapeterie.get(i)
+	if q == empty
+		continue
+	end
+	$dump(1, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fPapeterieN.get(i)
+	if q == empty
+		continue
+	end
+	$dump(2, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fDinoshop.get(i)
+	if q == empty
+		continue
+	end
+	$dump(1, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fDinoshopN.get(i)
+	if q == empty
+		continue
+	end
+	$dump(2, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fCinema.get(i)
+	if q == empty
+		continue
+	end
+	$dump(1, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fCinemaN.get(i)
+	if q == empty
+		continue
+	end
+	$dump(2, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fMarche.get(i)
+	if q == empty
+		continue
+	end
+	$dump(1, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fMarcheN.get(i)
+	if q == empty
+		continue
+	end
+	$dump(2, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fLibrairie.get(i)
+	if q == empty
+		continue
+	end
+	$dump(1, $i, $q)
+end
+for i in seq(1, 60)
+	let q = $ fLibrairieN.get(i)
 	if q == empty
 		continue
 	end
