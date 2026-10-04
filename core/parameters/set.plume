@@ -26,7 +26,7 @@ Constant: macro(value)
 	end
 end
 
-Choice: macro(...values)
+ref Choice: macro(...values)
 	@Parameter
 		size: $ len(values)
 		get: macro(i, n: 0, seed: 0)
@@ -38,6 +38,37 @@ Choice: macro(...values)
 			else
 				$v
 			end
+		end
+	end
+end
+
+macro fact(n)
+	let i = 1
+	for j in seq(n)
+		set i *= $j
+	end
+	return $i
+end
+
+// Not clean: overlaps
+ChoiceSet: macro(Number count, ...values)
+	if count==0 or count.floor() != count or count==len(values)
+		raise count must be a postive integer lesser than $len($values), not "$count".
+	end
+	let choice = $Choice(...values)
+	@Parameter
+		size: $ fact(len(values)) / (fact(count) * fact(len(values) - count))
+		get: macro(i, n: 0, seed: 0)
+			let result = $Table()
+			while len(result) < count
+				let next = $ choice.get(i % choice.size)
+				if not Table.find(result, next)
+					run $ Table.append(result, next)
+				end
+				set i += 1
+			end
+
+			return $result
 		end
 	end
 end
