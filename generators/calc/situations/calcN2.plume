@@ -890,10 +890,20 @@ oursMiel: @QuestionFactory
 				else
 					if unknow == "x"
 						Les abeilles ont rapporté $m($delta) pots de miel.$trap
-						\sIl y en a maintenant $m($now) dans la cave. Combien de pots de miel y avait-il au départ?
+						if trap
+							\sIl a maintenant $m($now) pots de miel dans la cave.\s
+						else
+							\sIl y en a maintenant $m($now) dans la cave.\s
+						end
+						Combien de pots de miel y avait-il au départ?
 					elseif unknow == "y"
 						Au départ, il y avait $m($initial) pots de miel dans la cave.$trap
-						\sMaintenant, il y en a $m($now). Combien de pots de miel les abeilles ont-elles rapportés?
+						if trap
+							\sIl a maintenant $m($now) pots de miel dans la cave.\s
+						else
+							\sMaintenant, il y en a $m($now).\s
+						end
+						Combien de pots de miel les abeilles ont-elles rapportés?
 					elseif unknow == "z"
 						Il y avait $m($initial) pots de miel dans la cave.$trap
 						\sLes abeilles en ont rapporté $m($delta). Combien de pots de miel y a-t-il maintenant?
