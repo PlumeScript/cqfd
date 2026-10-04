@@ -193,15 +193,25 @@ pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?t
 	end
 end
 
-// ax+bz+cz
-pbEvalLin: macro(context, minItemCount:1, maxItemCount: 3, minDiff1: 0, maxDiff1:3, names:, ?trap)
+// Evaluate a linear combination of the context's items: the instruction
+// lists the first `itemCount` items with a quantity each and asks for the
+// total (ax +/- by +/- cz over a situation). `select` shapes the quantities:
+//   0 → 1: the bare price (the "1" coefficient)
+//   1 → the context's count
+//   2 → the context's count, negated (coupon de réduction / retour)
+// Constraints: the first term is positive; at most `maxOnes` bare prices;
+// at least one full count (a quantity >= 2); itemCount >= 2 keeps at most
+// one item absent. A context count of 1 is doubled so the quantity 1 is
+// never displayed ("1 x price" is ambiguous and breaks the plural) —
+// bare-price terms (select 0) keep their 1. Prices are stored in integer
+// tenths of euro (item.dec), so the total is exact.
+pbEvalLin: macro(context, minItemCount:2, maxItemCount: 3, maxOnes: 2, names:, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $ Range(minItemCount, maxItemCount)
-			- $ Range(minDiff1, maxDiff1)
-			- $Range(0, 1)
-			- $Range(0, 2)
-			- $Range(0, 2)
+			- $ Range(0, 1)
+			- $ Range(0, 2)
+			- $ Range(0, 2)
 		end
 		hyperParameters: do
 			context: $context
@@ -211,78 +221,88 @@ pbEvalLin: macro(context, minItemCount:1, maxItemCount: 3, minDiff1: 0, maxDiff1
 				$Choice(0)
 			end
 		end
-		validate: macro(itemCount, diff1, context:, name:, ...select)
-			if itemCount==1
-				return $ select[1] != 0
+		validate: macro(itemCount, context:, name:, ...select)
+			// the first term is always positive
+			if select[1] == 2
+				return $false
 			end
-			for i in select
-				if i==0
-					set diff1 -= 1
-				end
-				if diff1 == 0
-					return $ false
+			let ones = 0
+			let full = 0
+			for i in seq(itemCount)
+				if select[i] == 0
+					set ones = $(ones + 1)
+				elseif select[i] == 1
+					set full = $(full + 1)
 				end
 			end
-			return $ true
+			// max `maxOnes` bare prices, at least one full count
+			return $(ones <= maxOnes and full >= 1)
 		end
-		get: macro(itemCount, _, context:, name:, ...select)
+		get: macro(itemCount, context:, name:, ...select)
 			let result = 0
 
 			let items = for i in seq(itemCount)
 				let item = $ context.items[i]
+				let count = if select[i] == 0
+					1
+				elseif select[i] == 2
+					$ -item.count
+				else
+					$item.count
+				end
+				if select[i] != 0 and (count == -1 or count == 1)
+					set count *= 2
+				end
+				set result = $(result + count * item.dec)
 				- do
 					name: $item.name
 					namePlural: $item.namePlural
-					coeff: $item.coeff
-					let count = if select[i]==0
-						1
-					elseif select[i]==2
-						$ -item.count
-					else
-						$item.count
-					end
-					if select[i] != 0 and count == -1 or count == 1
-						set count *= 2
-					end
+					dec: $item.dec
 					count: $count
-
-					set result += $ count * item.coeff
 				end
 			end
 
+			// a $(...) atom breaks a call's argument list (the / inside is
+			// read as template): hoist the price out into a let first
+			let firstPrice = $(items[1].dec/10)
 			let tip = if items[1].count > 1
-				$Node(*, $items[1].count, $items[1].coeff)
+				$ Node("*", $items[1].count, $firstPrice)
 			else
-				$items[1].coeff
+				$firstPrice
 			end
 			for i in seq(2, itemCount)
-				let opp
-				let count =  $items[i].count
+				let count = $items[i].count
+				let price = $(items[i].dec/10)
+				// a quoted string in a let/set RHS keeps its quotes (plain
+				// text); a $(...) is a Lua expression, so the sign is built
+				// there as a real string
+				let opp = $(count < 0 and "-" or "+")
 				if count < 0
-					set opp = -
-					set count *= -1
-				else
-					set opp = +
+					set count = $ -count
 				end
-
-				let right = if count > 1
-					$Node(*, $count, $items[i].coeff)
+				if count > 1
+					set tip = $ Node(opp, tip, Node("*", count, price))
 				else
-					$items[i].coeff
+					set tip = $ Node(opp, tip, price)
 				end
-				set tip = $Node($opp, $tip, $right)
 			end
 
-			if result < 0
+			if result <= 0
 				return
+			end
+
+			// unused select slots would repeat the same question under
+			// distinct ids: normalize them so the id is per visible shape
+			if itemCount < 3
+				set select[3] = 0
 			end
 
 			return @Question(pbEvalLin)
 				items: $items
 				context: $context
-				solution: $result
+				solution: $(result/10)
 				calcul: $tip
-				id: $maxItemCount-$Table.join(...select)
+				id: $(itemCount)-$(Table.join(...select))
 			end
 		end
 	end

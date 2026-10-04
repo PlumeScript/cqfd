@@ -360,7 +360,6 @@ pbMulX: do
 	end
 end
 
-// wip
 pbEvalLin: do
 	instruction:macro(question)
 		$ question.context.renderInstructions(question)
