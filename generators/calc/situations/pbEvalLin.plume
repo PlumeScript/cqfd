@@ -10,14 +10,41 @@ let QuestionFactory from $import(../../../core/cls/questionFactory)
 let Range from $import(../../../core/parameters/range)
 let Choice, ChoiceSet from $import(../../../core/parameters/set)
 
+// Boulangerie context for pbEvalLin: three distinct products drawn among
+// four, each with a price interpolated in [minU..maxU] units of
+// 10^-digit euro, rounded up to the unit, and a shop count (>= 1).
+// Prices are kept in integer tenths of euro (`dec`) so the pbEvalLin
+// total stays exact; the display price is dec/10.
+macro itemLine(item)
+	let n = $(Number.abs(item.count))
+	let price = $(Number(item.dec/10).localize())
+	if item.count < 0
+		if n == 1
+			$n coupon de réduction ($price € pièce)
+		else
+			$n coupons de réduction ($price € pièce)
+		end
+	else
+		$n $(n == 1 and item.name or item.namePlural) ($price € pièce)
+	end
+end
 
+macro listItems(question)
+	let last = $(len(question.items))
+	for i, item in enumerate(question.items)
+		if i > 1
+			$(i == last and " et" or ",")
+		end
+		\s$itemLine($item)
+	end
+end
 
 boulangerie: @QuestionFactory
 	let infos = do
-		- (name: baguette, namePlural: baguettes, coeffMin: 0.5, coeffMax: 1, countMax: 20, digit: 1)
-		- (name: croissant, namePlural: croissants, coeffMin: 0.8, coeffMax: 1.2, countMax: 20, digit: 1)
-		- (name: pain au chocolat, namePlural: pains au chocolat, coeffMin: 0.8, coeffMax: 1.2, countMax: 20, digit: 1)
-		- (name: gâteau, namePlural: gâteaux, coeffMin: 10, coeffMax: 50, countMax: 5, digit: 0)
+		- (name: baguette, namePlural: baguettes, minU: 5, maxU: 10, digit: 1, countMax: 20)
+		- (name: croissant, namePlural: croissants, minU: 8, maxU: 12, digit: 1, countMax: 20)
+		- (name: pain au chocolat, namePlural: pains au chocolat, minU: 8, maxU: 12, digit: 1, countMax: 20)
+		- (name: gâteau, namePlural: gâteaux, minU: 10, maxU: 50, digit: 0, countMax: 5)
 	end
 	parameters: do
 		items: @ChoiceSet(3)
@@ -26,37 +53,31 @@ boulangerie: @QuestionFactory
 			- 3
 			- 4
 		end
-		for i in seq(6)
-			- $Range(0, 100)
-		end
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
+		- $Range(0, 100)
 	end
 	get: macro(items:, ...vars)
 		@Question(pbParameters)
 			items: for i, item in enumerate(items)
+				let info = $infos[item]
 				- do
-					let itemInfos = $infos[item]
-					name: $itemInfos.name
-					namePlural: $itemInfos.namePlural
-					coeff: $(
-						((
-							itemInfos.coeffMin +
-							(itemInfos.coeffMax - itemInfos.coeffMin) * vars[i]/ 100
-						)*10^itemInfos.digit).ceil()/10^itemInfos.digit
-					)
-					count: $ (itemInfos.countMax * vars[3 + i] / 100).ceil()
+					name: $info.name
+					namePlural: $info.namePlural
+					dec: $ (info.minU + (info.maxU - info.minU) * vars[i] / 100).ceil() * 10^(1 - info.digit)
+					count: $(max(1, ((info.countMax * vars[3 + i]) / 100).ceil()))
 				end
 			end
 			renderInstructions: macro(question)
-				for item in question.items
-					if item.count>0
-						$item.count x $item.namePlural ($item.coeff€ pièce)
-					else
-						$item.count x coupon de réduction ($item.coeff€ pièce)
-					end
-				end
+				Le ticket de caisse d'une boulangerie indique :
+				$listItems($question)
+				. Quel est le montant total à payer ?
 			end
 			renderSolution: macro(question)
-
+				Le montant total à payer est de $(Number(question.solution).localize()) €.
 			end
 		end
 	end

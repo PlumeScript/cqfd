@@ -1,0 +1,22 @@
+// L1 driver: draw pbEvalLin questions (boulangerie context) and dump
+// structured text for the python test.
+let pbEvalLin from $import(../generators/calc/problem)
+let boulangerie from $import(../generators/calc/situations/pbEvalLin)
+let calcRender = $import(../render/pages/calcul)
+
+let factory = $ pbEvalLin($boulangerie)
+
+for i in seq(1, 300)
+	let q = $ factory.get(i)
+	if q == empty
+		continue
+	end
+	==Q-$i==
+	==META|n:$len($q.items)|c1:$q.items[1].count|d1:$q.items[1].dec|c2:$q.items[2].count|d2:$q.items[2].dec|c3:$(len($q.items) >= 3 and $q.items[3].count or 0)|d3:$(len($q.items) >= 3 and $q.items[3].dec or 0)|nm1:$q.items[1].name|pl1:$q.items[1].namePlural|nm2:$q.items[2].name|pl2:$q.items[2].namePlural|nm3:$(len($q.items) >= 3 and $q.items[3].name or 0)|pl3:$(len($q.items) >= 3 and $q.items[3].namePlural or 0)|sol:$q.solution|id:$q.id==
+	==I==
+	$calcRender.pbEvalLin.instruction($q)
+	==S==
+	$calcRender.pbEvalLin.solution($q)
+	==END==
+end
+==DONE==
