@@ -14,19 +14,26 @@ let r = $Range(2, 10)
 
 // matrioska (rendered by pbMulX, problem.plume): a chain of `depth`
 // multiplications over the context's 4-level vocabulary (level 1 = top).
-// Every template list is 4 slots wide, index = level, so the (start, depth)
-// arithmetic needs no per-context offset:
-//   top[level]    the count of level `level`           (level = start)
-//   link[level]   the count of level `level`           (start+1 .. start+depth; slot 1 = dummy)
-//   ask[level]    the question about the total         (level = start+depth; slot 1 = dummy)
-//   answer[level] the answer about the total           (level = start+depth; slot 1 = dummy)
+// No generic context: `situations` is the list of the specific contexts —
+// each entry is self-contained (name, instructions/solution macros, voc, its
+// own sentences table, division flag, maxStart); matrioska draws an entry by
+// index (Range(1, len(situations))) and stores it as the Question's context.
+// Each context is a named character (gendered title) with its own prose and
+// full division. Every sentences table list is 4 slots wide, index = level,
+// so the (start, depth) arithmetic needs no per-context offset:
+//   top[level]         the count of level `level`        (level = start)
+//   link[level]        the count of level `level`        (start+1 .. start+depth; slot 1 = dummy)
+//   total[level]       the given total (division)        (level = start+depth; slot 1 = dummy)
+//   askMult[level]     the question about the total      (level = start+depth; slot 1 = dummy)
+//   askDiv[level]      the per-level division question   (level = start+1 .. start+depth; slot 1 = dummy)
+//   askDivTop[level]   the hidden-top division question  (level = start)
+//   answerMult/answerDiv/answerDivTop[level] the solution sentences (same indexes)
+//   trap[level]        the level just below the target   (level = start+depth+1; a link the question never uses)
 // pbMulX hides `unknown`: unknown = depth+1 → the total is hidden
-// (multiplication, every context); unknown = 1..depth → a factor is hidden
-// and the total is given (division — only contexts with `division` set,
-// currently `train` only). The trap is the level just below the target
-// (start+depth+1): a link the question never uses. `train` (#129): a named
-// « chef de ligne » character (ma/sa, mes/ses) and per-level division prose
-// — in trainSentences below; the context rejects start > 2.
+// (multiplication); unknown = 1..depth → a factor is hidden and the total is
+// given (division — only contexts with `division` set, and only when the
+// factory is called with the `division:` flag). Each context rejects
+// start > maxStart (train: 2, the others: 3).
 
 macro cap(x)
 	$x.sub(1).upper()$x.sub(2, -1)
@@ -837,6 +844,1856 @@ let situations = do
 		end
 		division: $true
 		maxStart: 2
+	end
+
+	- do
+		name: chocolat
+		// chocolat: the named chocolatier — the workshop (l'atelier) holds the
+		// crates: caisse -> boîte -> chocolat -> pépite de caramel.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			let role = if name.name == "elle"
+				chocolatière
+			else
+				chocolatier
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- caisse
+			- boîte
+			- chocolat
+			- pépite de caramel
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					$cap($poss) atelier a $n caisses.
+				end
+				- macro(n, poss)
+					$cap($poss) atelier a $n boîtes.
+				end
+				- macro(n, poss)
+					$cap($poss) atelier a $n chocolats.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Dans chaque caisse, il y a $n boîtes.
+				end
+				- macro(n)
+					Dans chaque boîte, il y a $n chocolats.
+				end
+				- macro(n)
+					Dans chaque chocolat, il y a $n pépites de caramel.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n boîtes dans $poss atelier.
+				end
+				- macro(n, poss)
+					En tout, il y a $n chocolats dans $poss atelier.
+				end
+				- macro(n, poss)
+					En tout, il y a $n pépites de caramel dans $poss atelier.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de boîtes y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de chocolats y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de pépites de caramel y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de boîtes y a-t-il dans chaque caisse\0?
+				end
+				- macro()
+					Combien de chocolats y a-t-il dans chaque boîte\0?
+				end
+				- macro()
+					Combien de pépites de caramel y a-t-il dans chaque chocolat\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien de caisses $poss atelier a-t-il\0?
+				end
+				- macro(poss)
+					Combien de boîtes $poss atelier a-t-il\0?
+				end
+				- macro(poss)
+					Combien de chocolats $poss atelier a-t-il\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n boîtes.
+				end
+				- macro(n)
+					En tout, il y a $n chocolats.
+				end
+				- macro(n)
+					En tout, il y a $n pépites de caramel.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque caisse a donc $n boîtes.
+				end
+				- macro(n)
+					Chaque boîte a donc $n chocolats.
+				end
+				- macro(n)
+					Chaque chocolat a donc $n pépites de caramel.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n caisses dans $poss atelier.
+				end
+				- macro(n, poss)
+					Il y a donc $n boîtes dans $poss atelier.
+				end
+				- macro(n, poss)
+					Il y a donc $n chocolats dans $poss atelier.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque boîte contient $n chocolats.
+				end
+				- macro(n)
+					Chaque chocolat contient $n pépites de caramel.
+				end
+			end
+		end
+	end
+
+	- do
+		name: collège
+		// collège: the named teacher — the collège has buildings, the city has
+		// several collèges: collège -> bâtiment -> classe -> élève.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			let role = if name.name == "elle"
+				professeure
+			else
+				professeur
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- collège
+			- bâtiment
+			- classe
+			- élève
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					Il y a $n collèges dans la ville.
+				end
+				- macro(n, poss)
+					$cap($poss) collège a $n bâtiments.
+				end
+				- macro(n, poss)
+					$cap($poss) collège a $n classes.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque collège a $n bâtiments.
+				end
+				- macro(n)
+					Chaque bâtiment a $n classes.
+				end
+				- macro(n)
+					Dans chaque classe, il y a $n élèves.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n bâtiments.
+				end
+				- macro(n, poss)
+					En tout, il y a $n classes.
+				end
+				- macro(n, poss)
+					En tout, il y a $n élèves.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de bâtiments y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de classes y a-t-il\0?
+				end
+				- macro()
+					En tout, combien d'élèves y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de bâtiments y a-t-il par collège\0?
+				end
+				- macro()
+					Combien de classes y a-t-il dans chaque bâtiment\0?
+				end
+				- macro()
+					Combien d'élèves y a-t-il dans chaque classe\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien de collèges y a-t-il dans la ville\0?
+				end
+				- macro(poss)
+					Combien de bâtiments $poss collège a-t-il\0?
+				end
+				- macro(poss)
+					Combien de classes $poss collège a-t-il\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n bâtiments.
+				end
+				- macro(n)
+					En tout, il y a $n classes.
+				end
+				- macro(n)
+					En tout, il y a $n élèves.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque collège a donc $n bâtiments.
+				end
+				- macro(n)
+					Chaque bâtiment a donc $n classes.
+				end
+				- macro(n)
+					Chaque classe a donc $n élèves.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n collèges dans la ville.
+				end
+				- macro(n, poss)
+					Il y a donc $n bâtiments dans $poss collège.
+				end
+				- macro(n, poss)
+					Il y a donc $n classes dans $poss collège.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque bâtiment regroupe $n classes.
+				end
+				- macro(n)
+					Chaque classe compte $n élèves.
+				end
+			end
+		end
+	end
+
+	- do
+		name: arbre
+		// arbre: the named gardener — the garden (le jardin) holds the trees:
+		// arbre -> branche -> nid -> œuf.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			let role = if name.name == "elle"
+				jardinière
+			else
+				jardinier
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- arbre
+			- branche
+			- nid
+			- œuf
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					$cap($poss) jardin a $n arbres.
+				end
+				- macro(n, poss)
+					$cap($poss) jardin a $n branches.
+				end
+				- macro(n, poss)
+					$cap($poss) jardin a $n nids.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque arbre a $n branches.
+				end
+				- macro(n)
+					Chaque branche a $n nids.
+				end
+				- macro(n)
+					Chaque nid a $n œufs.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n branches dans $poss jardin.
+				end
+				- macro(n, poss)
+					En tout, il y a $n nids dans $poss jardin.
+				end
+				- macro(n, poss)
+					En tout, il y a $n œufs dans $poss jardin.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de branches y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de nids y a-t-il\0?
+				end
+				- macro()
+					En tout, combien d'œufs y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de branches y a-t-il sur chaque arbre\0?
+				end
+				- macro()
+					Combien de nids y a-t-il sur chaque branche\0?
+				end
+				- macro()
+					Combien d'œufs y a-t-il dans chaque nid\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien d'arbres $poss jardin a-t-il\0?
+				end
+				- macro(poss)
+					Combien de branches $poss jardin a-t-il\0?
+				end
+				- macro(poss)
+					Combien de nids $poss jardin a-t-il\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n branches.
+				end
+				- macro(n)
+					En tout, il y a $n nids.
+				end
+				- macro(n)
+					En tout, il y a $n œufs.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque arbre a donc $n branches.
+				end
+				- macro(n)
+					Chaque branche a donc $n nids.
+				end
+				- macro(n)
+					Chaque nid a donc $n œufs.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n arbres dans $poss jardin.
+				end
+				- macro(n, poss)
+					Il y a donc $n branches dans $poss jardin.
+				end
+				- macro(n, poss)
+					Il y a donc $n nids dans $poss jardin.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque branche porte $n nids.
+				end
+				- macro(n)
+					Chaque nid contient $n œufs.
+				end
+			end
+		end
+	end
+
+	- do
+		name: ville
+		// ville: the named regional councillor — her region has several cities,
+		// her city has the parkings: ville -> parking -> voiture -> siège.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				ma
+			else
+				sa
+			end
+			let role = if name.name == "elle"
+				conseillère régionale
+			else
+				conseiller régional
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				ma
+			else
+				sa
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- ville
+			- parking
+			- voiture
+			- siège
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					$cap($poss) région a $n villes.
+				end
+				- macro(n, poss)
+					$cap($poss) ville a $n parkings.
+				end
+				- macro(n, poss)
+					$cap($poss) ville a $n voitures.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque ville a $n parkings.
+				end
+				- macro(n)
+					Chaque parking a $n voitures.
+				end
+				- macro(n)
+					Chaque voiture a $n sièges.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n parkings.
+				end
+				- macro(n, poss)
+					En tout, il y a $n voitures.
+				end
+				- macro(n, poss)
+					En tout, il y a $n sièges.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de parkings y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de voitures y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de sièges y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de parkings y a-t-il par ville\0?
+				end
+				- macro()
+					Combien de voitures y a-t-il dans chaque parking\0?
+				end
+				- macro()
+					Combien de sièges y a-t-il dans chaque voiture\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien de villes $poss région a-t-elle\0?
+				end
+				- macro(poss)
+					Combien de parkings $poss ville a-t-elle\0?
+				end
+				- macro(poss)
+					Combien de voitures $poss ville a-t-elle\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n parkings.
+				end
+				- macro(n)
+					En tout, il y a $n voitures.
+				end
+				- macro(n)
+					En tout, il y a $n sièges.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque ville a donc $n parkings.
+				end
+				- macro(n)
+					Chaque parking a donc $n voitures.
+				end
+				- macro(n)
+					Chaque voiture a donc $n sièges.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n villes dans $poss région.
+				end
+				- macro(n, poss)
+					Il y a donc $n parkings dans $poss ville.
+				end
+				- macro(n, poss)
+					Il y a donc $n voitures dans $poss ville.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque parking compte $n voitures.
+				end
+				- macro(n)
+					Chaque voiture dispose de $n sièges.
+				end
+			end
+		end
+	end
+
+	- do
+		name: magasin
+		// magasin: the named shopkeeper — the city has several shops, her shop
+		// has the pianos: magasin -> piano -> touche -> corde.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			let role = if name.name == "elle"
+				commerçante
+			else
+				commerçant
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- magasin
+			- piano
+			- touche
+			- corde
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					Il y a $n magasins dans la ville.
+				end
+				- macro(n, poss)
+					$cap($poss) magasin a $n pianos.
+				end
+				- macro(n, poss)
+					$cap($poss) magasin a $n touches.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque magasin a $n pianos.
+				end
+				- macro(n)
+					Chaque piano a $n touches.
+				end
+				- macro(n)
+					Chaque touche a $n cordes.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n pianos.
+				end
+				- macro(n, poss)
+					En tout, il y a $n touches.
+				end
+				- macro(n, poss)
+					En tout, il y a $n cordes.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de pianos y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de touches y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de cordes y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de pianos y a-t-il par magasin\0?
+				end
+				- macro()
+					Combien de touches y a-t-il par piano\0?
+				end
+				- macro()
+					Combien de cordes y a-t-il par touche\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien de magasins y a-t-il dans la ville\0?
+				end
+				- macro(poss)
+					Combien de pianos $poss magasin a-t-il\0?
+				end
+				- macro(poss)
+					Combien de touches $poss magasin a-t-il\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n pianos.
+				end
+				- macro(n)
+					En tout, il y a $n touches.
+				end
+				- macro(n)
+					En tout, il y a $n cordes.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque magasin a donc $n pianos.
+				end
+				- macro(n)
+					Chaque piano a donc $n touches.
+				end
+				- macro(n)
+					Chaque touche a donc $n cordes.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n magasins dans la ville.
+				end
+				- macro(n, poss)
+					Il y a donc $n pianos dans $poss magasin.
+				end
+				- macro(n, poss)
+					Il y a donc $n touches dans $poss magasin.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque piano compte $n touches.
+				end
+				- macro(n)
+					Chaque touche est reliée à $n cordes.
+				end
+			end
+		end
+	end
+
+	- do
+		name: salle
+		// salle: the named museum keeper — the museum (le musée) has the rooms,
+		// each room an aquarium: salle -> aquarium -> poulpe -> tentacule.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			let role = if name.name == "elle"
+				conservatrice
+			else
+				conservateur
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- salle
+			- aquarium
+			- poulpe
+			- tentacule
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					$cap($poss) musée a $n salles.
+				end
+				- macro(n, poss)
+					$cap($poss) musée a $n aquariums.
+				end
+				- macro(n, poss)
+					$cap($poss) musée a $n poulpes.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque salle a $n aquariums.
+				end
+				- macro(n)
+					Chaque aquarium a $n poulpes.
+				end
+				- macro(n)
+					Chaque poulpe a $n tentacules.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n aquariums dans $poss musée.
+				end
+				- macro(n, poss)
+					En tout, il y a $n poulpes dans $poss musée.
+				end
+				- macro(n, poss)
+					En tout, il y a $n tentacules dans $poss musée.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien d'aquariums y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de poulpes y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de tentacules y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien d'aquariums y a-t-il par salle\0?
+				end
+				- macro()
+					Combien de poulpes y a-t-il dans chaque aquarium\0?
+				end
+				- macro()
+					Combien de tentacules y a-t-il par poulpe\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien de salles $poss musée a-t-il\0?
+				end
+				- macro(poss)
+					Combien d'aquariums $poss musée a-t-il\0?
+				end
+				- macro(poss)
+					Combien de poulpes $poss musée a-t-il\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n aquariums.
+				end
+				- macro(n)
+					En tout, il y a $n poulpes.
+				end
+				- macro(n)
+					En tout, il y a $n tentacules.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque salle a donc $n aquariums.
+				end
+				- macro(n)
+					Chaque aquarium a donc $n poulpes.
+				end
+				- macro(n)
+					Chaque poulpe a donc $n tentacules.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n salles dans $poss musée.
+				end
+				- macro(n, poss)
+					Il y a donc $n aquariums dans $poss musée.
+				end
+				- macro(n, poss)
+					Il y a donc $n poulpes dans $poss musée.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque aquarium abrite $n poulpes.
+				end
+				- macro(n)
+					Chaque poulpe déploie $n tentacules.
+				end
+			end
+		end
+	end
+
+	- do
+		name: caisse
+		// caisse: the named shop manager — the shop (la boutique) holds the
+		// juice crates: caisse -> pack -> brique -> litre de jus.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				ma
+			else
+				sa
+			end
+			let role = if name.name == "elle"
+				gérante
+			else
+				gérant
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				ma
+			else
+				sa
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- caisse
+			- pack
+			- brique
+			- litre de jus
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					$cap($poss) boutique a $n caisses.
+				end
+				- macro(n, poss)
+					$cap($poss) boutique a $n packs.
+				end
+				- macro(n, poss)
+					$cap($poss) boutique a $n briques.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque caisse a $n packs.
+				end
+				- macro(n)
+					Chaque pack a $n briques.
+				end
+				- macro(n)
+					Chaque brique contient $n litres de jus.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n packs dans $poss boutique.
+				end
+				- macro(n, poss)
+					En tout, il y a $n briques dans $poss boutique.
+				end
+				- macro(n, poss)
+					En tout, il y a $n litres de jus dans $poss boutique.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de packs y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de briques y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de litres de jus y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de packs y a-t-il par caisse\0?
+				end
+				- macro()
+					Combien de briques y a-t-il par pack\0?
+				end
+				- macro()
+					Combien de litres de jus y a-t-il par brique\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien de caisses $poss boutique a-t-elle\0?
+				end
+				- macro(poss)
+					Combien de packs $poss boutique a-t-elle\0?
+				end
+				- macro(poss)
+					Combien de briques $poss boutique a-t-elle\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n packs.
+				end
+				- macro(n)
+					En tout, il y a $n briques.
+				end
+				- macro(n)
+					En tout, il y a $n litres de jus.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque caisse a donc $n packs.
+				end
+				- macro(n)
+					Chaque pack a donc $n briques.
+				end
+				- macro(n)
+					Chaque brique contient donc $n litres de jus.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n caisses dans $poss boutique.
+				end
+				- macro(n, poss)
+					Il y a donc $n packs dans $poss boutique.
+				end
+				- macro(n, poss)
+					Il y a donc $n briques dans $poss boutique.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque pack contient $n briques.
+				end
+				- macro(n)
+					Chaque brique verse $n litres de jus.
+				end
+			end
+		end
+	end
+
+	- do
+		name: haras
+		// haras: the named groom — the region has several stables, her stable
+		// has the meadows: haras -> pré -> licorne -> crin.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			let role = if name.name == "elle"
+				écuyère
+			else
+				écuyer
+			end
+			let intro = if name.name == "je"
+				Je suis $role.
+			else
+				$cap($name.nameFirst) est $role.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- haras
+			- pré
+			- licorne
+			- crin
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					Il y a $n haras dans la région.
+				end
+				- macro(n, poss)
+					$cap($poss) haras a $n prés.
+				end
+				- macro(n, poss)
+					$cap($poss) haras a $n licornes.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque haras a $n prés.
+				end
+				- macro(n)
+					Chaque pré a $n licornes.
+				end
+				- macro(n)
+					Chaque licorne a $n crins.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n prés.
+				end
+				- macro(n, poss)
+					En tout, il y a $n licornes.
+				end
+				- macro(n, poss)
+					En tout, il y a $n crins.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de prés y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de licornes y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de crins y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de prés y a-t-il par haras\0?
+				end
+				- macro()
+					Combien de licornes y a-t-il par pré\0?
+				end
+				- macro()
+					Combien de crins y a-t-il par licorne\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien de haras y a-t-il dans la région\0?
+				end
+				- macro(poss)
+					Combien de prés $poss haras a-t-il\0?
+				end
+				- macro(poss)
+					Combien de licornes $poss haras a-t-il\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n prés.
+				end
+				- macro(n)
+					En tout, il y a $n licornes.
+				end
+				- macro(n)
+					En tout, il y a $n crins.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque haras a donc $n prés.
+				end
+				- macro(n)
+					Chaque pré a donc $n licornes.
+				end
+				- macro(n)
+					Chaque licorne a donc $n crins.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					Il y a donc $n haras dans la région.
+				end
+				- macro(n, poss)
+					Il y a donc $n prés dans $poss haras.
+				end
+				- macro(n, poss)
+					Il y a donc $n licornes dans $poss haras.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque pré abrite $n licornes.
+				end
+				- macro(n)
+					Chaque licorne porte $n crins.
+				end
+			end
+		end
+	end
+
+	- do
+		name: étoile
+		// étoile: the named astronomer — the observatory (l'observatoire)
+		// tracks the stars: étoile -> planète -> lune -> cratère.
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			// the role is invariable (astronome)
+			let intro = if name.name == "je"
+				Je suis astronome.
+			else
+				$cap($name.nameFirst) est astronome.
+			end
+			$intro
+			if unknown > 1
+				\s$ sentence.top[start](m(question.context.values[1]), poss)
+			end
+			// a link is skipped only when it introduces the hidden factor
+			// (division); in multiplication every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ sentence.link[start+i](m(question.context.values[i+1]))
+				end
+			end
+			if unknown <= depth
+				\s$ sentence.total[start+depth](m(question.total), poss)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ sentence.trap[start+depth+1](m(question.context.values[depth+2]))
+			end
+			if unknown > depth
+				\s$ sentence.askMult[start+depth]()
+			else
+				if unknown == 1
+					\s$ sentence.askDivTop[start](poss)
+				else
+					\s$ sentence.askDiv[start+unknown-1]()
+				end
+			end
+		end
+		solution: macro (question, name, unknown, depth, start, m)
+			let sentence = $ question.context.sentence
+			let poss = if name.name == "je"
+				mon
+			else
+				son
+			end
+			if unknown > depth
+				$ sentence.answerMult[start+depth](m(question.solution))
+			else
+				if unknown == 1
+					$ sentence.answerDivTop[start](m(question.solution), poss)
+				else
+					$ sentence.answerDiv[start+unknown-1](m(question.solution))
+				end
+			end
+		end
+		voc: do
+			- étoile
+			- planète
+			- lune
+			- cratère
+		end
+		division: $true
+		maxStart: 3
+		sentences: do
+			top: do
+				- macro(n, poss)
+					$cap($poss) observatoire suit $n étoiles.
+				end
+				- macro(n, poss)
+					$cap($poss) observatoire suit $n planètes.
+				end
+				- macro(n, poss)
+					$cap($poss) observatoire suit $n lunes.
+				end
+				- macro(n, poss)
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque étoile a $n planètes.
+				end
+				- macro(n)
+					Chaque planète a $n lunes.
+				end
+				- macro(n)
+					Chaque lune a $n cratères.
+				end
+			end
+			total: do
+				- macro(n, poss)
+				end
+				- macro(n, poss)
+					En tout, il y a $n planètes.
+				end
+				- macro(n, poss)
+					En tout, il y a $n lunes.
+				end
+				- macro(n, poss)
+					En tout, il y a $n cratères.
+				end
+			end
+			askMult: do
+				- macro()
+				end
+				- macro()
+					En tout, combien de planètes y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de lunes y a-t-il\0?
+				end
+				- macro()
+					En tout, combien de cratères y a-t-il\0?
+				end
+			end
+			askDiv: do
+				- macro()
+				end
+				- macro()
+					Combien de planètes y a-t-il par étoile\0?
+				end
+				- macro()
+					Combien de lunes y a-t-il par planète\0?
+				end
+				- macro()
+					Combien de cratères y a-t-il par lune\0?
+				end
+			end
+			askDivTop: do
+				- macro(poss)
+					Combien d'étoiles $poss observatoire suit-il\0?
+				end
+				- macro(poss)
+					Combien de planètes $poss observatoire suit-il\0?
+				end
+				- macro(poss)
+					Combien de lunes $poss observatoire suit-il\0?
+				end
+				- macro(poss)
+				end
+			end
+			answerMult: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n planètes.
+				end
+				- macro(n)
+					En tout, il y a $n lunes.
+				end
+				- macro(n)
+					En tout, il y a $n cratères.
+				end
+			end
+			answerDiv: do
+				- macro(n)
+				end
+				- macro(n)
+					Chaque étoile a donc $n planètes.
+				end
+				- macro(n)
+					Chaque planète a donc $n lunes.
+				end
+				- macro(n)
+					Chaque lune a donc $n cratères.
+				end
+			end
+			answerDivTop: do
+				- macro(n, poss)
+					$cap($poss) observatoire suit donc $n étoiles.
+				end
+				- macro(n, poss)
+					$cap($poss) observatoire suit donc $n planètes.
+				end
+				- macro(n, poss)
+					$cap($poss) observatoire suit donc $n lunes.
+				end
+				- macro(n, poss)
+				end
+			end
+			trap: do
+				- macro(n)
+				end
+				- macro(n)
+				end
+				- macro(n)
+					Chaque planète présente $n lunes.
+				end
+				- macro(n)
+					Chaque lune affiche $n cratères.
+				end
+			end
+		end
 	end
 
 	// Template
