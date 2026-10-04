@@ -1182,7 +1182,7 @@ let situations = do
 				- macro()
 				end
 				- macro()
-					Combien de bâtiments y a-t-il par collège\0?
+					Combien de bâtiments y a-t-il dans chaque collège\0?
 				end
 				- macro()
 					Combien de classes y a-t-il dans chaque bâtiment\0?
@@ -1594,7 +1594,7 @@ let situations = do
 				- macro()
 				end
 				- macro()
-					Combien de parkings y a-t-il par ville\0?
+					Combien de parkings y a-t-il dans chaque ville\0?
 				end
 				- macro()
 					Combien de voitures y a-t-il dans chaque parking\0?
@@ -1800,10 +1800,10 @@ let situations = do
 				- macro()
 				end
 				- macro()
-					Combien de pianos y a-t-il par magasin\0?
+					Combien de pianos y a-t-il dans chaque magasin\0?
 				end
 				- macro()
-					Combien de touches y a-t-il par piano\0?
+					Combien de touches y a-t-il dans chaque piano\0?
 				end
 				- macro()
 					Combien de cordes y a-t-il par touche\0?
@@ -2006,13 +2006,13 @@ let situations = do
 				- macro()
 				end
 				- macro()
-					Combien d'aquariums y a-t-il par salle\0?
+					Combien d'aquariums y a-t-il dans chaque salle\0?
 				end
 				- macro()
 					Combien de poulpes y a-t-il dans chaque aquarium\0?
 				end
 				- macro()
-					Combien de tentacules y a-t-il par poulpe\0?
+					Combien de tentacules y a-t-il sur chaque poulpe\0?
 				end
 			end
 			askDivTop: do
@@ -2212,13 +2212,13 @@ let situations = do
 				- macro()
 				end
 				- macro()
-					Combien de packs y a-t-il par caisse\0?
+					Combien de packs y a-t-il dans chaque caisse\0?
 				end
 				- macro()
-					Combien de briques y a-t-il par pack\0?
+					Combien de briques y a-t-il dans chaque pack\0?
 				end
 				- macro()
-					Combien de litres de jus y a-t-il par brique\0?
+					Combien de litres de jus y a-t-il dans chaque brique\0?
 				end
 			end
 			askDivTop: do
@@ -2282,7 +2282,7 @@ let situations = do
 					Chaque pack contient $n briques.
 				end
 				- macro(n)
-					Chaque brique verse $n litres de jus.
+					Chaque brique renferme $n litres de jus.
 				end
 			end
 		end
@@ -2418,13 +2418,13 @@ let situations = do
 				- macro()
 				end
 				- macro()
-					Combien de prés y a-t-il par haras\0?
+					Combien de prés y a-t-il dans chaque haras\0?
 				end
 				- macro()
-					Combien de licornes y a-t-il par pré\0?
+					Combien de licornes y a-t-il dans chaque pré\0?
 				end
 				- macro()
-					Combien de crins y a-t-il par licorne\0?
+					Combien de crins y a-t-il sur chaque licorne\0?
 				end
 			end
 			askDivTop: do
@@ -2626,7 +2626,7 @@ let situations = do
 					Combien de lunes y a-t-il par planète\0?
 				end
 				- macro()
-					Combien de cratères y a-t-il par lune\0?
+					Combien de cratères y a-t-il sur chaque lune\0?
 				end
 			end
 			askDivTop: do
@@ -2690,7 +2690,7 @@ let situations = do
 					Chaque planète présente $n lunes.
 				end
 				- macro(n)
-					Chaque lune affiche $n cratères.
+					Chaque lune arbore $n cratères.
 				end
 			end
 		end
