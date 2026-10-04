@@ -37,61 +37,7 @@ macro cap(x)
 // caramel ») and the part-whole verb (« Chaque wagon a ») stay correct.
 let sentences = do
 	// train: gare -> train -> wagon -> roue (named "chef de ligne" + division, #129 — kept for key completeness, unused by train)
-	train: do
-		top: do
-			- macro(n)
-				Il y a $n gares.
-			end
-			- macro(n)
-				Il y a $n trains.
-			end
-			- macro(n)
-				Il y a $n wagons.
-			end
-			- macro(n)
-				Il y a $n roues.
-			end
-		end
-		link: do
-			- macro(n)
-			end
-			- macro(n)
-				Dans chaque gare, il y a $n trains.
-			end
-			- macro(n)
-				Chaque train a $n wagons.
-			end
-			- macro(n)
-				Chaque wagon a $n roues.
-			end
-		end
-		ask: do
-			- macro()
-			end
-			- macro()
-				En tout, combien y a-t-il de trains\0?
-			end
-			- macro()
-				En tout, combien y a-t-il de wagons\0?
-			end
-			- macro()
-				En tout, combien y a-t-il de roues\0?
-			end
-		end
-		answer: do
-			- macro(n)
-			end
-			- macro(n)
-				En tout, il y a $n trains.
-			end
-			- macro(n)
-				En tout, il y a $n wagons.
-			end
-			- macro(n)
-				En tout, il y a $n roues.
-			end
-		end
-	end
+	
 	// chocolat: caisse -> boîte -> chocolat -> pépite de caramel
 	chocolat: do
 		top: do
@@ -751,76 +697,173 @@ macro genericSolution(question, name, unknown, depth, start, m)
 	$ question.context.sentence.answer[start+depth](m(question.solution))
 end
 
-// train (#129): intro (named chef de ligne) -> top (if the top count is
-// known) -> links (skipping the hidden factor) -> total (division only) ->
-// trap -> question (the total, or the hidden top / per-level count).
-macro trainInstructions(question, name, unknown, depth, start, trap, m)
-	let ligne = if name.name == "je"
-		ma
-	else
-		sa
-	end
-	let mesTrains = if name.name == "je"
-		mes
-	else
-		ses
-	end
-	let intro = if name.name == "je"
-		Je suis chef de ligne.
-	else
-		$cap($name.nameFirst) est chef de ligne.
-	end
-	$intro
-	if unknown > 1
-		\s$ trainSentences.top[start](m(question.context.values[1]), ligne, mesTrains)
-	end
-	for i in seq(1, depth)
-		if i+1 != unknown
-			\s$ trainSentences.link[start+i](m(question.context.values[i+1]), ligne, mesTrains)
+let situations = do
+	- do
+		name: train
+		// train (#129): intro (named chef de ligne) -> top (if the top count is
+		// known) -> links (skipping the hidden factor) -> total (division only) ->
+		// trap -> question (the total, or the hidden top / per-level count).
+		instructions: macro (question, name, unknown, depth, start, trap, m)
+			let ligne = if name.name == "je"
+				ma
+			else
+				sa
+			end
+			let mesTrains = if name.name == "je"
+				mes
+			else
+				ses
+			end
+			// the title is gendered: « cheffe » for the named female character
+			let title = if name.name == "elle"
+				cheffe
+			else
+				chef
+			end
+			let intro = if name.name == "je"
+				Je suis $title de ligne.
+			else
+				$cap($name.nameFirst) est $title de ligne.
+			end
+			$intro
+			if unknown > 1
+				\s$ trainSentences.top[start](m(question.context.values[1]), ligne, mesTrains)
+			end
+			// a link is skipped only when it introduces the hidden factor — which
+			// happens in division (unknown <= depth), never in multiplication, where
+			// every factor is given
+			for i in seq(1, depth)
+				if (unknown > depth) or (i+1 != unknown)
+					\s$ trainSentences.link[start+i](m(question.context.values[i+1]), ligne, mesTrains)
+				end
+			end
+			if unknown <= depth
+				\s$ trainSentences.total[start+depth](m(question.total), ligne, mesTrains)
+			end
+			if trap and start+depth+1 <= question.context.vocSize
+				\s$ trainSentences.trap[start+depth+1](m(question.context.values[depth+2]), ligne, mesTrains)
+			end
+			if unknown > depth
+				\s$ trainSentences.askMult[start+depth](ligne, mesTrains)
+			else
+				if unknown == 1
+					\s$ trainSentences.askDivTop[start](ligne, mesTrains)
+				else
+					\s$ trainSentences.askDiv[start+unknown-1](ligne, mesTrains)
+				end
+			end
 		end
-	end
-	if unknown <= depth
-		\s$ trainSentences.total[start+depth](m(question.total), ligne, mesTrains)
-	end
-	if trap and start+depth+1 <= question.context.vocSize
-		\s$ trainSentences.trap[start+depth+1](m(question.context.values[depth+2]), ligne, mesTrains)
-	end
-	if unknown > depth
-		\s$ trainSentences.askMult[start+depth](ligne, mesTrains)
-	else
-		if unknown == 1
-			\s$ trainSentences.askDivTop[start](ligne, mesTrains)
-		else
-			\s$ trainSentences.askDiv[start+unknown-1](ligne, mesTrains)
+		solution: macro (question, name, unknown, depth, start, m)
+			let ligne = if name.name == "je"
+				ma
+			else
+				sa
+			end
+			let mesTrains = if name.name == "je"
+				mes
+			else
+				ses
+			end
+			if unknown > depth
+				$ trainSentences.answerMult[start+depth](m(question.solution), ligne, mesTrains)
+			else
+				if unknown == 1
+					$ trainSentences.answerDivTop[start](m(question.solution), ligne, mesTrains)
+				else
+					$ trainSentences.answerDiv[start+unknown-1](m(question.solution), ligne, mesTrains)
+				end
+			end
 		end
+		voc: do
+			- gare
+			- train
+			- wagon
+			- roue
+		end
+		sentences: do
+			top: do
+				- macro(n)
+					Il y a $n gares.
+				end
+				- macro(n)
+					Il y a $n trains.
+				end
+				- macro(n)
+					Il y a $n wagons.
+				end
+				- macro(n)
+					Il y a $n roues.
+				end
+			end
+			link: do
+				- macro(n)
+				end
+				- macro(n)
+					Dans chaque gare, il y a $n trains.
+				end
+				- macro(n)
+					Chaque train a $n wagons.
+				end
+				- macro(n)
+					Chaque wagon a $n roues.
+				end
+			end
+			ask: do
+				- macro()
+				end
+				- macro()
+					En tout, combien y a-t-il de trains\0?
+				end
+				- macro()
+					En tout, combien y a-t-il de wagons\0?
+				end
+				- macro()
+					En tout, combien y a-t-il de roues\0?
+				end
+			end
+			answer: do
+				- macro(n)
+				end
+				- macro(n)
+					En tout, il y a $n trains.
+				end
+				- macro(n)
+					En tout, il y a $n wagons.
+				end
+				- macro(n)
+					En tout, il y a $n roues.
+				end
+			end
+		end
+		division: $true
+		maxStart: 2
 	end
+
+	// Template
+	// - do
+	// 	name: name
+	// 	instructions: macro (question, name, unknown, depth, start, trap, m)
+	// 		// ...
+	// 	end
+	// 	solution: macro (question, name, unknown, depth, start, m)
+	// 		//  ...
+	// 	end
+	// 	voc: do
+	// 		// - name1
+	// 		// - name2
+	// 		// ...
+	// 	end
+	// 	division: $true
+	// 	maxStart: 2
+	// 	sentences: ...
+	// end
 end
 
-macro trainSolution(question, name, unknown, depth, start, m)
-	let ligne = if name.name == "je"
-		ma
-	else
-		sa
-	end
-	let mesTrains = if name.name == "je"
-		mes
-	else
-		ses
-	end
-	if unknown > depth
-		$ trainSentences.answerMult[start+depth](m(question.solution), ligne, mesTrains)
-	else
-		if unknown == 1
-			$ trainSentences.answerDivTop[start](m(question.solution), ligne, mesTrains)
-		else
-			$ trainSentences.answerDiv[start+unknown-1](m(question.solution), ligne, mesTrains)
-		end
-	end
-end
+
 
 matrioska: @QuestionFactory
 	parameters: do
-		- $Choice(train)
+		- $Range(1, $len($situations))
 		- $r
 	end
 	hyperParameters: do
@@ -829,79 +872,72 @@ matrioska: @QuestionFactory
 			- $r
 		end
 	end
-	get: macro(context, start:, ...values)
-		// the train division prose only covers start 1..2 (gare / train tops)
-		if context == "train" and start > 2
+	get: macro(contextNum, start:, ...values)
+		let context = $situations[contextNum]
+		if start > context.maxStart
 			return
 		end
 		return @Question(pbParameters)
-			contextName: $context
-			voc: if context == "train"
-				- gare
-				- train
-				- wagon
-				- roue
-			elseif context == "chocolat"
-				- caisse
-				- boîte
-				- chocolat
-				- pépite de caramel
-			elseif context == "collège"
-				- collège
-				- bâtiment
-				- classe
-				- élève
-			elseif context == "arbre"
-				- arbre
-				- branche
-				- nid
-				- œuf
-			elseif context == "ville"
-				- ville
-				- parking
-				- voiture
-				- siège
-			elseif context == "magasin"
-				- magasin
-				- piano
-				- touche
-				- corde
-			elseif context == "salle"
-				- salle
-				- aquarium
-				- poulpe
-				- tentacule
-			elseif context == "caisse"
-				- caisse
-				- pack
-				- brique
-				- litre de jus
-			elseif context == "haras"
-				- haras
-				- pré
-				- licorne
-				- crin
-			else
-				- étoile
-				- planète
-				- lune
-				- cratère
-			end
+			contextName: $context.name
+			voc: $context.voc
+			// if context == "train"
+			// 	- gare
+			// 	- train
+			// 	- wagon
+			// 	- roue
+			// elseif context == "chocolat"
+			// 	- caisse
+			// 	- boîte
+			// 	- chocolat
+			// 	- pépite de caramel
+			// elseif context == "collège"
+			// 	- collège
+			// 	- bâtiment
+			// 	- classe
+			// 	- élève
+			// elseif context == "arbre"
+			// 	- arbre
+			// 	- branche
+			// 	- nid
+			// 	- œuf
+			// elseif context == "ville"
+			// 	- ville
+			// 	- parking
+			// 	- voiture
+			// 	- siège
+			// elseif context == "magasin"
+			// 	- magasin
+			// 	- piano
+			// 	- touche
+			// 	- corde
+			// elseif context == "salle"
+			// 	- salle
+			// 	- aquarium
+			// 	- poulpe
+			// 	- tentacule
+			// elseif context == "caisse"
+			// 	- caisse
+			// 	- pack
+			// 	- brique
+			// 	- litre de jus
+			// elseif context == "haras"
+			// 	- haras
+			// 	- pré
+			// 	- licorne
+			// 	- crin
+			// else
+			// 	- étoile
+			// 	- planète
+			// 	- lune
+			// 	- cratère
+			// end
 			vocSize: 4
 			values: $values
 			start: $start
-			sentence: $sentences[context]
-			division: $(context == "train")
-			renderInstructions: if context == "train"
-				$trainInstructions
-			else
-				$genericInstructions
-			end
-			renderSolution: if context == "train"
-				$trainSolution
-			else
-				$genericSolution
-			end
+			sentence: $context.sentences
+			division: $context.division
+			renderInstructions: $context.instructions
+			renderSolution:  $context.solution
 		end
 	end
 end

@@ -17,8 +17,8 @@ let names = do
 	end
 end
 
-let factory1 = $ pbMulX($matrioska, names: $names, minDepth: 1, maxDepth: 3, trap: true)
-let factory2 = $ pbMulX($matrioska, names: $names, minDepth: 1, maxDepth: 3)
+let factory1 = $ pbMulX($matrioska, names: $names, minDepth: 1, maxDepth: 3, trap: true, division: true)
+let factory2 = $ pbMulX($matrioska, names: $names, minDepth: 1, maxDepth: 3, division: true)
 
 for i in seq(1, 500)
 	let q = $ factory1.get(i)

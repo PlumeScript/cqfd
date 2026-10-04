@@ -1,13 +1,15 @@
-# L1: coherent rewrite of the mulX formulation (level-indexed templates) +
-# train proposition (named "chef de ligne" character + division, #129).
+# L1: the mulX train context (named "chef de ligne" character + division,
+# #129). Direction (#129, user): no generic contexts — every context gets
+# its own specific prose; matrioska draws `train` only, so the stream is
+# 100 % train.
 #
 # Runs tests/mulx_train_driver.plume under the installed plume, then checks:
 #   - arithmetic (total = product of the first d+1 factors; solution = the
 #     hidden factor for division, the total for multiplication; the chain
-#     fits the 4-level vocabulary; division only in train; train start <= 2),
-#   - rendered instructions/solutions (train prose, generic prose,
+#     fits the 4-level vocabulary; train start <= 2),
+#   - rendered instructions/solutions (train prose, gendered title,
 #     \div / \times formulas, "donc" in the division solutions),
-#   - trap (the level just below the target): present for train
+#   - trap (the level just below the target): present for
 #     (start, depth) in {(1,1), (2,1), (1,2)} with trap: true, absent
 #     with trap: false; those three are the only (start, depth) where the
 #     trap sentence is textually distinguishable from a chain link.
@@ -72,7 +74,8 @@ def main():
         ctx, start, u, d = q["ctx"], q["start"], q["u"], q["d"]
         vals, total, solution = q["vals"], q["total"], q["sol"]
         instr, soltext = q["instr"], q["soltext"]
-        is_train = ctx == "train"
+        if ctx != "train":
+            return fail("%s: unexpected context %s (matrioska draws train only)" % (tag, ctx), instr)
         division = u <= d
 
         # arithmetic
@@ -86,32 +89,41 @@ def main():
             return fail("%s: solution %d != expected %d (u=%d d=%d)" % (tag, solution, expect_sol, u, d))
         if start + d > 4:
             return fail("%s: chain does not fit the 4-level vocabulary (start=%d d=%d)" % (tag, start, d))
-        if division and not is_train:
-            return fail("%s: division outside the train context (ctx=%s)" % (tag, ctx))
-        if is_train and start > 2:
+        if start > 2:
             return fail("%s: train with start > 2 (start=%d)" % (tag, start))
 
-        # rendered instruction
-        if is_train:
-            if "chef de ligne" not in instr:
-                return fail("%s: train instruction without the character" % tag, instr)
-        else:
-            if "Il y a" not in instr:
-                return fail("%s: generic instruction without a top sentence" % tag, instr)
-            if "En tout, combien y a-t-il d" not in instr:
-                return fail("%s: generic instruction without the total question" % tag, instr)
-        if is_train and division:
+        # rendered instruction (train prose)
+        if "chef de ligne" not in instr and "cheffe de ligne" not in instr:
+            return fail("%s: train instruction without the character" % tag, instr)
+        # the title is gendered with the named character
+        if "Sophie" in instr and ("cheffe de ligne" not in instr or "chef de ligne" in instr):
+            return fail("%s: Sophie must be cheffe de ligne" % tag, instr)
+        if "Pierre" in instr and "chef de ligne" not in instr:
+            return fail("%s: Pierre must be chef de ligne" % tag, instr)
+        if division:
             if "En tout, il y a" not in instr:
                 return fail("%s: division instruction without the given total" % tag, instr)
             if "div" not in soltext:
                 return fail("%s: division formula without \\div" % tag, soltext)
         if not division and "times" not in soltext:
             return fail("%s: multiplication formula without \\times" % tag, soltext)
-        if is_train and ("donc" in soltext) != division:
+        if ("donc" in soltext) != division:
             return fail("%s: 'donc' in the solution inconsistent with division" % tag, soltext)
 
+        # the instruction must give every value that is known, otherwise the
+        # question is unsolvable (multiplication: all d+1 factors; division:
+        # the other factors + the total)
+        nums = [int(v) for v in re.findall(r">(\d+)</script>", instr)]
+        if division:
+            required = [v for k, v in enumerate(vals, 1) if k <= d + 1 and k != u] + [total]
+        else:
+            required = vals[:d + 1]
+        for v in required:
+            if v not in nums:
+                return fail("%s: instruction misses given value %d (needed %s)" % (tag, v, required), instr)
+
         # trap: the level just below the target
-        if is_train and (start, d) in TRAP_CLASSES:
+        if (start, d) in TRAP_CLASSES:
             trap_text = ("Chaque train a " in instr) or ("Chaque wagon a " in instr)
             if q["pass_id"] == "1" and not trap_text:
                 return fail("%s: train trap missing (start=%d d=%d)" % (tag, start, d), instr)
@@ -119,15 +131,12 @@ def main():
                 return fail("%s: train trap present with trap=false (start=%d d=%d)" % (tag, start, d), instr)
 
     # coverage of the classes the checks rely on
-    classes = {(q["ctx"] == "train", q["u"] <= q["d"]) for q in qs}
-    for needed, label in [((True, True), "train division"),
-                          ((True, False), "train multiplication"),
-                          ((False, False), "generic multiplication")]:
+    classes = {q["u"] <= q["d"] for q in qs}
+    for needed, label in [(True, "train division"),
+                          (False, "train multiplication")]:
         if needed not in classes:
             return fail("no %s question in the draw stream" % label)
-    if (False, True) in classes:
-        return fail("a generic division question leaked")
-    seen = {(q["start"], q["d"]) for q in qs if q["ctx"] == "train" and q["pass_id"] == "1"}
+    seen = {(q["start"], q["d"]) for q in qs if q["pass_id"] == "1"}
     missing = TRAP_CLASSES - seen
     if missing:
         print("WARN: no pass-1 train question for (start, depth) in %s — trap not checked there" % sorted(missing))

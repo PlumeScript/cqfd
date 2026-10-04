@@ -115,7 +115,8 @@ end
 // `values` (the drawn factors) and the rendering; this layer hides `unknown`:
 //   unknown = depth+1 → the total is hidden (multiplication) — every context;
 //   unknown = 1..depth → a factor is hidden, the total is given (division) —
-//   only contexts that set `division` (currently `train` only, #129).
+//   only contexts that set `division` (currently `train` only, #129), and
+//   only when the factory is called with the `division:` flag.
 pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?trap, ?division)
 	if depth
 		set minDepth = $depth
