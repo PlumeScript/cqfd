@@ -302,6 +302,7 @@ pbEvalLin: macro(context, minItemCount:2, maxItemCount: 3, maxOnes: 2, names:, ?
 				context: $context
 				solution: $(result/10)
 				calcul: $tip
+				name: $(name != 0 and name)
 				id: $(itemCount)-$(Table.join(...select))
 			end
 		end

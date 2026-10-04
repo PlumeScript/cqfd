@@ -7,7 +7,9 @@
 #   - arithmetic: solution == sum(c_i * d_i) / 10 exact (d in tenths of
 #     euro), and the rendered formula evaluates to the same total,
 #   - id: "<itemCount>-<select joined>" consistent with the counts,
-#   - instruction: ticket-of-cash prose, per-item quantity/name(s)/price in
+#   - instruction: named prose ("Marc est allé / Lise est allée" — the
+#     past participle agrees with the name — or the "Je suis allé / mon
+#     ticket" form without a name), per-item quantity/name(s)/price in
 #     order, coupon wording for negative terms, ", " / " et " separators,
 #   - solution: formula rhs equals the solution, \times iff some |c| >= 2,
 #     prose ending in "€.".
@@ -70,9 +72,9 @@ def main():
         return fail("no ==DONE== marker (driver incomplete)", out)
 
     qs = []
-    pat = re.compile(r"==Q-(\d+)====META\|([^=]+)====I==(.*?)==S==(.*?)==END==", re.S)
+    pat = re.compile(r"==Q-(\d+)-(\d+)====META\|([^=]+)====I==(.*?)==S==(.*?)==END==", re.S)
     for m in pat.finditer(out):
-        idx, meta, instr, sol = m.groups()
+        pass_id, idx, meta, instr, sol = m.groups()
         try:
             fields = dict(kv.split(":", 1) for kv in meta.split("|") if ":" in kv)
             n = int(fields["n"])
@@ -82,19 +84,27 @@ def main():
             pls = [fields["pl%d" % k] for k in range(1, 4)][:n]
             solution = float(fields["sol"])
             qid = fields["id"]
+            who = fields["who"]
         except Exception as e:
-            return fail("bad META in Q%s (%s)" % (idx, e), meta)
-        qs.append(dict(idx=idx, n=n, cs=cs, ds=ds, nms=nms, pls=pls,
-                       sol=solution, soltext=sol, instr=instr, id=qid))
+            return fail("bad META in Q%s-%s (%s)" % (pass_id, idx, e), meta)
+        qs.append(dict(pass_id=pass_id, idx=idx, n=n, cs=cs, ds=ds, nms=nms, pls=pls,
+                       sol=solution, soltext=sol, instr=instr, id=qid, who=who))
 
     if len(qs) < 25:
         return fail("too few questions (%d < 25)" % len(qs))
 
     for q in qs:
-        tag = "Q%s" % q["idx"]
+        tag = "Q%s-%s" % (q["pass_id"], q["idx"])
         n, cs, ds = q["n"], q["cs"], q["ds"]
         sol = q["sol"]
         instr, soltext = q["instr"], q["soltext"]
+        who = q["who"]
+        # the name is a per-question hyperparameter: pass 1 has none,
+        # pass 2 draws Marc (m) or Lise (f)
+        if q["pass_id"] == "1" and who != "0":
+            return fail("%s: pass 1 question with a name (%r)" % (tag, who))
+        if q["pass_id"] == "2" and who not in ("Marc", "Lise"):
+            return fail("%s: pass 2 question without a known name (%r)" % (tag, who))
 
         # shape: the class contract
         if n not in (2, 3):
@@ -124,14 +134,23 @@ def main():
         if q["id"] != expect_id:
             return fail("%s: id %s != expected %s (c=%s)" % (tag, q["id"], expect_id, cs))
 
-        # instruction prose
-        if not instr.startswith("Le ticket de caisse d'une boulangerie indique : "):
-            return fail("%s: instruction without the ticket opening" % tag, instr)
-        if not instr.endswith(". Quel est le montant total à payer ?"):
+        # instruction prose: the opening depends on the name, and the
+        # participle agrees with it (Lise → allée)
+        if who == "0":
+            opening = "Je suis allé à la boulangerie, mon ticket de caisse indique : "
+        else:
+            went = "est allée" if who == "Lise" else "est allé"
+            opening = "%s %s à la boulangerie, son ticket de caisse indique : " % (who, went)
+        if not instr.startswith(opening):
+            return fail("%s: instruction without the opening %r" % (tag, opening), instr)
+        closing = ". Quel est le montant total à payer ?"
+        if not instr.endswith(closing):
             return fail("%s: instruction without the total question" % tag, instr)
-        if instr.count(" et ") != 1:
+        # count the separators in the item list only (the opening has one ", ")
+        body = instr[len(opening):len(instr) - len(closing)]
+        if body.count(" et ") != 1:
             return fail("%s: expected one ' et ' separator (n=%d)" % (tag, n), instr)
-        if n >= 3 and instr.count(", ") != n - 2:
+        if n >= 3 and body.count(", ") != n - 2:
             return fail("%s: expected %d ', ' separators (n=%d)" % (tag, n - 2, n), instr)
 
         # per item: quantity, name(s), price — in the list order
@@ -188,6 +207,12 @@ def main():
         return fail("no negative (coupon) term in the draw stream")
     if not any(c == 1 for q in qs for c in q["cs"]):
         return fail("no bare-price term in the draw stream")
+    if not any(q["who"] == "0" for q in qs):
+        return fail("no nameless (je) question in the draw stream")
+    if not any(q["who"] == "Marc" for q in qs):
+        return fail("no Marc question in the draw stream")
+    if not any(q["who"] == "Lise" for q in qs):
+        return fail("no Lise question in the draw stream")
 
     print("OK: %d questions checked (shape, arithmetic, id, prose, formulas)" % len(qs))
     print("VALIDE")
