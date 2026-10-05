@@ -271,7 +271,7 @@ pbEvalLin: macro(context, minItemCount:2, maxItemCount: 3, maxOnes: 2, names:, ?
 			// read as template): hoist the price out into a let first
 			let firstPrice = $(items[1].dec/10)
 			let tip = if items[1].count > 1
-				$ Node("*", $items[1].count, $firstPrice)
+				$ Node("*", items[1].count, firstPrice)
 			else
 				$firstPrice
 			end
