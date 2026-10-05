@@ -145,7 +145,7 @@ drawSegment: macro(?length, ?segment, ?middle, ?dotin, ?bydef)
 					elseif dot==3
 						- $ figure2D.Dot(A + (B-A)*r/100 + (B-A).normal().normalize()*2, label: _C, angle: (B-A).normal().angle(), ?cross)
 					end
-					if length
+					if length and dot != 4
 						- $ figure2D.Dot((A+B)/2, label: l.."cm", angle: (B-A).normal().angle(), direction: (B-A).angle())
 					end
 				end
