@@ -682,7 +682,7 @@ course: @QuestionFactory
 						\sCette étape a fait $m($delta) km. Combien de km $name.qhad déjà parcourus avant cette étape?
 					elseif unknow == "y"
 						Avant la deuxième étape, $name.hadFirst parcouru $m($initial) km.$trap
-						\sAprès, $name.haveFirst parcouru $m($now) km en tout. Quelle est la longueur de la deuxième étape?
+						\sAprès cette étape, $name.haveFirst parcouru $m($now) km en tout. Quelle est la longueur de la deuxième étape?
 					elseif unknow == "z"
 						Avant la deuxième étape, $name.hadFirst parcouru $m($initial) km.$trap
 						\sCette étape a fait $m($delta) km. Combien de km $name.qhave parcourus en tout?

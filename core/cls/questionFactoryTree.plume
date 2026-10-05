@@ -276,7 +276,14 @@ ref QuestionFactoryTree: macro()
 
 		if n+1 <= len(self.callCache[seed])
 			return $self.callCache[seed][n+1]
-		else
+		elseif n <= 10000
+			// Sequential fill: draw every position up to n-1 so the window
+			// state advances block by block (each block's permutation
+			// depends on the previous block's suffix). A far position
+			// (n > 10000) skips the fill: it would redraw every
+			// intermediate position (O(n)) and cannot be fast-forwarded.
+			// _windowedSlot then recomputes the target block without a
+			// previous suffix — the window is relaxed across the jump only.
 			for i in seq(len(self.callCache[seed]), n-1)
 				run $ self._get(i, seed)
 			end
@@ -350,7 +357,11 @@ ref QuestionFactoryTree: macro()
 		end
 
 		set questionInfos.counter += $try
-		set self.callCache[seed][n+1] = $result
+		// Cache only near positions: a sparse far entry would make
+		// len(callCache) unreliable (fill bound and the fast path above).
+		if n <= 10000
+			set self.callCache[seed][n+1] = $result
+		end
 
 		return $result
 	end

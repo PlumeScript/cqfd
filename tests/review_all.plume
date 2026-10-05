@@ -1,0 +1,20 @@
+use ../.
+
+let names = ((Joe, m), (Joanne, f))
+
+
+
+let exercice = $(
+	generator.calc.pbCalcN2(generator.calc.situations.calcN2.all, names: names)
+  + generator.calc.pbMulX(generator.calc.situations.mulX.all, names: names, maxDepth: 3)
+  +  generator.calc.pbEvalLin(generator.calc.situations.pbEvalLin.all, names: names)
+)
+
+let i = 1
+let batch = 3
+for i in seq(batch*i, batch*i+batch)
+	INSTRUCTIONS\n
+	$(exercice.get(i).render("instruction"))\n
+	SOLUTION\n
+	$(exercice.get(i).render("solution").replace("<[^>]+>", "", ?rich))\n
+end
