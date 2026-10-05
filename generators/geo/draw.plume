@@ -347,6 +347,11 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin, ?bydef)
 				else
 					cercle
 				end
+				let cname = if disque==1
+					D
+				else
+					C
+				end
 				description: if radius == 6
 					if disque == 1
 						Placer $pages.formula($_A), puis l'ensemble des points situés à $pages.formula($r\0cm) ou moins de $pages.formula($_A).
@@ -361,9 +366,9 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin, ?bydef)
 					elseif radius == 3
 						Tracer un $name de centre $pages.formula($_A) et une corde $pages.formula([$_B$_C]).
 					elseif radius == 4
-						Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\in \\mathscr C).
+						Tracer un $name $pages.formula(\\mathscr $cname) de centre $pages.formula($_A) et placer $pages.formula($_B \\in \\mathscr $cname).
 					elseif radius == 5
-						Tracer un $name $pages.formula(\\mathscr C) de centre $pages.formula($_A) et placer $pages.formula($_B \\notin \\mathscr C).
+						Tracer un $name $pages.formula(\\mathscr $cname) de centre $pages.formula($_A) et placer $pages.formula($_B \\notin \\mathscr $cname).
 					else
 						Tracer un $name de centre $pages.formula($_A).
 					end
