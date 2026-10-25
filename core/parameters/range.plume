@@ -9,7 +9,9 @@ let Parameter from $import(../cls/parameter)
 let QuestionFactory from $import(../cls/questionfactory)
 let Constant from $import(./set)
 
-// Parameter spanning the contiguous integers [start..stop].
+/*
+Generate a number between $posParam(Number, start, 1) and $posParam(Number, stop, 2)
+*/
 ref Range: macro(Number start, Number stop)
 	if start > stop
 		raise Stop (`$stop`) must be greater than start (`$start`).
@@ -23,8 +25,13 @@ ref Range: macro(Number start, Number stop)
 	end
 end
 
-// Range based on integer length
-// One block per length: 9 * 10^(k-1) distinct values per length k
+/*
+Two modes:
+@InfosList
+	- Generate an integer with $posParam(Number, figures, 1) figures.
+	- Generate an integer with  between $posParam(Number, minFigures, 1) and $posParam(Number, maxFigures, 2) figures.
+end
+*/
 ref Integer: macro (...args)
 	let smin, smax
 	if len(args) == 0
@@ -58,6 +65,13 @@ ref Integer: macro (...args)
 	end
 end
 
+/*
+Generaten a number with
+@InfosList
+	- Mantisse with between $posParam(Number, minFigures, 1) and $posParam(Number, maxFigures, 2) figures
+	- Exposant between $posParam(Number, minIndex, 1) and $posParam(Number, maxIndex, 2) 
+end
+*/
 Decimal: macro (minFigures, maxFigures, minIndex, maxIndex)
 	@QuestionFactory
 		parameters: do

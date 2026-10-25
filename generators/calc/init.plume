@@ -14,6 +14,13 @@ Licensed under the MIT License — see LICENSE for details.
 ...import(./problem)
 ...import(./compose)
 
+commondoc: raw[
+@InfosList
+	- $code(compute) is a raw estimation of time difficulty for a student to do the compute.$newline Can be set by $code(compute), $code(minCompute), $code(maxCompute).
+	- $code(\0?fullSign) is used to show (+5)+(-3) instead of 5+(-3)
+end
+]end
+
 situations: for file in os.Path("./situations").getChildren()
 	let all
 	if file.getExtension() == "plume"

@@ -322,7 +322,7 @@ ref getCompute: do
 		let const nD = $ ((len(dp) + 1) / 2).floor()
 		let const total = $ nI + nD
 
-		// one cycle: decision, estimation fact, trial row, short subtraction
+		// one cycle\: decision, estimation fact, trial row, short subtraction
 		macro cycle(P, R, k)
 			let est = 0
 			if R == 0
@@ -368,7 +368,7 @@ ref getCompute: do
 				set g = $ pairValue(dp, c - nI)
 			end
 			set P = $ P * 100 + g
-			// k: largest 0..9 with (20R + k) * k <= P (off perfect squares too)
+			// k\: largest 0..9 with (20R + k) * k <= P (off perfect squares too)
 			let k = 0
 			while (20 * R + k + 1) * (k + 1) <= P
 				set k += 1

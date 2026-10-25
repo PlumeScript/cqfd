@@ -1,0 +1,112 @@
+use #rawNumbers
+
+use html, css
+use pages
+use .
+
+macro capitalize(String s)
+  $s.sub(1).upper()$s.sub(2, -1)
+end
+
+macro escapeHTML(String s)
+	$s.replace(&, &amp;).replace(<, &lt;).replace(>, &gt;).replace(", &quot;)
+end
+
+macro formatLine(line)
+	set line = $line.replace(```(.-)```, macro (x) $BlockCode($x),?rich)
+	set line = $line.replace(`(.-)`, macro (x) $code($x),?rich)
+	set line = $line.replace(%*%*(.-)%*%*, macro (x) $bold($x),?rich)
+	set line = $line.replace(%*(.-)%*, macro (x) $italic($x),?rich)
+	set line = $line.replace(\\n, \n)
+	return $line
+end
+
+let doclib = raw[
+	use pages
+	macro Param(typ, name, d)
+		@code
+			$typ $bold($name) ($d)
+		end
+	end
+	macro posParam(typ, name, pos)
+		@code
+			$typ $bold($name)\0[$pos]
+		end
+	end
+	macro InfosList(...items)
+		@List(indent: 0, marker: arrow)
+			...items
+		end
+	end
+]end
+
+let version = v0.8.0
+
+@Document(filename: ./doc, title: CQFD Documentation, pagination: 3)
+    @Style
+      @Rule(h1)
+        background: linear-gradient(20deg, #000, #ff0000 50%)
+        $("-webkit-background-clip"): text
+        $("-webkit-text-fill-color"): transparent
+      end
+    end
+	$vfill
+    @MainTitle
+		title: $image($os.Path(./cqfd_logo.svg)) Documentation
+		subtitle: $version
+	end
+    $vfill
+
+    @Header(?excludeFirst)
+      left: CQFD Documentation
+    end
+    
+    @Footer(?excludeFirst)
+      center: $version
+    end
+
+    $whitePage
+    $tableOfContents(title: Table of contents, depth: 2)
+    $newpage
+    
+    $chapter(Parameters)
+		for paremetersSet in os.Path("./core/parameters").getChildren()
+			$ section(capitalize(paremetersSet.getStem()))
+			for name, elem in items(paremetersSet.import())
+				if type(elem) == "macro"
+					$ subsection(name, ?noNumbering)
+					let infos = $ plume.doc(elem)
+					if len(infos.doc) > 0
+						  $glue
+						$eval($doclib\n$infos.doc)
+					end
+				end
+			end
+		end
+	
+	// $chapter(Generators)
+		for generator in os.Path("./Generators").getChildren()
+			$ chapter(capitalize(generator.getStem()))
+			let source = $(generator / "init.plume").import()
+			if source.commondoc?
+				$eval($doclib\n$source.commondoc)
+			end
+			for subGenerator in generator.getChildren()
+				if subGenerator.isFile()
+					$ section(subGenerator.getStem())
+					
+					for name, elem in items(subGenerator.import())
+						if type(elem) == "macro"
+							$ subsection(name, ?noNumbering)
+							let infos = $ plume.doc(elem)
+							if len(infos.doc) > 0
+					            $glue
+								// $eval($doclib\n$infos.doc)
+								$infos.doc
+							end
+						end
+					end
+				end
+			end
+		end
+end

@@ -8,6 +8,9 @@ Licensed under the MIT License — see LICENSE for details.
 let Parameter from $import(../cls/parameter)
 let derive, FeistelWalker from $import(../utils/walkers)
 
+/*
+Apply $posParam(macro, transform, 1) on another $posParam(Parameter, parameter, 2) output.
+*/
 Map: macro(parameter, transform)
 	@Parameter
 		size: $parameter.getSize()
@@ -17,6 +20,9 @@ Map: macro(parameter, transform)
 	end
 end
 
+/*
+Return always $posParam(any, value, 1)
+*/
 Constant: macro(value)
 	@Parameter
 		size: 1
@@ -26,6 +32,9 @@ Constant: macro(value)
 	end
 end
 
+/*
+Return an element from $posParam(any, values, variadic)
+*/
 ref Choice: macro(...values)
 	@Parameter
 		size: $ len(values)
@@ -50,8 +59,11 @@ macro fact(n)
 	return $i
 end
 
-// Not clean: overlaps
+/*
+Return an subset of $posParam(Number, count, 1) values from $posParam(any, values, values)
+*/
 ChoiceSet: macro(Number count, ...values)
+	// Implementation not clean (some overlaps)
 	if count==0 or count.floor() != count or count==len(values)
 		raise count must be a postive integer lesser than $len($values), not "$count".
 	end

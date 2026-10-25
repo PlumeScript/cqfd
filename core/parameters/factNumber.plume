@@ -10,6 +10,14 @@ let Choice from $import(./set)
 let Range from $import(./range)
 let FactNumberCls from $import(../utils/factNumber)
 
+/* 
+Generate a number:
+@InfosList
+	- Between $Param(Number, minN, 2) and $Param(Number, maxN, 1000)
+	- Using primes between the $Param(Number, minP, 1)-nth and the $Param(Number, maxP, 6)-nth
+	- Without valuation greater than $Param(Number, maxE, 2)
+end
+*/
 ref FactNumber: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
 	@QuestionFactory
 		parameters: do
@@ -29,6 +37,13 @@ ref FactNumber: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number min
 	end
 end
 
+/* 
+Generate two numbers $code(a) and $code(b), where one is a multiple of the other.$newline
+@InfosList
+	- Use $code(FactNumber) parameters to get the first one
+	- Multiply it by a number between $Param(Number, minK, 2) and $Param(Number, maxK, 10)
+end 
+*/
 ref FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
@@ -58,6 +73,10 @@ ref FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, 
 	end
 end
 
+/*
+Generate two numbers $code(a) and $code(b) that are coprimes.$newline
+Use same parameters as $code(FactNumber).
+*/
 ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
 	@QuestionFactory
 		parameters: do
@@ -113,6 +132,10 @@ ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, N
 	end
 end
 
+/*
+Generate two numbers $code(a) and $code(b) that are neither coprimes or multiples.$newline
+Use same parameters as $code(FactNumber).
+*/
 ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
 
 	@QuestionFactory
@@ -155,7 +178,23 @@ ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Numb
 	end
 end
 
-// Get two numbers b and d, then a coprime with b and c coprime with d.
+/*
+Target $formula(\\frac a b + \\frac c d) usage: generate four numbers $code(a\, b\, c\, d) where
+$glue
+@InfosList
+	- $code(a) and $code(b) are coprimes
+	- $code(c) and $code(d) are coprimes
+end
+
+Use same parameters as $code(FactNumber), plus some flags:
+$glue
+@InfosList
+	- $code(\0?multiple) (exclusive with coprime): 
+	- $code(\0?coprime) (exclusive with multiple):
+	- $code(\0?sameDenominator)\: $code(b) and $code(d) will be equals.
+	- $code(\0?noSameNumerator)\: $code(a) and $code(c) will be differents.
+end
+*/
 FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime, ?sameDenominator, ?noSameNumerator)
 	if multiple and coprime
 		raise Theses flags are mutually exclusives
@@ -209,7 +248,6 @@ FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?mu
 			if noSameNumerator and a.value==c.value
 				return
 			end
-
 
 			if a.value != b.value and c.value != d.value and a.value >= minN and a.value <= maxN and c.value >= minN and c.value <= maxN
 				return do

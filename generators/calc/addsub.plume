@@ -12,6 +12,9 @@ let Choice from $import(../../core/parameters/set)
 let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
+/*
+Generate an addition between two $code(Decimal) capped by $Param(Number, compute, empty).
+*/
 ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
@@ -44,6 +47,9 @@ ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 	end
 end
 
+/*
+Generate an substraction between two $code(Decimal) capped by $Param(Number, compute, empty).
+*/
 ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
@@ -97,6 +103,10 @@ macro makeZ(A, B, C, signA, signB, bigger)
 	return $ (A, B, C)
 end
 
+/*
+Generate an addition between two signed $code(Decimal) (with same sign), capped by $Param(Number, compute, empty).
+Support $code(?fullSign).
+*/
 ref addZ2Plus: macro(?fullSign, ...args)
 	@QuestionFactory
 		parameters: do
@@ -144,6 +154,10 @@ ref addZ2Plus: macro(?fullSign, ...args)
 	end
 end
 
+/*
+Generate an addition between two signed $code(Decimal) (with different sign), capped by $Param(Number, compute, empty).
+Support $code(?fullSign).
+*/
 ref addZ2Minus: macro(?fullSign, ...args)
 	@QuestionFactory
 		parameters: do
@@ -200,10 +214,17 @@ ref addZ2Minus: macro(?fullSign, ...args)
 	end
 end
 
+/*
+Alternate between addZ2Plus and addZ2Minus.
+*/
 ref addZ2: macro(...args)
 	$ addZ2Plus(...args) * addZ2Minus(...args)
 end
 
+/*
+Generate an sub between two signed $code(Decimal) capped by $Param(Number, compute, empty).
+Support $code(?fullSign).
+*/
 subZ2: macro(?fullSign, ...args)
 	@QuestionFactory
 		parameters: $Table($addZ2(fullSign: $fullSign, ...args))

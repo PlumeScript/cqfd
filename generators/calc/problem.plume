@@ -199,7 +199,7 @@ end
 //   0 → 1: the bare price (the "1" coefficient)
 //   1 → the context's count
 //   2 → the context's count, negated (coupon de réduction / retour)
-// Constraints: the first term is positive; at most `maxOnes` bare prices;
+// Constraints\: the first term is positive; at most `maxOnes` bare prices;
 // at least one full count (a quantity >= 2); itemCount >= 2 keeps at most
 // one item absent. A context count of 1 is doubled so the quantity 1 is
 // never displayed ("1 x price" is ambiguous and breaks the plural) —

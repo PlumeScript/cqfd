@@ -14,6 +14,9 @@ let DecimalRepresentation, getCompute from $import(./utils)
 
 let addN2, subN2 from $import(./addsub)
 
+/*
+Rewrite an $code(subN2) exercice as an hole equality (hole first).
+*/
 addN2HoleFirst: macro(...params)
 	@QuestionFactory
 		parameters: do
@@ -34,6 +37,9 @@ addN2HoleFirst: macro(...params)
 	end
 end
 
+/*
+Rewrite an $code(subN2) exercice as an hole equality (hole second).
+*/
 addN2HoleSecond: macro(...params)
 	@QuestionFactory
 		parameters: do
@@ -54,6 +60,9 @@ addN2HoleSecond: macro(...params)
 	end
 end
 
+/*
+Rewrite an $code(addN2) exercice as an hole equality (hole first).
+*/
 subN2HoleFirst: macro(...params)
 	@QuestionFactory
 		parameters: do
@@ -74,6 +83,9 @@ subN2HoleFirst: macro(...params)
 	end
 end
 
+/*
+Rewrite an $code(addN2) exercice as an hole equality (hole last).
+*/
 subN2HoleSecond: macro(...params)
 	@QuestionFactory
 		parameters: do
@@ -94,6 +106,9 @@ subN2HoleSecond: macro(...params)
 	end
 end
 
+/*
+Writhe add hole equality (hole first) between two $quote(Decimal), but there is no solution.
+*/
 addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
 		parameters: do
@@ -113,6 +128,9 @@ addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number mi
 	end
 end
 
+/*
+Writhe add hole equality (hole second) between two $quote(Decimal), but there is no solution.
+*/
 addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
 		parameters: do
@@ -132,6 +150,9 @@ addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number m
 	end
 end
 
+/*
+Writhe sub hole equality (hole second) between two $quote(Decimal), but there is no solution.
+*/
 subN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
 		parameters: do

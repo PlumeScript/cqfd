@@ -14,9 +14,9 @@ let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 
 let defaultUnit = $Choice(km, hm, dam, m, dm, cm, mm)
-// TODO: mixed units
-// TODO: approximation
-// TODO: better number generation
+// TODO\: mixed units
+// TODO\: approximation
+// TODO\: better number generation
 cuboid: macro(unit:, minn: 1, maxn: 5, ?cube)
 	if not unit
 		set unit = $defaultUnit

@@ -12,8 +12,11 @@ let Choice from $import(../../core/parameters/set)
 let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
-// TODO: consider figureNumber
+/*
+Generate a multiplication between two $code(Decimal), capped by $code(compute).
+*/
 ref mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
+	// TODO: consider figureNumber
 	if figures
 		set minFigures = $figures
 		set maxFigures = $figures
@@ -47,8 +50,12 @@ ref mulN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 	end
 end
 
-// fullSign: explicit sign on every factor, ex: (+1) * (-2)
+/*
+Convert a $code(mulN2) to a signed multiplication.
+Support $code(?fullSign).
+*/
 mulZ2: macro(?fullSign, ...params)
+	// fullSign\: explicit sign on every factor, ex: (+1) * (-2)
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
@@ -87,8 +94,12 @@ mulZ2: macro(?fullSign, ...params)
 	end
 end
 
-// Straightfoward, should be enhanced
+/*
+Convert a $code(mulN2) to a division capped by compute.
+Flag $code(?frac) to print it as a fraction.
+*/
 ref divN2: macro(minCompute:, maxCompute:, compute:, ?frac, ...args)
+	// Straightfoward, should be enhanced
 	if compute
 		set minCompute = $compute
 		set maxCompute = $compute
@@ -125,8 +136,13 @@ ref divN2: macro(minCompute:, maxCompute:, compute:, ?frac, ...args)
 	end
 end
 
-// fullSign: no double sign in division rendering, kept for API uniformity
+/*
+Convert a $code(divN2) to a signed division.
+Support $code(?fullSign).
+Flag $code(?frac) to print it as a fraction.
+*/
 divZ2: macro(?frac, ?fullSign, ...params)
+	// fullSign\: no double sign in division rendering, kept for API uniformity
 	@QuestionFactory
 		parameters: do
 			signA: $Choice(+, -)
