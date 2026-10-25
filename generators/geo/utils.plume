@@ -9,6 +9,9 @@ let Range from $import(../../core/parameters/range)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 
 let _letters = (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z)
+/*
+Generate $posParam(Number, n, 1) distinct letters to name the dots of a figure.
+*/
 letters: macro(n)
 	@QuestionFactory
 		parameters: do

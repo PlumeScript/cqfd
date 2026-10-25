@@ -13,10 +13,15 @@ let Range from $import(../../core/parameters/range)
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 
-let defaultUnit = $Choice(km, hm, dam, m, dm, cm, mm)
 // TODO\: mixed units
 // TODO\: approximation
 // TODO\: better number generation
+
+let defaultUnit = $Choice(km, hm, dam, m, dm, cm, mm)
+/*
+Generate a cuboid volume to compute (V = l·L·h).
+Support $code(\0?cube).
+*/
 cuboid: macro(unit:, minn: 1, maxn: 5, ?cube)
 	if not unit
 		set unit = $defaultUnit
@@ -52,6 +57,10 @@ cuboid: macro(unit:, minn: 1, maxn: 5, ?cube)
 	end
 end
 
+/*
+Generate a rectangular pyramid volume to compute (V = l·L·h/3).
+Support $code(\0?square).
+*/
 pyramidRect: macro(unit:, minn: 1, maxn: 5, ?square)
 	if not unit
 		set unit = $defaultUnit
@@ -89,8 +98,11 @@ pyramidRect: macro(unit:, minn: 1, maxn: 5, ?square)
 	end
 end
 
-// TODO pi approximation
+/*
+Generate a cylinder volume to compute (V = π·r²·h).
+*/
 cylinder: macro(unit:, minn: 1, maxn: 5)
+	// TODO pi approximation
 	if not unit
 		set unit = $defaultUnit
 	end
@@ -112,6 +124,9 @@ cylinder: macro(unit:, minn: 1, maxn: 5)
 	end
 end
 
+/*
+Generate a cone volume to compute (V = π·r²·h/3).
+*/
 cone: macro(unit:, minn: 1, maxn: 5)
 	if not unit
 		set unit = $defaultUnit

@@ -21,7 +21,7 @@ Map: macro(parameter, transform)
 end
 
 /*
-Return always $posParam(any, value, 1)
+Always return $posParam(any, value, 1)
 */
 Constant: macro(value)
 	@Parameter
@@ -60,12 +60,12 @@ macro fact(n)
 end
 
 /*
-Return an subset of $posParam(Number, count, 1) values from $posParam(any, values, values)
+Return a subset of $posParam(Number, count, 1) values from $posParam(any, values, variadic)
 */
 ChoiceSet: macro(Number count, ...values)
 	// Implementation not clean (some overlaps)
 	if count==0 or count.floor() != count or count==len(values)
-		raise count must be a postive integer lesser than $len($values), not "$count".
+		raise count must be a positive integer less than $len($values), not "$count".
 	end
 	let choice = $Choice(...values)
 	@Parameter

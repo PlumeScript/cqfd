@@ -13,7 +13,7 @@ let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
 /*
-Generate an addition between two $code(Decimal) capped by $Param(Number, compute, empty).
+Generate an addition between two $ParamSet(Decimal) capped by $Param(Number, compute, empty).
 */
 ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
@@ -48,7 +48,7 @@ ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 end
 
 /*
-Generate an substraction between two $code(Decimal) capped by $Param(Number, compute, empty).
+Generate a subtraction between two $ParamSet(Decimal) capped by $Param(Number, compute, empty).
 */
 ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
@@ -104,8 +104,8 @@ macro makeZ(A, B, C, signA, signB, bigger)
 end
 
 /*
-Generate an addition between two signed $code(Decimal) (with same sign), capped by $Param(Number, compute, empty).
-Support $code(?fullSign).
+Generate an addition between two signed $ParamSet(Decimal)  $italic((with the same sign)), capped by $Param(Number, compute, empty).
+Support $code(\0?fullSign).
 */
 ref addZ2Plus: macro(?fullSign, ...args)
 	@QuestionFactory
@@ -155,8 +155,8 @@ ref addZ2Plus: macro(?fullSign, ...args)
 end
 
 /*
-Generate an addition between two signed $code(Decimal) (with different sign), capped by $Param(Number, compute, empty).
-Support $code(?fullSign).
+Generate an addition between two signed $ParamSet(Decimal) $italic((with different signs)), capped by $Param(Number, compute, empty).
+Support $code(\0?fullSign).
 */
 ref addZ2Minus: macro(?fullSign, ...args)
 	@QuestionFactory
@@ -215,15 +215,15 @@ ref addZ2Minus: macro(?fullSign, ...args)
 end
 
 /*
-Alternate between addZ2Plus and addZ2Minus.
+Alternate between $ParamSet(addZ2Plus) and $ParamSet(addZ2Minus).
 */
 ref addZ2: macro(...args)
 	$ addZ2Plus(...args) * addZ2Minus(...args)
 end
 
 /*
-Generate an sub between two signed $code(Decimal) capped by $Param(Number, compute, empty).
-Support $code(?fullSign).
+Generate a sub between two signed $ParamSet(Decimal) capped by $Param(Number, compute, empty).
+Support $code(\0?fullSign).
 */
 subZ2: macro(?fullSign, ...args)
 	@QuestionFactory

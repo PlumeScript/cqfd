@@ -12,6 +12,10 @@ let Choice from $import(../../core/parameters/set)
 let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
+/*
+Generate a power of a $ParamSet(Decimal), capped by $Param(Number, compute, empty).$newline
+Support $code(\0?negativeExposant).
+*/
 ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, Number minCompute: 0,Number  maxCompute: 10, compute:, Number minExposant: 0, Number maxExposant:10, ?negativeExposant)
 	if figures
 		set minFigures = $figures
@@ -90,8 +94,12 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 	end
 end
 
-// fullSign: no double sign in power rendering, kept for API uniformity
+/*
+Convert a $ParamSet(powN2) to a power with a negative base.$newline
+Support $code(\0?fullSign).
+*/
 powZ2: macro(?fullSign, ...args)
+	// fullSign\: no double sign in power rendering, kept for API uniformity
 	@QuestionFactory
 		parameters: $Table($powN2(...args))
 		get: macro(calc)
@@ -129,6 +137,11 @@ powZ2: macro(?fullSign, ...args)
 	end
 end
 
+/*
+Generate a division between two powers of the same base.$newline
+Flag $code(\0?frac) to print it as a fraction.$newline
+Support $code(\0?negativeExposant).
+*/
 powDivN2: macro(minDelta:1, maxDelta: 10, ?frac, ?negativeExposant, ...args)
 	@QuestionFactory
 		parameters: do
@@ -178,6 +191,9 @@ powDivN2: macro(minDelta:1, maxDelta: 10, ?frac, ?negativeExposant, ...args)
 	end
 end
 
+/*
+Rewrite a $code(powN2) as a power of a power $formula((x^{d})^{y/d}, ?inlineDisplay), when the exponent is composite.
+*/
 powPowN2: macro(...args)
 	@QuestionFactory
 		parameters: do

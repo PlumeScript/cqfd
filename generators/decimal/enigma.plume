@@ -11,10 +11,14 @@ let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let PermFromRank from $import(../../core/utils/walkers)
 
-let figuresParam = $Range(1, 9)
-
 // TODO-FIX\: for now, 2000 is treated as "zero hole"
 // TODO\: permutation in render, shouldn't always be in ascending order.
+// TODO: use Decimal
+let figuresParam = $Range(1, 9)
+
+/*
+Generate a number with missing digits (a hole) to find.
+*/
 enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2, Number maxFigures: 3, figures:, Number minHole: 0, maxHole:, hole:)
 	if figures
 		set minFigures = $figures
@@ -87,8 +91,11 @@ enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2,
 	end
 end
 
-// TODO: handle minIndex
+/*
+Generate a digit puzzle, the number is between two bounds and the sum, product, difference or quotient of its digits is the target.
+*/
 enigmaCalc2: macro(Number minIndex:-3, Number maxIndex:3, Number minSolutions: 1 , Number maxSolutions: 1, solutions:, Number minFigures: 2, Number maxFigures: 2, figures:, calc:, Number minInterval: 10)
+	// TODO: handle minIndex
 	
 	if solutions
 		set minSolutions = $solutions

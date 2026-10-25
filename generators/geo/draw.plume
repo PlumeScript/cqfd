@@ -20,6 +20,10 @@ let letters from $import(./utils)
 
 let pages = $import(pages) // Should be in render
 
+/*
+Generate a line to draw.
+Support $code(\0?byname) and $code(\0?bydef).
+*/
 drawLine: macro(?byname, ?bydef)
 	if not bydef
 		set byname = $true
@@ -69,6 +73,10 @@ drawLine: macro(?byname, ?bydef)
 end
 
 
+/*
+Generate a segment to draw.
+Support $code(\0?length), $code(\0?segment), $code(\0?middle), $code(\0?dotin) and $code(\0?bydef).
+*/
 drawSegment: macro(?length, ?segment, ?middle, ?dotin, ?bydef)
 	if not length and not segment and not dotin and not bydef
 		raise Must provide at least "length" or "segment" or "dotin" or "bydef"
@@ -154,6 +162,9 @@ drawSegment: macro(?length, ?segment, ?middle, ?dotin, ?bydef)
 	end
 end
 
+/*
+Generate a half-line to draw.
+*/
 drawHalfLine: @QuestionFactory
 	parameters: $Table()
 	hyperParameters: do
@@ -184,6 +195,10 @@ drawHalfLine: @QuestionFactory
 end
 
 
+/*
+Generate two lines to draw, with a given intersection.
+Support $code(\0?parallel), $code(\0?one) and $code(\0?infinite).
+*/
 drawIntersection: macro(?parallel, ?one, ?infinite)
 	if not parallel and not one and not infinite
 		raise Provide at least one flag
@@ -250,6 +265,10 @@ drawIntersection: macro(?parallel, ?one, ?infinite)
 end
 
 
+/*
+Generate two circles to draw, with a given number of intersections.
+Support $code(\0?zero), $code(\0?one), $code(\0?two) and $code(\0?infinite).
+*/
 drawCircleIntersection: macro(?zero, ?one, ?two, ?infinite)
 	if not zero and not one and not two and not infinite
 		raise Provide at least one flag
@@ -304,6 +323,10 @@ drawCircleIntersection: macro(?zero, ?one, ?two, ?infinite)
 	end
 end
 
+/*
+Generate a circle or a disk to draw.
+Support $code(\0?disque), $code(\0?radius), $code(\0?diameter), $code(\0?rope), $code(\0?dotin) and $code(\0?bydef).
+*/
 drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin, ?bydef)
 	@QuestionFactory
 		parameters: do
@@ -424,6 +447,9 @@ drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin, ?bydef)
 	end
 end
 
+/*
+Generate three dots to place on a circle, without drawing it.
+*/
 draw3CircleDot: @QuestionFactory
 	parameters: $Table()
 	hyperParameters: do
@@ -464,6 +490,9 @@ draw3CircleDot: @QuestionFactory
 	end
 end
 
+/*
+Generate three dots to place at the intersection of two circles, without using the compass.
+*/
 drawDot2Circle: @QuestionFactory
 	parameters: $Table()
 	hyperParameters: do
@@ -501,6 +530,10 @@ drawDot2Circle: @QuestionFactory
 	end
 end
 
+/*
+Generate three dots to place on a line, without drawing it.
+Support $code(\0?line), $code(\0?halfLine), $code(\0?segment) and $code(\0?notin).
+*/
 draw3DotLine: macro(?line, ?halfLine, ?segment, ?notin)
 	if not line and not halfLine and not segment
 		raise Provide at least one flag.

@@ -14,6 +14,9 @@ macro decomposition(n, b: 10)
 	return $result
 end
 
+/*
+Return the decimal representation of a number, its figures, its integer part and its decimal part.
+*/
 ref DecimalRepresentation: macro(Number x, b: 10)
 	let intPart = $x.floor()
 	// decimal length from the shortest decimal spelling of x
@@ -128,6 +131,9 @@ macro mulScore(dx, dy)
 	return $ realCompute + bonus
 end
 
+/*
+Score the difficulty of a compute, the number of real steps of the long calculation ($code(add), $code(sub), $code(mul), $code(div), $code(pow), $code(sqrt)).
+*/
 ref getCompute: do
 	add: macro(x, y)
 		let dx = $ DecimalRepresentation(x)

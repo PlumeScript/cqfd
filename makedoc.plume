@@ -22,7 +22,7 @@ macro formatLine(line)
 end
 
 let doclib = raw[
-	use pages
+	use html, pages
 	macro Param(typ, name, d)
 		@code
 			$typ $bold($name) ($d)
@@ -31,6 +31,11 @@ let doclib = raw[
 	macro posParam(typ, name, pos)
 		@code
 			$typ $bold($name)\0[$pos]
+		end
+	end
+	macro ParamSet(name)
+		@A(href: #heading-$name)
+			$name
 		end
 	end
 	macro InfosList(...items)
@@ -42,12 +47,22 @@ let doclib = raw[
 
 let version = v0.8.0
 
-@Document(filename: ./doc, title: CQFD Documentation, pagination: 3)
+@Document(filename: $os.Path(./doc), title: CQFD Documentation, pagination: 3)
     @Style
-      @Rule(h1)
+	   @Rule(:root)
+		   $("--page-margin-top"): 2cm
+		   $("--page-margin-bottom"): 2cm
+		   $("--page-margin-right"): 2cm
+		   $("--page-margin-left"): 2cm
+	   end
+	   @Rule(html)
+	      fontSize: 14pt
+	   end
+	   @Rule(h1\, a)
         background: linear-gradient(20deg, #000, #ff0000 50%)
         $("-webkit-background-clip"): text
         $("-webkit-text-fill-color"): transparent
+		textDecoration: none
       end
     end
 	$vfill
@@ -85,14 +100,14 @@ let version = v0.8.0
 		end
 	
 	// $chapter(Generators)
-		for generator in os.Path("./Generators").getChildren()
+		for generator in os.Path("./generators").getChildren()
 			$ chapter(capitalize(generator.getStem()))
 			let source = $(generator / "init.plume").import()
 			if source.commondoc?
 				$eval($doclib\n$source.commondoc)
 			end
 			for subGenerator in generator.getChildren()
-				if subGenerator.isFile()
+				if subGenerator.isFile() and subGenerator.getStem() != "init" and subGenerator.getStem() != "utils"
 					$ section(subGenerator.getStem())
 					
 					for name, elem in items(subGenerator.import())
@@ -101,8 +116,7 @@ let version = v0.8.0
 							let infos = $ plume.doc(elem)
 							if len(infos.doc) > 0
 					            $glue
-								// $eval($doclib\n$infos.doc)
-								$infos.doc
+								$eval($doclib\n$infos.doc)
 							end
 						end
 					end

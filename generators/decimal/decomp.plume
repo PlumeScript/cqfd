@@ -12,6 +12,9 @@ let Node from $import(../../core/utils/tree)
 let enigmaSimple from $import(./enigma)
 let PermFromRank from $import(../../core/utils/walkers)
 
+/*
+Generate a decimal decomposition of a number based, its digits expanded as powers of 10.
+*/
 decomposition: macro(...params)
 	@QuestionFactory
 		parameters: do
@@ -27,6 +30,9 @@ decomposition: macro(...params)
 	end
 end
 
+/*
+Generate a decimal decomposition with between $posParam(Number, minOverlap, 1) and $posParam(Number, maxOverlap, 2) overlapping two-digit terms.
+*/
 inverseDecomposition: macro(Number minOverlap:1, Number maxOverlap:1, overlap:, ...params)
 	if overlap
 		set minOverlap = $overlap

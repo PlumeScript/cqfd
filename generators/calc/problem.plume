@@ -14,6 +14,9 @@ let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
 
+/*
+Invert a $code(Problem), the equation with its solution is shown, the answer is a statement.
+*/
 invPb: macro(pb)
 	@QuestionFactory
 		parameters: $Table($pb)
@@ -25,8 +28,12 @@ invPb: macro(pb)
 	end
 end
 
-// Problem class: k1 * X + k2 * Y = Z
+/*
+Generate a problem with two unknowns (a sum or a loss), from a $code(situations) context.$newline
+Support $code(\0?trap).
+*/
 pbCalcN2: macro(context, names:, ?trap)
+	// Problem class\: k1 * X + k2 * Y = Z
 	@QuestionFactory
 		parameters: do
 			unknown: $Choice(x, y, z)
@@ -110,19 +117,22 @@ pbCalcN2: macro(context, names:, ?trap)
 	end
 end
 
-// Problem class: a chain of `depth` multiplications over the context's
-// vocabulary (matrioska). The context question carries `start` (top level),
-// `values` (the drawn factors) and the rendering; this layer hides `unknown`:
-//   unknown = depth+1 → the total is hidden (multiplication) — every context;
-//   unknown = 1..depth → a factor is hidden, the total is given (division) —
-//   only contexts that set `division` (currently `train` only, #129), and
-//   only when the factory is called with the `division:` flag.
+/*
+Generate a matrioska problem, a chain of multiplications where one factor or the total is hidden.
+Support $code(\0?trap), and $code(\0?division) for the contexts that set it.
+*/
 pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?trap, ?division)
 	if depth
 		set minDepth = $depth
 		set maxDepth = $depth
 	end
-
+	// Problem class\: a chain of `depth` multiplications over the context's
+	// vocabulary (matrioska). The context question carries `start` (top level),
+	// `values` (the drawn factors) and the rendering; this layer hides `unknown`:
+	//   unknown = depth+1 → the total is hidden (multiplication) — every context;
+	//   unknown = 1..depth → a factor is hidden, the total is given (division) —
+	//   only contexts that set `division` (currently `train` only, #129), and
+	//   only when the factory is called with the `division:` flag.
 	@QuestionFactory
 		parameters: do
 			unknown: $ Range(1, maxDepth+1)
@@ -193,19 +203,23 @@ pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?t
 	end
 end
 
-// Evaluate a linear combination of the context's items: the instruction
-// lists the first `itemCount` items with a quantity each and asks for the
-// total (ax +/- by +/- cz over a situation). `select` shapes the quantities:
-//   0 → 1: the bare price (the "1" coefficient)
-//   1 → the context's count
-//   2 → the context's count, negated (coupon de réduction / retour)
-// Constraints\: the first term is positive; at most `maxOnes` bare prices;
-// at least one full count (a quantity >= 2); itemCount >= 2 keeps at most
-// one item absent. A context count of 1 is doubled so the quantity 1 is
-// never displayed ("1 x price" is ambiguous and breaks the plural) —
-// bare-price terms (select 0) keep their 1. Prices are stored in integer
-// tenths of euro (item.dec), so the total is exact.
+/*
+Generate an evaluation problem, the total of a few items with their quantities, from a $code(situations) context.
+Support $code(\0?trap).
+*/
 pbEvalLin: macro(context, minItemCount:2, maxItemCount: 3, maxOnes: 2, names:, ?trap)
+	// Evaluate a linear combination of the context's items: the instruction
+	// lists the first `itemCount` items with a quantity each and asks for the
+	// total (ax +/- by +/- cz over a situation). `select` shapes the quantities:
+	//   0 → 1: the bare price (the "1" coefficient)
+	//   1 → the context's count
+	//   2 → the context's count, negated (coupon de réduction / retour)
+	// Constraints\: the first term is positive; at most `maxOnes` bare prices;
+	// at least one full count (a quantity >= 2); itemCount >= 2 keeps at most
+	// one item absent. A context count of 1 is doubled so the quantity 1 is
+	// never displayed ("1 x price" is ambiguous and breaks the plural) —
+	// bare-price terms (select 0) keep their 1. Prices are stored in integer
+	// tenths of euro (item.dec), so the total is exact.
 	@QuestionFactory
 		parameters: do
 			- $ Range(minItemCount, maxItemCount)

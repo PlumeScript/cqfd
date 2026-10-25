@@ -29,7 +29,7 @@ end
 Two modes:
 @InfosList
 	- Generate an integer with $posParam(Number, figures, 1) figures.
-	- Generate an integer with  between $posParam(Number, minFigures, 1) and $posParam(Number, maxFigures, 2) figures.
+	- Generate an integer with between $posParam(Number, minFigures, 1) and $posParam(Number, maxFigures, 2) figures.
 end
 */
 ref Integer: macro (...args)
@@ -66,10 +66,10 @@ ref Integer: macro (...args)
 end
 
 /*
-Generaten a number with
+Generate a number with
 @InfosList
-	- Mantisse with between $posParam(Number, minFigures, 1) and $posParam(Number, maxFigures, 2) figures
-	- Exposant between $posParam(Number, minIndex, 1) and $posParam(Number, maxIndex, 2) 
+	- Mantissa with between $posParam(Number, minFigures, 1) and $posParam(Number, maxFigures, 2) figures
+	- Exponent between $posParam(Number, minIndex, 1) and $posParam(Number, maxIndex, 2) 
 end
 */
 Decimal: macro (minFigures, maxFigures, minIndex, maxIndex)

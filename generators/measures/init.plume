@@ -6,3 +6,10 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 ...import(./volumes)
+
+commondoc: raw[
+@InfosList
+	- $code(unit) is the unit of the dimensions, a random one between km, hm, dam, m, dm, cm, mm if not set.
+	- $code(minn) and $code(maxn) bound the values of the dimensions.
+end
+]end

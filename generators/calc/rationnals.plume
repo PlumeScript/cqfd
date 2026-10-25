@@ -24,6 +24,10 @@ macro prettyFrac(a, b)
 	end
 end
 
+/*
+Generate a fraction $formula(\\frac{ak}{bk}) to simplify, where $code(a\, b) result of $ParamSet(FactNumber2Coprimes).$newline
+$code(k) is between $Param(Number, minK, 2) and $Param(Number, maxK, 10).
+*/
 ref simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
@@ -48,6 +52,10 @@ ref simplifyRationnal: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, 
 	end
 end
 
+/*
+Generate a fraction $formula(\\frac{nk}{k}) that simplifies to an integer $ParamSet(FactNumber).$newline
+$code(k) is between $Param(Number, minK, 2) and $Param(Number, maxK, 10).
+*/
 ref simplifyRationnalInteger: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
@@ -66,6 +74,9 @@ ref simplifyRationnalInteger: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, mi
 	end
 end
 
+/*
+Generate an irreducible fraction with $ParamSet(FactNumber2Coprimes)
+*/
 ref simplifyRationnalIrreductible: macro(minP:, maxP:, maxE:, minN: 2, maxN: 1000, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
@@ -86,6 +97,9 @@ ref simplifyRationnalIrreductible: macro(minP:, maxP:, maxE:, minN: 2, maxN: 100
 	end
 end
 
+/*
+Rewrite a $ParamSet(simplifyRationnal) as a hole equality between the fraction and its simplification.
+*/
 rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
@@ -138,6 +152,10 @@ rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 1
 	end
 end
 
+/*
+Generate two fractions to rewrite with a common denominator. Use $ParamSet(FactNumber).$newline
+Support $code(\0?integer), $code(\0?coprime) and $code(\0?multiple).
+*/
 reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?multiple, ?coprime, ?integer)
 	if integer and (multiple or coprime)
 		raise Integer flag must be used alone
@@ -198,6 +216,9 @@ reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK:
 	end
 end
 
+/*
+Generate an addition or a subtraction between two fractions, using $ParamSet(FactNumber4).
+*/
 addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer)
 	@QuestionFactory
 		parameters: do
@@ -269,6 +290,9 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 	end
 end
 
+/*
+Generate a multiplication between two fractions $ParamSet(FactNumber2Coprimes), capped by the simplification factor between $Param(Number, minK, 2) and $Param(Number, maxK, 10).
+*/
 ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:)
 	@QuestionFactory
 		parameters: do
@@ -332,6 +356,9 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:)
 	end
 end
 
+/*
+Convert a $ParamSet(mulRationnal) to a division.
+*/
 divRationnal: macro(...args)
 	@QuestionFactory
 		parameters: do

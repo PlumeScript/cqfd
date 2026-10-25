@@ -11,7 +11,7 @@ let Node from $import(../../core/utils/tree)
 let getCompute from $import(./utils)
 
 /*
-Create an addition with $posParam(QuestionFactory, left, 1) and $posParam(QuestionFactory, left, 1), capped by $code(compute).
+Create an addition with $posParam(QuestionFactory, left, 1) and $posParam(QuestionFactory, right, 2), capped by $code(compute).
 */
 composeAdd: macro(left, right, minCompute:, maxCompute:, compute:)
 	if compute
@@ -40,7 +40,7 @@ composeAdd: macro(left, right, minCompute:, maxCompute:, compute:)
 end
 
 /*
-Create an sub with $posParam(QuestionFactory, left, 1) and $posParam(QuestionFactory, left, 1), capped by $code(compute).
+Create a sub with $posParam(QuestionFactory, left, 1) and $posParam(QuestionFactory, right, 2), capped by $code(compute).
 */
 composeSub: macro(left, right, minCompute:, maxCompute:, compute:)
 	if compute
@@ -69,7 +69,7 @@ composeSub: macro(left, right, minCompute:, maxCompute:, compute:)
 end
 
 /*
-Create an multiplication with $posParam(QuestionFactory, left, 1) and $posParam(QuestionFactory, left, 1), capped by $code(compute).
+Create a multiplication with $posParam(QuestionFactory, left, 1) and $posParam(QuestionFactory, right, 2), capped by $code(compute).
 */
 composeMul: macro(left, right, minCompute:, maxCompute:, compute:)
 	if compute
@@ -98,7 +98,7 @@ composeMul: macro(left, right, minCompute:, maxCompute:, compute:)
 end
 
 /*
-Create an sqrt compute over with $posParam(QuestionFactory, calc, 1), capped by $code(compute).
+Create a sqrt compute over $posParam(QuestionFactory, calc, 1), capped by $code(compute).
 */
 composeSqrtN: macro(calc, minCompute:, maxCompute:, compute:)
 	if compute

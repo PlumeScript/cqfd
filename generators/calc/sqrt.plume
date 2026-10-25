@@ -19,6 +19,9 @@ macro clamp(x)
 	end
 end
 
+/*
+Generate a square root of a perfect square $ParamSet(Decimal), capped by $Param(Number, compute, empty).
+*/
 sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:, maxCompute:, compute:)
 	if figures
 		set minFigures = $figures
@@ -55,6 +58,9 @@ sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 	end
 end
 
+/*
+Generate a square root of a negative $ParamSet(Decimal), which is not defined.
+*/
 sqrtC: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:)
 	if figures
 		set minFigures = $figures
@@ -81,6 +87,9 @@ sqrtC: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 	end
 end
 
+/*
+Generate the approximation of a square root of an non-square $ParamSet(Decimal), between its floor and its ceiling.
+*/
 sqrtR: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, Number digit: 0)
 	if figures
 		set minFigures = $figures
@@ -111,6 +120,10 @@ sqrtR: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 	end
 end
 
+/*
+Generate a square root of a square $formula(\\sqrt{x^2}= |x|) $ParamSet(Decimal).
+Support $code(\0?negative).
+*/
 sqrtEasy: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, ?negative)
 	if figures
 		set minFigures = $figures

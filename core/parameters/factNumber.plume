@@ -133,7 +133,7 @@ ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, N
 end
 
 /*
-Generate two numbers $code(a) and $code(b) that are neither coprimes or multiples.$newline
+Generate two numbers $code(a) and $code(b) that are neither coprimes nor multiples.$newline
 Use same parameters as $code(FactNumber).
 */
 ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
@@ -189,15 +189,15 @@ end
 Use same parameters as $code(FactNumber), plus some flags:
 $glue
 @InfosList
-	- $code(\0?multiple) (exclusive with coprime): 
-	- $code(\0?coprime) (exclusive with multiple):
-	- $code(\0?sameDenominator)\: $code(b) and $code(d) will be equals.
-	- $code(\0?noSameNumerator)\: $code(a) and $code(c) will be differents.
+	- $code(\0?multiple) (exclusive with coprime)\: $code(b) and $code(d) will be multiples.
+	- $code(\0?coprime) (exclusive with multiple)\: $code(b) and $code(d) will be coprimes.
+	- $code(\0?sameDenominator)\: $code(b) and $code(d) will be equal.
+	- $code(\0?noSameNumerator)\: $code(a) and $code(c) will be different.
 end
 */
 FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime, ?sameDenominator, ?noSameNumerator)
 	if multiple and coprime
-		raise Theses flags are mutually exclusives
+		raise These flags are mutually exclusive
 	end
 	@QuestionFactory
 		parameters: do

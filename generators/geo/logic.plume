@@ -22,6 +22,9 @@ let figure2D = $import(figure2D)
 
 let letters from $import(./utils)
 
+/*
+The notation pools of a line, a segment, a half-line and a length, used by $code(shuffle).
+*/
 ref lineNotationPool: do
 	- do
 		- macro(_, A, B, ...letters) $pages.formula([$A$B])
@@ -45,6 +48,9 @@ ref lineNotationPool: do
 	end
 end
 
+/*
+The notation pools of a circle and a disk, used by $code(shuffle).
+*/
 circlePool: do
 	- do
 		- macro(n, O, ...letters) Le cercle de centre $pages.formula($O), de rayon $pages.formula($n\0cm)
@@ -65,6 +71,10 @@ macro sentence(w)
 end
 
 
+/*
+Generate a geometrical statement from a $posParam(any, pool, 1), true or false.
+Support $code(\0?alwaysTrue) and $code(\0?alwaysFalse).
+*/
 shuffle: macro(pool, ?alwaysTrue, ?alwaysFalse)
 	if alwaysTrue and alwaysFalse
 		raise Theses flags arn't compatibles
@@ -139,6 +149,9 @@ end
 
 
 
+/*
+The geometrical notion pools, one per concept (circle, disk, center, radius, ...), used by the $code(ifThen) factories.
+*/
 let ifThenPool = do
 	circle: do
 		letters: 2
@@ -749,6 +762,9 @@ let ifThenPool = do
 	
 end
 
+/*
+Generate a geometrical statement to judge true or false, one factory per notion pool of $code(ifThenPool).
+*/
 ifThen: do
 	for name, infos in items(ifThenPool)
 		$name: @QuestionFactory

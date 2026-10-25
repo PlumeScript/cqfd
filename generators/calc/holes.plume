@@ -15,7 +15,7 @@ let DecimalRepresentation, getCompute from $import(./utils)
 let addN2, subN2 from $import(./addsub)
 
 /*
-Rewrite an $code(subN2) exercice as an hole equality (hole first).
+Rewrite an $ParamSet(addN2) exercice as a hole equality (hole first).
 */
 addN2HoleFirst: macro(...params)
 	@QuestionFactory
@@ -38,7 +38,7 @@ addN2HoleFirst: macro(...params)
 end
 
 /*
-Rewrite an $code(subN2) exercice as an hole equality (hole second).
+Rewrite an $ParamSet(addN2) exercice as a hole equality (hole second).
 */
 addN2HoleSecond: macro(...params)
 	@QuestionFactory
@@ -61,7 +61,7 @@ addN2HoleSecond: macro(...params)
 end
 
 /*
-Rewrite an $code(addN2) exercice as an hole equality (hole first).
+Rewrite a $ParamSet(subN2) exercice as a hole equality (hole first).
 */
 subN2HoleFirst: macro(...params)
 	@QuestionFactory
@@ -84,7 +84,7 @@ subN2HoleFirst: macro(...params)
 end
 
 /*
-Rewrite an $code(addN2) exercice as an hole equality (hole last).
+Rewrite a $ParamSet(subN2) exercice as a hole equality (hole second).
 */
 subN2HoleSecond: macro(...params)
 	@QuestionFactory
@@ -107,7 +107,7 @@ subN2HoleSecond: macro(...params)
 end
 
 /*
-Writhe add hole equality (hole first) between two $quote(Decimal), but there is no solution.
+Write add hole equality (hole first) between two $ParamSet(Decimal), but there is no solution.
 */
 addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
@@ -129,7 +129,7 @@ addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number mi
 end
 
 /*
-Writhe add hole equality (hole second) between two $quote(Decimal), but there is no solution.
+Write add hole equality (hole second) between two  $ParamSet(Decimal), but there is no solution.
 */
 addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
@@ -151,7 +151,7 @@ addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number m
 end
 
 /*
-Writhe sub hole equality (hole second) between two $quote(Decimal), but there is no solution.
+Write sub hole equality (hole second) between two $ParamSet(Decimal), but there is no solution.
 */
 subN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
