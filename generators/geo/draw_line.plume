@@ -16,6 +16,7 @@ let Range from $import(../../core/parameters/range)
 let Choice from $import(../../core/parameters/set)
 
 let figure2D = $import(figure2D)
+use figure2D
 let letters from $import(./utils)
 
 let pages = $import(pages) // Should be in render
@@ -337,6 +338,100 @@ draw3DotLine: macro(?line, ?halfLine, ?segment, ?notin)
 					- $ figure2D.Dot(A, label: _A, angle: a+Math.pi/2, ?cross)
 					- $ figure2D.Dot(B, label: _B, angle: a+Math.pi/2, ?cross)
 					- $ figure2D.Dot(C, label: _C, angle: a+Math.pi/2, ?cross)
+				end
+			end
+		end
+	end
+end
+
+/*
+Generate two parallels lines to draw.$newline
+$code(\0?indirect) to indirect instruction.
+*/
+drawParallelLines: macro(?indirect)
+	@QuestionFactory
+		parameters: do
+			- $letters(4)
+			- $Range(0, 360)
+			- $Range(5, 15)
+			- $Range(5, 15)
+			- $Range(5, 15)
+		end
+
+		get: macro(letters, rotation, position1, position2, position3)
+			let _A, _B, _C, _D = $letters
+			@Question(draw)
+				description: if indirect
+					Placer $pages.formula($_A\, $_B\, $_C\, $_D) distincts tel que $pages.formula(($_A$_B) /\/  ($_C$_D)).
+				else
+					Placer $pages.formula($_A\, $_B\, $_C) distincts non alignés, puis tracer la parallèle à $pages.formula(($_A$_B)) passant par $pages.formula($_C).
+				end
+				figure: do
+					set rotation *= $(Math.pi / 180)
+					let A = $ Vect2D(0, 0)
+					let B = $ Vect2D(a: rotation, r: position1)
+					let C = $ Vect2D(a: rotation+Math.pi/4, r: position2)
+					let D = $ C + (B-A).normalize() * position3
+					let Cp = $ C.proj(B-A)
+
+					- $ Line(A, B)
+					- $ Line(C, D)
+					- $ Line(C, C+(D-C).normal(), style: (stroke: (strokeDasharray: 5)))
+					- $ Dot(A, label: _A, angle: 3*Math.pi/4 + (B-A).normal().angle(), ?cross)
+					- $ Dot(B, label: _B, angle: 5*Math.pi/4 + (B-A).normal().angle(), ?cross)
+					- $ Dot(C, label: _C, angle: Math.pi/4+(B-A).normal().angle(), ?cross)
+					- $ RightAngleSector(Cp, C, D)
+					- $ RightAngleSector(C, Cp, A)
+					if indirect
+						- $ Dot(D, label: _D, angle: -Math.pi/4+(B-A).normal().angle(), ?cross)
+					end
+				end
+			end
+		end
+	end
+end
+
+/*
+Generate two perpendicular lines to draw.$newline
+$code(\0?indirect) to indirect instruction.
+*/
+drawPerpendicularLines: macro(?indirect)
+	@QuestionFactory
+		parameters: do
+			- $letters(4)
+			- $Range(0, 360)
+			- $Range(5, 15)
+			- $Range(5, 15)
+			- $Range(5, 15)
+		end
+
+		get: macro(letters, rotation, position1, position2, position3)
+			let _A, _B, _C, _D = $letters
+			@Question(draw)
+				description: if indirect
+					Placer $pages.formula($_A\, $_B\, $_C\, $_D) distincts tel que $pages.formula(($_A$_B)  \\perp ($_C$_D)).
+				else
+					Placer $pages.formula($_A\, $_B\, $_C) distincts non alignés, puis tracer la perpendiculaire à $pages.formula(($_A$_B)) passant par $pages.formula($_C).
+				end
+				figure: do
+					set rotation *= $(Math.pi / 180)
+					let A = $ Vect2D(0, 0)
+					let B = $ Vect2D(a: rotation, r: position1)
+					let C = $ Vect2D(a: rotation+Math.pi/4, r: position2)
+					let Cp = $ C.proj(B-A)
+					let D = $ Cp + (Cp - C).normalize() * position3
+					
+
+					- $ Line(A, B)
+					- $ Line(C, D)
+
+					- $ Dot(A, label: _A, angle: 3*Math.pi/4 + (B-A).normal().angle(), ?cross)
+					- $ Dot(B, label: _B, angle: 5*Math.pi/4 + (B-A).normal().angle(), ?cross)
+					- $ Dot(C, label: _C, angle: Math.pi/4+(B-A).normal().angle(), ?cross)
+					- $ RightAngleSector(A, Cp, C)
+					if indirect
+						- $ Dot(D, label: _D, angle: -Math.pi/4+(B-A).normal().angle(), ?cross)
+					end
 				end
 			end
 		end
