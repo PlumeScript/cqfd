@@ -186,3 +186,43 @@ divZ2: macro(?frac, ?fullSign, ...params)
 		end
 	end
 end
+
+/*
+Use mulN2 to create an equality $formula(a \\times b = c).$newline
+Then get a number $formula(n) between $formula(1) and $formula(b) to transform it into $formula(a \\times b + n= c+n).$newline
+Flag $code(\0?noRest) for make $formula(n=0).
+*/
+EuclideanDiv: macro(?noRest, ...args)
+	set args.minIndex = $ max(0, args.minIndex? or 0)
+	@QuestionFactory
+		parameters: do
+			- $divN2(...args)
+			if noRest
+				- $Choice(0)
+			else
+				- $ Range(1, 10^(args.maxFigures? or 3))
+			end
+		end
+
+		validate: macro(div, rest)
+			if rest > div.instruction.children[2]
+				return $false
+			end
+			return $true
+		end
+
+		get: macro(div, rest)
+			let A = $ div.instruction.children[1]
+			let B = $ div.instruction.children[2]
+			let C = $ div.solution
+
+			return @Question(calcul)
+				instruction: $ Node("⊢", (A+rest), B)
+				solution: $ Node("=", (A+rest), Node("+", Node("*", B, C), rest))
+				solutionHideCalcul: $true
+				id: $A ⊢ $B
+				compute: $div.compute
+			end
+		end
+	end
+end

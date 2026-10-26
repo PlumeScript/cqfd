@@ -125,6 +125,18 @@ ref renderLatexAST: macro(node, ?mayPar)
 			end
 			\\div
 			$ renderLatexAST(node.children[2], ?mayPar)
+		elseif node.label == "⊢"
+			if type(node.children[1]) == "table" and node.children[1].label == "+"
+				$ renderLatexAST(node.children[1], ?mayPar)
+			else
+				if node.fullSign? and type(node.children[1]) == "table" and node.children[1].label == "-" and len(node.children[1].children) == 1
+					$ renderLatexAST(node.children[1], ?mayPar)
+				else
+					$ renderLatexAST(node.children[1])
+				end
+			end
+			⊢
+			$ renderLatexAST(node.children[2], ?mayPar)
 		elseif node.label == "/"
 			\\dfrac
 			{
@@ -133,6 +145,10 @@ ref renderLatexAST: macro(node, ?mayPar)
 			{
 				$ renderLatexAST(node.children[2])
 			}
+		elseif node.label == "="
+			$ renderLatexAST(node.children[1])
+			=
+			$ renderLatexAST(node.children[2])
 		elseif node.label == "<"
 			@Table.join(sep: \\lt)
 				for x in node.children

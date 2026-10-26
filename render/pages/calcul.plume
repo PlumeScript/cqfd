@@ -17,11 +17,13 @@ calcul: do
 	end
 	ref solution: macro(question)
 		@pages.formula
-			$ renderLatexAST(question.instruction)
-			=
-			if question.beforeSimplification? and question.simplification != 1
-				$ renderLatexAST(question.beforeSimplification)
+			if not question.solutionHideCalcul?
+				$ renderLatexAST(question.instruction)
 				=
+				if question.beforeSimplification? and question.simplification != 1
+					$ renderLatexAST(question.beforeSimplification)
+					=
+				end
 			end
 			$ renderLatexAST(question.solution)
 		end
