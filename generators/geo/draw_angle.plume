@@ -26,8 +26,9 @@ There are shortcut:
 	- $code(\0?obtuse) for $formula(91-179°)
 	- $code(\0?straight) for $formula(180°)
 end
+$code(\0?indirect) to indirect instruction.
 */
-drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision: 1, ?zero, ?acute, ?right, ?obtuse, ?straight)
+drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision: 1, ?zero, ?acute, ?right, ?obtuse, ?straight, ?indirect)
 	if zero
 		set minAngle = 0
 		set maxAngle = 0
@@ -75,15 +76,21 @@ drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision: 1, 
 			set angle *= $precision
 			let _A, _B, _C = $letters
 			@Question(draw)
-				description: Tracer $pages.formula(\\widehat{$_A$_B$_C} = $angle°)
+				description: if indirect
+					Placer $pages.formula($_A\, $_B\, $_C) tel que $pages.formula(\\widehat{$_A$_B$_C} = $angle°).
+				else
+					Tracer $pages.formula(\\widehat{$_A$_B$_C} = $angle°)
+				end
 				figure: do
 					let A = $ Vect2D(a: rotation, r: 10, ?deg)
 					let B = $ Vect2D(0, 0)
 					let C = $ Vect2D(a: angle+rotation, r: position, ?deg)
 					
-					- $ Angle(A, B, C)
+					if not indirect
+						- $ Angle(A, B, C)
+					end
 					- $ Dot(A, label: _A, angle: (B-A).normal().angle() ,?cross, ?deg)
-					- $ Dot(B, label: _B, angle: 180 + rotation+angle/2, ?deg)
+					- $ Dot(B, label: _B, angle: 180 + rotation+angle/2, cross: indirect, ?deg)
 					- $ Dot(C, label: _C, angle: 180 + (B-C).normal().angle(), ?cross, ?deg)
 				end
 			end
