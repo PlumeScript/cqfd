@@ -82,9 +82,9 @@ drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision: 1, 
 					let C = $ Vect2D(a: angle+rotation, r: position, ?deg)
 					
 					- $ Angle(A, B, C)
-					- $ Dot(A, label: _A, angle: (B-A).normal().angle() ,?cross)
-					- $ Dot(B, label: _B, angle: Math.pi + rotation+angle/2)
-					- $ Dot(C, label: _C, angle: Math.pi + (B-C).normal().angle(), ?cross)
+					- $ Dot(A, label: _A, angle: (B-A).normal().angle() ,?cross, ?deg)
+					- $ Dot(B, label: _B, angle: 180 + rotation+angle/2, ?deg)
+					- $ Dot(C, label: _C, angle: 180 + (B-C).normal().angle(), ?cross, ?deg)
 				end
 			end
 		end
