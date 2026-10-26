@@ -1,0 +1,128 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Range from $import(../../core/parameters/range)
+let Choice from $import(../../core/parameters/set)
+
+use figure2D
+let letters from $import(./utils)
+
+let pages = $import(pages) // Should be in render
+
+macro angleTip(A, B, C)
+    $ ((A-B).normalize() + (C-B).normalize()).normalize().angle() + Math.pi
+end
+
+/*
+Generate a triangle to draw from two angles.$newpar
+Angle will be a multiple of $Param(Number, precision, 1)
+*/
+drawTriangle2angles: macro(Number precision: 1)
+	@QuestionFactory
+		parameters: do
+			- $Range(20, 140)
+			- $Range(1, 100)
+			- $Range(2, 8)
+		end
+
+		hyperParameters: do
+			- $letters(3)
+			- $Range(0, 180)
+			- $Range(5, 15)
+		end
+
+		get: macro(a1, r, l, letters, rotation, position)
+			let _A, _B, _C = $letters
+
+			set a1 = $ (a1 / precision).floor() * precision
+			let a2 = $ ((20 + (140 - a1) * r/100)/precision).floor()*precision
+
+			@Question(draw)
+				description: do
+					Sachant que\s
+					$pages.formula(\\widehat{$_A$_B$_C}=$a1°),\s
+					$pages.formula(\\widehat{$_B$_A$_C}=$a2°)\s
+					et\s
+					$pages.formula($_A$_B=$l\0cm),\s
+					tracer le triangle $pages.formula($_A$_B$_C).
+				end
+				figure: do
+					let B = $Vect2D(0, 0)
+
+					let A = $ Vect2D(a: rotation, r: 1, ?deg)
+					let line1 = $ Line2D(B, Vect2D(a: rotation+a1, r: 1, ?deg))
+					let line2 = $ Line2D(A, Vect2D(a: rotation+(180-a2), r: 1, ?deg))
+					let C = $ line1.intersect(line2)[1]
+
+					- $ Polygon(A, B, C)
+					- $ Dot(A, label: _A, angle: angleTip(B, A, C))
+					- $ Dot(B, label: _B, angle: angleTip(C, B, A))
+					- $ Dot(C, label: _C, angle: angleTip(A, C, B))
+					- $ Angle(A, B, C, fill: "#ddd", ?noline)
+					- $ Angle(C, A, B, fill: "#ddd", ?noline)
+					- $ Dot((A+B)/2, label: l.."cm", direction:(B-A).angle())
+				end
+			end
+		end
+	end
+end
+
+/*
+Generate a triangle to draw from two lengths.$newpar
+Angle will be a multiple of $Param(Number, precision, 1)
+*/
+drawTriangle2lengths: macro(Number precision: 1)
+	@QuestionFactory
+		parameters: do
+			- $Range(20, 100)
+			- $Range(5, 15)
+			- $Range(2, 8)
+		end
+
+		hyperParameters: do
+			- $letters(3)
+			- $Range(0, 180)
+		end
+
+		get: macro(a, r, l1, letters, rotation)
+			let _A, _B, _C = $letters
+
+			set a = $ (a / precision).floor() * precision
+			let l2 = $ (l1*r/10).ceil()
+
+			@Question(draw)
+				description: do
+					Sachant que\s
+					$pages.formula(\\widehat{$_A$_B$_C}=$a°),\s
+					,\s
+					$pages.formula($_A$_B=$l1\0cm)\s
+					et\s
+					$pages.formula($_A$_C=$l2\0cm),\s
+					tracer le triangle $pages.formula($_A$_B$_C).
+				end
+				figure: do
+					let B = $Vect2D(0, 0)
+
+					let A = $ Vect2D(a: rotation, r: l1, ?deg)
+					let line = $ Line2D(B, Vect2D(a: rotation+a, r: 1, ?deg))
+					let circle = $ Circle2D(B, l2)
+					let C = $ line.intersect(circle)[1]
+
+					- $ Polygon(A, B, C)
+					- $ Dot(A, label: _A, angle: angleTip(B, A, C))
+					- $ Dot(B, label: _B, angle: angleTip(C, B, A))
+					- $ Dot(C, label: _C, angle: angleTip(A, C, B))
+					- $ Angle(C, B, A, fill: "#ddd", ?noline)
+					- $ Dot((A+B)/2, label: l1.."cm", direction:(B-A).angle())
+					- $ Dot((B+C)/2, label: l2.."cm", direction:(B-C).angle())
+				end
+			end
+		end
+	end
+end
