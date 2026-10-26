@@ -17,3 +17,14 @@ draw: do
 		end
 	end
 end
+
+measure: do
+	instruction:macro(question)
+		@figure2D.Canva2D(width: 200, height: 100)
+			...question.figure
+		end
+	end
+	solution: macro(question)
+		$question.description
+	end
+end
