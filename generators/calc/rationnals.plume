@@ -103,7 +103,7 @@ Rewrite a $ParamSet(simplifyRationnal) as a hole equality between the fraction a
 rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10)
 	@QuestionFactory
 		parameters: do
-			- $ simplifyRationnal(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			- $ simplifyRationnal(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK)
 			- $ Choice(1, 2, 3, 4)
 			- $ Choice(0, 1)
 		end
@@ -217,7 +217,8 @@ reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK:
 end
 
 /*
-Generate an addition or a subtraction between two fractions, using $ParamSet(FactNumber4).
+Generate an addition or a subtraction between two fractions, using $ParamSet(FactNumber4).$newline
+Use flag $code(\0?integer) to generate an addition or a substraction between a integer and a fraction.
 */
 addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer)
 	@QuestionFactory
