@@ -1,0 +1,281 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Range from $import(../../core/parameters/range)
+let Choice from $import(../../core/parameters/set)
+
+let figure2D = $import(figure2D)
+let letters from $import(./utils)
+
+let pages = $import(pages) // Should be in render
+
+/*
+Generate two circles to draw, with a given number of intersections.
+Support $code(\0?zero), $code(\0?one), $code(\0?two) and $code(\0?infinite).
+*/
+drawCircleIntersection: macro(?zero, ?one, ?two, ?infinite)
+	if not zero and not one and not two and not infinite
+		raise Provide at least one flag
+	end
+	@QuestionFactory
+		parameters: do
+			- @Choice
+				if zero
+					- 0
+				end
+				if one
+					- 1
+				end
+				if two
+					- 2
+				end
+				if infinite
+					- infinite
+				end
+			end
+		end
+		hyperParameters: do
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+		end
+		get: macro(count, r1, r2, delta)
+			@Question(draw)
+				description: if count == "infinite"
+					Tracer deux cercles avec une infinité de points d'intersections.
+				elseif count == 2
+					Tracer deux cercles avec deux points d'intersections.
+				elseif count == 0
+					Tracer deux cercles avec aucun point d'intersection.
+				else
+					Tracer deux cercles avec un unique point d'intersection.
+				end
+				figure: if count == 0
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0), figure2D.Vect2D(r1, 0))
+					- $ figure2D.Circle(figure2D.Vect2D(r1+r2+delta, 0), figure2D.Vect2D(r1+delta+2*r2, 0))
+				elseif count == 1
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0), figure2D.Vect2D(r1, 0))
+					- $ figure2D.Circle(figure2D.Vect2D(r1+r2, 0), figure2D.Vect2D(r1+2*r2, 0))
+				elseif count == 2
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0), figure2D.Vect2D(r1, 0))
+					- $ figure2D.Circle(figure2D.Vect2D(max(r1, r2), 0), figure2D.Vect2D(max(r1, r2)+r2, 0))
+				elseif count == "infinite"
+					- $ figure2D.Circle(figure2D.Vect2D(0, 0),figure2D.Vect2D(r1, 0))
+				end
+			end
+		end
+	end
+end
+
+/*
+Generate a circle or a disk to draw.
+Support $code(\0?disque), $code(\0?radius), $code(\0?diameter), $code(\0?rope), $code(\0?dotin) and $code(\0?bydef).
+*/
+drawCircle: macro(?disque, ?radius, ?diameter, ?rope, ?dotin, ?bydef)
+	@QuestionFactory
+		parameters: do
+			disque: if disque
+				$Choice(0, 1)
+			else
+				$Choice(0)
+			end
+			radius: @Choice
+				- 0
+				if radius
+					- 1
+				end
+				if diameter
+					- 2
+				end
+				if rope
+					- 3
+				end
+				if dotin
+					- 4
+					- 5
+				end
+				if bydef
+					- 6
+				end
+			end
+		end
+		hyperParameters: do
+			- $letters(3)
+			- $Range(0, 180)
+			- $Range(40,  80)
+			- $Range(3,  8)
+		end
+		get: macro(letters, angle1, angle2, r, disque:, radius:)
+			let _A, _B, _C = $letters
+
+			@Question(draw)
+				let name = if disque==1
+					disque
+				else
+					cercle
+				end
+				let cname = if disque==1
+					D
+				else
+					C
+				end
+				description: if radius == 6
+					if disque == 1
+						Placer $pages.formula($_A), puis l'ensemble des points situés à $pages.formula($r\0cm) ou moins de $pages.formula($_A).
+					else
+						Placer $pages.formula($_A), puis l'ensemble des points situés à exactement $pages.formula($r\0cm) de $pages.formula($_A).
+					end
+				else
+					if radius == 2
+						Tracer un $name et son diamètre $pages.formula([$_A$_B]).
+					elseif radius == 1
+						Tracer un $name de centre $pages.formula($_A) et un rayon $pages.formula([$_A$_B]).
+					elseif radius == 3
+						Tracer un $name de centre $pages.formula($_A) et une corde $pages.formula([$_B$_C]).
+					elseif radius == 4
+						Tracer un $name $pages.formula(\\mathscr $cname) de centre $pages.formula($_A) et placer $pages.formula($_B \\in \\mathscr $cname).
+					elseif radius == 5
+						Tracer un $name $pages.formula(\\mathscr $cname) de centre $pages.formula($_A) et placer $pages.formula($_B \\notin \\mathscr $cname).
+					else
+						Tracer un $name de centre $pages.formula($_A).
+					end
+				end
+
+				let center = $figure2D.Vect2D(0, 0)
+				let dotA = $figure2D.Vect2D(a: $angle1, r:1, ?deg)
+				let dotB = $ 2*center - dotA
+				let dotC =  $figure2D.Vect2D(a: $(angle1+angle2), r:1, ?deg)
+				let dotD = if disque==1
+					if radius == 4
+						$ figure2D.Vect2D(a: angle1, r:0.5, ?deg)
+					else
+						$ figure2D.Vect2D(a: angle1, r:1.5, ?deg)
+					end
+				else
+					if radius == 4
+						$figure2D.Vect2D(a: $angle1, r:1, ?deg)
+					else
+						if angle2>60
+							$ figure2D.Vect2D(a: angle1, r:1.5, ?deg)
+						else
+							$ figure2D.Vect2D(a: angle1, r:0.5, ?deg)
+						end
+					end
+				end
+
+				figure: do
+					- $ figure2D.Circle(center, dotA, fill: disque==1 and "#aaa5")// fill should be in render
+					
+					if radius == 5 or radius == 4
+						- $ figure2D.Dot(center, label: _A, angle: (dotA-dotB).angle(), ?cross)
+						- $ figure2D.Dot(dotD, label: _B, angle: (center-dotB).angle(), ?cross)
+					elseif radius == 3
+						- $ figure2D.Segment(dotB, dotC)
+						- $ figure2D.Dot(center, label: _A, angle: (dotA-dotB).angle(), ?cross)
+						- $ figure2D.Dot(dotB, label: _B, angle: (dotB-dotA).angle(), ?cross)
+						- $ figure2D.Dot(dotC, label: _C, angle: (dotB-dotA).angle(), ?cross)
+					elseif radius == 2
+						- $ figure2D.Segment(dotA, dotB)
+						- $ figure2D.Dot(dotA, label: _A, angle: (dotA-dotB).angle(), ?cross)
+						- $ figure2D.Dot(dotB, label: _B, angle: (dotB-dotA).angle(), ?cross)
+					elseif radius == 1
+						- $ figure2D.Segment(center, dotA)
+						- $ figure2D.Dot(center, label: _A, ?cross)
+						- $ figure2D.Dot(dotA, label: _B, angle: (dotA-dotB).angle(), ?cross)
+					else
+						- $ figure2D.Dot(center, label: _A, ?cross)
+					end
+				end
+			end
+		end
+	end
+end
+
+/*
+Generate three dots to place on a circle, without drawing it.
+*/
+draw3CircleDot: @QuestionFactory
+	parameters: $Table()
+	hyperParameters: do
+		- $Range(2, 6)
+		- $Range(0, 80)
+		- $Range(30, 80)
+		- $Range(30, 80)
+		- $letters(3)
+	end
+	get: macro(r, a1, a2, a3, letters)
+		let _A, _B, _C = $letters
+
+		let center = $figure2D.Vect2D()
+		let A = $figure2D.Vect2D(r: 1, a: $a1)
+		let B = $figure2D.Vect2D(r: 1, a: $(a1+a2))
+		let C = $figure2D.Vect2D(r: 1, a: $(a1+a2+a3))
+
+		@Question(draw)
+			description: Soit $pages.formula(\\mathscr C) un cercle de rayon $pages.formula($r\0cm). Sans le tracer, placer $pages.formula($_A\, $_B\, $_C) appartenants à $pages.formula(\\mathscr C).
+			figure: do
+				- $ figure2D.Dot(center, ?cross)
+
+				- $ figure2D.Segment(center, A, style: (stroke: (strokeDasharray: "5")))
+				- $ figure2D.Segment(center, B, style: (stroke: (strokeDasharray: "5")))
+				- $ figure2D.Segment(center, C, style: (stroke: (strokeDasharray: "5")))
+
+				let label = $r\0cm
+				- $ figure2D.Dot((center+A)/2, label: label)
+				- $ figure2D.Dot((center+B)/2, label: label)
+				- $ figure2D.Dot((center+C)/2, label: label)
+
+				- $ figure2D.Dot(A, label: _A, angle: a1, ?cross)
+				- $ figure2D.Dot(B, label: _B, angle: a1+a2, ?cross)
+				- $ figure2D.Dot(C, label: _C, angle: a1+a2+a3, ?cross)
+
+			end
+		end
+	end
+end
+
+/*
+Generate three dots to place at the intersection of two circles, without using the compass.
+*/
+drawDot2Circle: @QuestionFactory
+	parameters: $Table()
+	hyperParameters: do
+		- $Range(2, 6)
+		- $Range(2, 6)
+		- $Range(0, 80)
+		- $Range(30, 80)
+		- $Range(30, 80)
+		- $letters(3)
+	end
+	get: macro(r1, r2, a1, a2, a3, letters)
+		let _A, _B, _C = $letters
+
+		let center = $figure2D.Vect2D()
+		let A = $figure2D.Vect2D(0, 0)
+		let B = $figure2D.Vect2D($r1, 0)
+		let C = $figure2D.Vect2D($(r1+r2), 0)
+
+		@Question(draw)
+			description: Sans utiliser le compas, placer $pages.formula($_A\, $_B\, $_C) tel que $pages.formula($_C) appartienne au cercle de centre $pages.formula($_A) et de rayon $pages.formula($r1\0cm) et au cercle de centre $pages.formula($_B) et de rayon $pages.formula($r2\0cm).
+			figure: do
+				- $ figure2D.Segment(A, B, style: (stroke: (strokeDasharray: "5")))
+				- $ figure2D.Segment(B, C, style: (stroke: (strokeDasharray: "5")))
+
+
+				- $ figure2D.Dot((A+B)/2, label: r1.."cm", angle:(Math.pi/2))
+				- $ figure2D.Dot((B+C)/2, label: r2.."cm", angle:(Math.pi/2))
+
+				- $ figure2D.Dot(A, label: _A, ?cross)
+				- $ figure2D.Dot(B, label: _B, ?cross)
+				- $ figure2D.Dot(C, label: _C, ?cross)
+
+			end
+		end
+	end
+end
