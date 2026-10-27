@@ -106,7 +106,7 @@ end
 
 /*
 Compare two rationnals using a pivot.$newline
-Ex\: $formula(\\frac a b < n < \frac c d).$newline
+Ex\: $formula(\\frac a b < n < \\frac c d).$newline
 Created with $ParamSet(FactNumber4)
 */
 rationnalWithPivot: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, pivot: 1)
