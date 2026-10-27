@@ -1,0 +1,249 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let FactNumber, FactNumber2Coprimes, FactNumber4 from $import(../../core/parameters/factNumber)
+let Range from $import(../../core/parameters/range)
+let Choice from $import(../../core/parameters/set)
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Node from $import(../../core/utils/tree)
+let FactNumberCls from $import(../../core/utils/factNumber)
+
+/*
+Compare two rationnals with same denominator.$newline
+Created with $ParamSet(FactNumber4)
+*/
+rationnalFromNumerator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, ?sameDenominator, ?noSameNumerator)
+		end
+		get: macro(abcd)
+			let a, b, c, d = $abcd
+
+			let solution = if a.value<c.value
+				<
+			else
+				>
+			end
+
+			let left = @Node(/)
+				- $a.value
+				- $b.value
+			end
+			let right = @Node(/)
+				- $c.value
+				- $d.value
+			end
+
+			@Question(comp)
+				instruction: @Node(...)
+					- $left
+					- $right
+				end
+				solution: @Node($solution)
+					- $left
+					- $right
+				end
+				help: @Node($solution)
+					- $a.value
+					- $c.value
+				end
+			end
+		end
+	end
+end
+
+/*
+Compare two rationnals with same numerator.$newline
+Created with $ParamSet(FactNumber4)
+*/
+rationnalFromDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, ?sameDenominator, ?noSameNumerator)
+		end
+		get: macro(abcd)
+			let b, a, d, c = $abcd
+
+			let solution = if a.value<c.value
+				<
+			else
+				>
+			end
+
+			let left = @Node(/)
+				- $a.value
+				- $b.value
+			end
+			let right = @Node(/)
+				- $c.value
+				- $d.value
+			end
+
+			@Question(comp)
+				instruction: @Node(...)
+					- $left
+					- $right
+				end
+				solution: @Node($solution)
+					- $left
+					- $right
+				end
+				help: @Node($solution)
+					- $d.value
+					- $b.value
+				end
+			end
+		end
+	end
+end
+
+/*
+Compare two rationnals using a pivot.$newline
+Ex\: $formula(\\frac a b < n < \frac c d).$newline
+Created with $ParamSet(FactNumber4)
+*/
+rationnalWithPivot: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, pivot: 1)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, ?noSameNumerator)
+		end
+		hyperParameters: do
+			- $Range(1, 100)
+		end
+		get: macro(abcd, switch)
+			let a, b, c, d = $abcd
+
+			if a.value>b.value
+				set a, b = ($b, $a)
+			end
+			if c.value>d.value
+				set c, d = ($d, $c)
+			end
+
+			set a = @FactNumberCls.fromNumber
+				$ (a.value + (pivot-1)*b.value).floor()
+			end
+			set c = @FactNumberCls.fromNumber
+				$ (c.value + (pivot)*d.value).floor()
+			end
+
+			let solution = <
+			if switch % 2 == 0
+				set solution = >
+				set a, b, c, d = ($c, $d, $a, $b)
+			end
+
+			let left = @Node(/)
+				- $a.value
+				- $b.value
+			end
+			let right = @Node(/)
+				- $c.value
+				- $d.value
+			end
+
+			@Question(comp)
+				instruction: @Node(...)
+					- $left
+					- $right
+				end
+				help: @Node($solution)
+					- $left
+					- @Node($solution)
+						- $pivot
+						- $right
+					end
+				end
+				solution: @Node($solution)
+					- $left
+					- $right
+				end
+			end
+		end
+	end
+end
+
+
+/*
+Compare a rationnals with an integer.$newline
+The integer is between $Param(Number, minK, 2) and $Param(Number, maxK, 10).
+*/
+rationnalWithInteger: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10)
+	@QuestionFactory
+		parameters: do
+			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			- $ Range(minK, maxK)
+			- $Choice(>, <)
+		end
+		hyperParameters: do
+			- $Range(1, 100)
+		end
+		get: macro(ab, k, solution, switch)
+			let a, b = $ab
+
+			if a.value>b.value
+				set a, b = ($b, $a)
+			end
+			set a = @FactNumberCls.fromNumber
+				if solution == "<"
+					$ (a.value + (k-1)*b.value).floor()
+				else
+					$ (a.value + k*b.value).floor()
+				end
+			end
+
+			let left = @Node(/)
+				- $a.value
+				- $b.value
+			end
+			let right = $k
+
+			let psolution = $ solution
+			if switch % 2 == 0
+				set psolution = if solution == "<"
+					>
+				else
+					<
+				end
+				// set a, b = ($b, $a)
+				set left, right = ($right, $left)
+			end
+
+			@Question(comp)
+				instruction: @Node(...)
+					- $left
+					- $right
+				end
+				
+				help: if k==1
+					@Node($solution)
+						- $a.value
+						- $b.value
+					end
+				else
+					@Node($solution)
+						- $a.value
+						- @Node(=)
+							- @Node(*)
+								- $b.value
+								- $k
+							end
+							- $ b.value*k
+						end
+					end
+				end
+				solution: @Node($psolution)
+					- $left
+					- $right
+				end
+			end
+		end
+	end
+end

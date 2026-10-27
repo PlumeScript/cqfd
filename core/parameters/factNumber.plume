@@ -246,7 +246,11 @@ FactNumber4: macro(minP:, maxP: 6, maxE: 2, minN: 1, maxN: 1000, minK:, maxK:, f
 			elseif multiple
 				$ FactNumber2Multiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, force: forceb)
 			elseif sameDenominator
-				$ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: forceb)
+				if forceb
+					$ Choice(FactNumberCls.fromNumber(forceb))
+				else
+					$ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+				end
 			else
 				$ FactNumber2NoCoprimesNoMultiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: forceb)
 			end
