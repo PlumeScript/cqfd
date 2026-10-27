@@ -18,7 +18,7 @@ let mulN2, divQ2 from $import(./muldiv)
 /*
 Rewrite an $ParamSet(addN2) exercice as a hole equality (hole first).
 */
-addN2HoleFirst: macro(...params)
+ref addN2HoleFirst: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $subN2(...params)
@@ -41,7 +41,7 @@ end
 /*
 Rewrite an $ParamSet(addN2) exercice as a hole equality (hole second).
 */
-addN2HoleSecond: macro(...params)
+ref addN2HoleSecond: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $subN2(...params)
@@ -62,9 +62,16 @@ addN2HoleSecond: macro(...params)
 end
 
 /*
+Wrapper for $ParamSet(addN2HoleFirst) and $ParamSet(addN2HoleSecond).
+*/
+addN2Hole: macro(...args)
+	$ (addN2HoleFirst(...args) + addN2HoleSecond(...args)).tree()
+end
+
+/*
 Rewrite a $ParamSet(subN2) exercice as a hole equality (hole first).
 */
-subN2HoleFirst: macro(...params)
+ref subN2HoleFirst: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $addN2(...params)
@@ -87,7 +94,7 @@ end
 /*
 Rewrite a $ParamSet(subN2) exercice as a hole equality (hole second).
 */
-subN2HoleSecond: macro(...params)
+ref subN2HoleSecond: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $subN2(...params)
@@ -108,9 +115,16 @@ subN2HoleSecond: macro(...params)
 end
 
 /*
+Wrapper for $ParamSet(subN2HoleFirst) and $ParamSet(subN2HoleSecond).
+*/
+subN2Hole: macro(...args)
+	$ (subN2HoleFirst(...args) + subN2HoleSecond(...args)).tree()
+end
+
+/*
 Write add hole equality (hole first) between two $ParamSet(Decimal), but there is no solution.
 */
-addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
+ref addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
 		parameters: do
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
@@ -132,7 +146,7 @@ end
 /*
 Write add hole equality (hole second) between two  $ParamSet(Decimal), but there is no solution.
 */
-addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
+ref addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, figures:, minCompute:)
 	@QuestionFactory
 		parameters: do
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
@@ -150,6 +164,14 @@ addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number m
 		end
 	end
 end
+
+/*
+Wrapper for $ParamSet(addN2HoleSecondNoSolution) and $ParamSet(addN2HoleSecondNoSolution).
+*/
+addN2HoleNoSolution: macro(...args)
+	$ (addN2HoleFirstNoSolution(...args) + addN2HoleSecondNoSolution(...args)).tree()
+end
+
 
 /*
 Write sub hole equality (hole second) between two $ParamSet(Decimal), but there is no solution.
@@ -176,7 +198,7 @@ end
 /*
 Transform a $ParamSet(mulN2) into an equality with hole first.
 */
-mulHoleFirst: macro(...params)
+ref mulHoleFirst: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $mulN2(...params)
@@ -200,9 +222,43 @@ mulHoleFirst: macro(...params)
 end
 
 /*
+Transform a $ParamSet(mulN2) into an equality with hole second.
+*/
+ref mulHoleSecond: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $mulN2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(*, $calc.instruction.children[1], ...)
+				solution: $calc.instruction.children[2]
+				solutionCalc: @Node(-:)
+					- $calc.solution
+					- $calc.instruction.children[1]
+				end
+				completed: @Node(*)
+					- $Node(bold, $calc.instruction.children[2])
+					- $calc.instruction.children[1]
+				end
+				target: $calc.solution
+			end
+		end
+	end
+end
+
+
+/*
+Wrapper for $ParamSet(mulHoleFirst) and $ParamSet(mulHoleSecond).
+*/
+mulHole: macro(...args)
+	$ (mulHoleFirst(...args) + mulHoleSecond(...args)).tree()
+end
+
+/*
 Transform a $ParamSet(divQ2) into an equality with hole first.
 */
-mulHoleFirst: macro(...params)
+ref mulHoleFirstRationnal: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $divQ2(...params)
@@ -230,7 +286,7 @@ end
 /*
 Transform a $ParamSet(divQ2) into an equality with hole second.
 */
-mulHoleSecond: macro(...params)
+ref mulHoleSecondRationnal: macro(...params)
 	@QuestionFactory
 		parameters: do
 			- $divQ2(...params)
@@ -254,4 +310,11 @@ mulHoleSecond: macro(...params)
 			end
 		end
 	end
+end
+
+/*
+Wrapper for $ParamSet(mulHoleFirstRationnal) and $ParamSet(mulHoleFirstSecond).
+*/
+mulHoleRationnal: macro(...args)
+	$ (mulHoleFirstRationnal(...args) + mulHoleSecondRationnal(...args)).tree()
 end
