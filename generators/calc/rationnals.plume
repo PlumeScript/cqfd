@@ -315,14 +315,20 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percen
 			end
 			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: (percentage and 100))
 		end
-
-		get: macro(ab, cd)
+		hyperParameters: do
+			- $Range(0, 100)
+		end
+		get: macro(ab, cd, switch)
 			let a, b = if integer
 				$Table($ab, $FactNumberCls.fromNumber(1))
 			else
 				$ab
 			end
 			let d, c = $cd
+
+			if switch % 2 == 0
+				set a, b, c, d = ($c, $d, $a, $b)
+			end
 
 			let top    = $ a*c
 			let bottom = $ b*d
