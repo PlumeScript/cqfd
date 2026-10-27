@@ -111,12 +111,25 @@ let version = v0.8.0
 					$ section(subGenerator.getStem())
 					
 					for name, elem in items(subGenerator.import())
-						if type(elem) == "macro"
+						if type(elem) != "table" or elem._?.public?
 							$ subsection(name, ?noNumbering)
 							let infos = $ plume.doc(elem)
 							if len(infos.doc) > 0
-					            $glue
+								$glue
 								$eval($doclib\n$infos.doc)
+							end
+
+							if type(elem) == "table" and elem._?.children?
+								$newpar
+								Children\:
+								@plume.Table.join(sep: \,\s)
+									for key, value in items(elem)
+										if key != "_"
+											- $code($key)
+										end
+									end
+								end
+								.
 							end
 						end
 					end
