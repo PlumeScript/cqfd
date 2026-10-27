@@ -22,9 +22,12 @@ let ardoise = $import(ardoise) // TODO: Replace by contextual variables (#47)
 		end
 	end
 
-
+	macro id(content, item)
+		$content
+	end
 	batch: do
 		any: macro(mode, batch, renderer)
+			let render = $ batch.overwriteRender?[mode]? or id
 			if mode == "instruction" and batch.instruction
 				@ardoise.instruction $batch.instruction
 			end
@@ -37,7 +40,7 @@ let ardoise = $import(ardoise) // TODO: Replace by contextual variables (#47)
 				...batch.styleOptn
 				// Content
 				for item in batch.items
-					- $ item.render(mode, renderer: renderer)
+					- $ render(item.render(mode, renderer: renderer), item)
 				end
 			end
 		end
