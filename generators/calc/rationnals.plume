@@ -302,17 +302,26 @@ end
 
 /*
 Generate a multiplication between two fractions $ParamSet(FactNumber2Coprimes), capped by the simplification factor between $Param(Number, minK, 2) and $Param(Number, maxK, 10)..$newline
+Use flag $code(\0?integer) to generate a multiplication between a integer and a fraction.$newline
 Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).
 */
-ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percentage)
+ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percentage, ?integer)
 	@QuestionFactory
-		parameters: do
-			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+		parameters:do
+			if integer
+				- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			else
+				- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			end
 			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: (percentage and 100))
 		end
 
 		get: macro(ab, cd)
-			let a, b = $ab
+			let a, b = if integer
+				$Table($ab, $FactNumberCls.fromNumber(1))
+			else
+				$ab
+			end
 			let d, c = $cd
 
 			let top    = $ a*c
@@ -332,14 +341,14 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percen
 					d: $d
 				end
 				instruction: @Node(*)
-					- @Node(/)
+					- @prettyFrac
 						- $a.value
 						- $b.value
 					end
 					- if percentage and d.value == 100
 						$c.value \\%
 					else
-						@Node(/)
+						@prettyFrac
 							- $c.value
 							- $d.value
 						end
@@ -362,7 +371,7 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percen
 					- $bottom.value
 				end
 				simplification: $k.value
-				solution: @Node(/)
+				solution: @prettyFrac
 					- $ top.value / k.value
 					- $ bottom.value / k.value
 				end
