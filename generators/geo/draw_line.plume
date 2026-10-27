@@ -166,35 +166,36 @@ end
 /*
 Generate a half-line to draw.
 */
-drawHalfLine: @QuestionFactory
-	parameters: $Table()
-	hyperParameters: do
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $Range(1, 5)
-		- $letters(2)
-	end
-	get: macro(a, b, c, d, letters)
-		if a==c and b==d
-			set a += 1
+drawHalfLine: macro
+	@QuestionFactory
+		parameters: $Table()
+		hyperParameters: do
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $Range(1, 5)
+			- $letters(2)
 		end
-		let A = $figure2D.Vect2D($a, $b)
-		let B = $figure2D.Vect2D($c, $d)
-		let _A, _B = $letters
+		get: macro(a, b, c, d, letters)
+			if a==c and b==d
+				set a += 1
+			end
+			let A = $figure2D.Vect2D($a, $b)
+			let B = $figure2D.Vect2D($c, $d)
+			let _A, _B = $letters
 
-		@Question(draw)
-			description: Tracer une demi-droite $pages.formula([$_A$_B\)).
-			figure: do
-				- $ figure2D.HalfLine(A, B)
-				- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
-				- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
-				- $ figure2D.Dot(B+(B-A)/2) // extend canva
+			@Question(draw)
+				description: Tracer une demi-droite $pages.formula([$_A$_B\)).
+				figure: do
+					- $ figure2D.HalfLine(A, B)
+					- $ figure2D.Dot(A, label: _A, angle: (B-A).normal().angle(), ?cross)
+					- $ figure2D.Dot(B, label: _B, angle: (B-A).normal().angle(), ?cross)
+					- $ figure2D.Dot(B+(B-A)/2) // extend canva
+				end
 			end
 		end
 	end
 end
-
 
 /*
 Generate two lines to draw, with a given intersection.

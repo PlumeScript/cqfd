@@ -200,41 +200,43 @@ end
 /*
 Generate three dots to place on a circle, without drawing it.
 */
-draw3CircleDot: @QuestionFactory
-	parameters: $Table()
-	hyperParameters: do
-		- $Range(2, 6)
-		- $Range(0, 80)
-		- $Range(30, 80)
-		- $Range(30, 80)
-		- $letters(3)
-	end
-	get: macro(r, a1, a2, a3, letters)
-		let _A, _B, _C = $letters
+draw3CircleDot: macro
+	@QuestionFactory
+		parameters: $Table()
+		hyperParameters: do
+			- $Range(2, 6)
+			- $Range(0, 80)
+			- $Range(30, 80)
+			- $Range(30, 80)
+			- $letters(3)
+		end
+		get: macro(r, a1, a2, a3, letters)
+			let _A, _B, _C = $letters
 
-		let center = $figure2D.Vect2D()
-		let A = $figure2D.Vect2D(r: 1, a: $a1)
-		let B = $figure2D.Vect2D(r: 1, a: $(a1+a2))
-		let C = $figure2D.Vect2D(r: 1, a: $(a1+a2+a3))
+			let center = $figure2D.Vect2D()
+			let A = $figure2D.Vect2D(r: 1, a: $a1)
+			let B = $figure2D.Vect2D(r: 1, a: $(a1+a2))
+			let C = $figure2D.Vect2D(r: 1, a: $(a1+a2+a3))
 
-		@Question(draw)
-			description: Soit $pages.formula(\\mathscr C) un cercle de rayon $pages.formula($r\0cm). Sans le tracer, placer $pages.formula($_A\, $_B\, $_C) appartenants à $pages.formula(\\mathscr C).
-			figure: do
-				- $ figure2D.Dot(center, ?cross)
+			@Question(draw)
+				description: Soit $pages.formula(\\mathscr C) un cercle de rayon $pages.formula($r\0cm). Sans le tracer, placer $pages.formula($_A\, $_B\, $_C) appartenants à $pages.formula(\\mathscr C).
+				figure: do
+					- $ figure2D.Dot(center, ?cross)
 
-				- $ figure2D.Segment(center, A, style: (stroke: (strokeDasharray: "5")))
-				- $ figure2D.Segment(center, B, style: (stroke: (strokeDasharray: "5")))
-				- $ figure2D.Segment(center, C, style: (stroke: (strokeDasharray: "5")))
+					- $ figure2D.Segment(center, A, style: (stroke: (strokeDasharray: "5")))
+					- $ figure2D.Segment(center, B, style: (stroke: (strokeDasharray: "5")))
+					- $ figure2D.Segment(center, C, style: (stroke: (strokeDasharray: "5")))
 
-				let label = $r\0cm
-				- $ figure2D.Dot((center+A)/2, label: label)
-				- $ figure2D.Dot((center+B)/2, label: label)
-				- $ figure2D.Dot((center+C)/2, label: label)
+					let label = $r\0cm
+					- $ figure2D.Dot((center+A)/2, label: label)
+					- $ figure2D.Dot((center+B)/2, label: label)
+					- $ figure2D.Dot((center+C)/2, label: label)
 
-				- $ figure2D.Dot(A, label: _A, angle: a1, ?cross)
-				- $ figure2D.Dot(B, label: _B, angle: a1+a2, ?cross)
-				- $ figure2D.Dot(C, label: _C, angle: a1+a2+a3, ?cross)
+					- $ figure2D.Dot(A, label: _A, angle: a1, ?cross)
+					- $ figure2D.Dot(B, label: _B, angle: a1+a2, ?cross)
+					- $ figure2D.Dot(C, label: _C, angle: a1+a2+a3, ?cross)
 
+				end
 			end
 		end
 	end
@@ -243,38 +245,40 @@ end
 /*
 Generate three dots to place at the intersection of two circles, without using the compass.
 */
-drawDot2Circle: @QuestionFactory
-	parameters: $Table()
-	hyperParameters: do
-		- $Range(2, 6)
-		- $Range(2, 6)
-		- $Range(0, 80)
-		- $Range(30, 80)
-		- $Range(30, 80)
-		- $letters(3)
-	end
-	get: macro(r1, r2, a1, a2, a3, letters)
-		let _A, _B, _C = $letters
+drawDot2Circle: macro
+	@QuestionFactory
+		parameters: $Table()
+		hyperParameters: do
+			- $Range(2, 6)
+			- $Range(2, 6)
+			- $Range(0, 80)
+			- $Range(30, 80)
+			- $Range(30, 80)
+			- $letters(3)
+		end
+		get: macro(r1, r2, a1, a2, a3, letters)
+			let _A, _B, _C = $letters
 
-		let center = $figure2D.Vect2D()
-		let A = $figure2D.Vect2D(0, 0)
-		let B = $figure2D.Vect2D($r1, 0)
-		let C = $figure2D.Vect2D($(r1+r2), 0)
+			let center = $figure2D.Vect2D()
+			let A = $figure2D.Vect2D(0, 0)
+			let B = $figure2D.Vect2D($r1, 0)
+			let C = $figure2D.Vect2D($(r1+r2), 0)
 
-		@Question(draw)
-			description: Sans utiliser le compas, placer $pages.formula($_A\, $_B\, $_C) tel que $pages.formula($_C) appartienne au cercle de centre $pages.formula($_A) et de rayon $pages.formula($r1\0cm) et au cercle de centre $pages.formula($_B) et de rayon $pages.formula($r2\0cm).
-			figure: do
-				- $ figure2D.Segment(A, B, style: (stroke: (strokeDasharray: "5")))
-				- $ figure2D.Segment(B, C, style: (stroke: (strokeDasharray: "5")))
+			@Question(draw)
+				description: Sans utiliser le compas, placer $pages.formula($_A\, $_B\, $_C) tel que $pages.formula($_C) appartienne au cercle de centre $pages.formula($_A) et de rayon $pages.formula($r1\0cm) et au cercle de centre $pages.formula($_B) et de rayon $pages.formula($r2\0cm).
+				figure: do
+					- $ figure2D.Segment(A, B, style: (stroke: (strokeDasharray: "5")))
+					- $ figure2D.Segment(B, C, style: (stroke: (strokeDasharray: "5")))
 
 
-				- $ figure2D.Dot((A+B)/2, label: r1.."cm", angle:(Math.pi/2))
-				- $ figure2D.Dot((B+C)/2, label: r2.."cm", angle:(Math.pi/2))
+					- $ figure2D.Dot((A+B)/2, label: r1.."cm", angle:(Math.pi/2))
+					- $ figure2D.Dot((B+C)/2, label: r2.."cm", angle:(Math.pi/2))
 
-				- $ figure2D.Dot(A, label: _A, ?cross)
-				- $ figure2D.Dot(B, label: _B, ?cross)
-				- $ figure2D.Dot(C, label: _C, ?cross)
+					- $ figure2D.Dot(A, label: _A, ?cross)
+					- $ figure2D.Dot(B, label: _B, ?cross)
+					- $ figure2D.Dot(C, label: _C, ?cross)
 
+				end
 			end
 		end
 	end
