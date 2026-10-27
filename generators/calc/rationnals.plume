@@ -218,16 +218,17 @@ end
 
 /*
 Generate an addition or a subtraction between two fractions, using $ParamSet(FactNumber4).$newline
-Use flag $code(\0?integer) to generate an addition or a substraction between a integer and a fraction.
+Use flag $code(\0?integer) to generate an addition or a substraction between a integer and a fraction.$newline
+Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).
 */
-addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer)
+addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer, ?percentage)
 	@QuestionFactory
 		parameters: do
 			if integer
 				- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
 				- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
 			else
-				- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime, sameDenominator: sameDenominator, noSameNumerator: noSameNumerator)
+				- $ FactNumber4(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, multiple: multiple, coprime: coprime, sameDenominator: sameDenominator, noSameNumerator: noSameNumerator, forceb: (percentage and 100))
 				- $Choice(1)
 			end
 			- $Choice(+, -)
@@ -263,13 +264,21 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 				let k = $ top.gcd(bottom)
 
 				instruction: @Node($opp)
-					- @prettyFrac
-						- $a.value
-						- $b.value
+					- if percentage and b.value == 100
+						$a.value \\%
+					else
+						@prettyFrac
+							- $a.value
+							- $b.value
+						end
 					end
-					- @prettyFrac
-						- $c.value
-						- $d.value
+					- if percentage and d.value == 100
+						$d.value \\%
+					else
+						@prettyFrac
+							- $c.value
+							- $d.value
+						end
 					end
 				end
 				beforeSimplification: @prettyFrac
@@ -292,18 +301,19 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 end
 
 /*
-Generate a multiplication between two fractions $ParamSet(FactNumber2Coprimes), capped by the simplification factor between $Param(Number, minK, 2) and $Param(Number, maxK, 10).
+Generate a multiplication between two fractions $ParamSet(FactNumber2Coprimes), capped by the simplification factor between $Param(Number, minK, 2) and $Param(Number, maxK, 10)..$newline
+Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).
 */
-ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:)
+ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percentage)
 	@QuestionFactory
 		parameters: do
 			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
-			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: (percentage and 100))
 		end
 
 		get: macro(ab, cd)
 			let a, b = $ab
-			let c, d = $cd
+			let d, c = $cd
 
 			let top    = $ a*c
 			let bottom = $ b*d
@@ -326,9 +336,13 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:)
 						- $a.value
 						- $b.value
 					end
-					- @Node(/)
-						- $c.value
-						- $d.value
+					- if percentage and d.value == 100
+						$c.value \\%
+					else
+						@Node(/)
+							- $c.value
+							- $d.value
+						end
 					end
 				end
 				steps: do

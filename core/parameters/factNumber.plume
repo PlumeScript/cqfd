@@ -43,12 +43,18 @@ Generate two numbers $code(a) and $code(b), where one is a multiple of the other
 	- Use $code(FactNumber) parameters to get the first one
 	- Multiply it by a number between $Param(Number, minK, 2) and $Param(Number, maxK, 10)
 end 
+Value of $code(a) can be forced with $Param(Number, force, empty).$newline
+Forced value will always be the greater.
 */
-ref FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, minK: 2, maxK: 10)
+ref FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, minK: 2, maxK: 10, force:)
 	@QuestionFactory
 		parameters: do
 			// Base
-			- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			if force
+				- $ Choice(FactNumberCls.fromNumber(force))
+			else
+				- $ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			end
 			// Multiple
 			- $ Range(minK, maxK)
 			// Order
@@ -56,7 +62,6 @@ ref FactNumber2Multiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, 
 		end
 		get: macro(a, k, order)
 			let b = $ FactNumberCls.fromNumber(a.value * k)
-
 			if a.value != b.value and a.value >= minN and a.value <= maxN and b.value >= minN and b.value <= maxN and a.value != b.value
 				if order==1
 					set a, b = ($b, $a)
@@ -75,21 +80,48 @@ end
 
 /*
 Generate two numbers $code(a) and $code(b) that are coprimes.$newline
-Use same parameters as $code(FactNumber).
+Use same parameters as $code(FactNumber).$newline
+Value of $code(a) can be forced with $Param(Number, force, empty).
 */
-ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
+ref FactNumber2Coprimes: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, force:)
+
+	if force and (force < minN or force > maxN)
+		raise `force` must be between `minN` and `maxN`
+	end
+
 	@QuestionFactory
 		parameters: do
-			// weight
-			for i in seq(1, minP-1)
-				- $Choice(0)
-			end
-			for i in seq(minP, maxP)
-				- $Range(0, $maxE)
-			end
-			// choice
-			for i in seq(1, maxP)
-				- $Choice(0, 1)
+			if force
+				let f = $ FactNumberCls.fromNumber(force)
+				for i in seq(1, maxP)
+				
+					if f.vp[i]? and f.vp[i]? != 0
+						- $Choice($f.vp[i])
+					else
+						- $Range(0, $maxE)
+					end
+				end
+
+				for i in seq(1, maxP)
+					if (f.vp[i]? or 0)==0
+						- $Choice(1)
+					else
+						- $Choice(0)
+					end
+				end
+			else
+				// weight
+				for i in seq(1, minP-1)
+					- $Choice(0)
+				end
+				for i in seq(minP, maxP)
+					- $Range(0, $maxE)
+				end
+
+				// choice
+				for i in seq(1, maxP)
+					- $Choice(0, 1)
+				end
 			end
 		end
 		get: macro(...vp)
@@ -134,13 +166,14 @@ end
 
 /*
 Generate two numbers $code(a) and $code(b) that are neither coprimes nor multiples.$newline
-Use same parameters as $code(FactNumber).
+Use same parameters as $code(FactNumber).$newline
+Value of $code(a) can be forced with $Param(Number, force, empty).
 */
-ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000)
+ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, force:)
 
 	@QuestionFactory
 		parameters: do
-			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+			- $ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: force)
 			for i in seq(1, maxP)
 				- $Range(0, $maxE)
 			end
@@ -151,11 +184,16 @@ ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Numb
 
 			let nullcheck = $true
 			for i in seq(1, maxP)
-				if vp[i] != 0
-					set nullcheck = $false
+				if not force or vpb[i]>0
+					if vp[i] != 0
+						set nullcheck = $false
+					end
+					
+					if not force
+						set vpa[i] += $ vp[i]
+					end
+					set vpb[i] += $ vp[i]
 				end
-				set vpa[i] += $ vp[i]
-				set vpb[i] += $ vp[i]
 			end
 
 			if nullcheck
@@ -194,21 +232,23 @@ $glue
 	- $code(\0?sameDenominator)\: $code(b) and $code(d) will be equal.
 	- $code(\0?noSameNumerator)\: $code(a) and $code(c) will be different.
 end
+$glue
+$Param(Number, forceb, empty) will set the value of $code(b).
 */
-FactNumber4: macro(minP:, maxP: 6, maxE: 2, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime, ?sameDenominator, ?noSameNumerator)
+FactNumber4: macro(minP:, maxP: 6, maxE: 2, minN: 1, maxN: 1000, minK:, maxK:, forceb:, ?multiple, ?coprime, ?sameDenominator, ?noSameNumerator)
 	if multiple and coprime
 		raise These flags are mutually exclusive
 	end
 	@QuestionFactory
 		parameters: do
 			- if coprime
-				$ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+				$ FactNumber2Coprimes(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: forceb)
 			elseif multiple
-				$ FactNumber2Multiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK)
+				$ FactNumber2Multiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, minK: minK, maxK: maxK, force: forceb)
 			elseif sameDenominator
-				$ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+				$ FactNumber(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: forceb)
 			else
-				$ FactNumber2NoCoprimesNoMultiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN)
+				$ FactNumber2NoCoprimesNoMultiples(minP: minP, maxP: maxP, maxE: maxE, minN: minN, maxN: maxN, force: forceb)
 			end
 			// Choice for c
 			for i in seq(1, maxP)
