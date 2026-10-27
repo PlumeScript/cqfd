@@ -11,6 +11,7 @@ let Node from $import(../../core/utils/tree)
 let Choice from $import(../../core/parameters/set)
 let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
+let FactNumberCls from $import(../../core/utils/factNumber)
 
 /*
 Generate a multiplication between two $ParamSet(Decimal), capped by $code(compute).
@@ -218,11 +219,15 @@ divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, N
 
 	@QuestionFactory
 		parameters: do
-			- $ Range(minA, maxB)
+			- $ Range(minA, maxA)
 			- $ Range(minB, maxB)
 			- $ Range(minPeriod, maxPeriod)
 		end
 		validate: macro(a, b, period)
+			// dirty fix
+			if FactNumberCls.fromNumber(a).gcd(b).value != 1
+				return
+			end
 			if a < b and greaterA or a > b and greaterB
 				return
 			end
@@ -252,12 +257,11 @@ divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, N
 				return
 			end
 
-
-
 			return $true
 		end
 
 		get: macro(a, b, period)
+			
 			let opp = if frac
 				/
 			else
