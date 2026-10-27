@@ -195,7 +195,7 @@ $glue
 	- $code(\0?noSameNumerator)\: $code(a) and $code(c) will be different.
 end
 */
-FactNumber4: macro(minP:, maxP: 6, maxE:, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime, ?sameDenominator, ?noSameNumerator)
+FactNumber4: macro(minP:, maxP: 6, maxE: 2, minN: 1, maxN: 1000, minK:, maxK:, ?multiple, ?coprime, ?sameDenominator, ?noSameNumerator)
 	if multiple and coprime
 		raise These flags are mutually exclusive
 	end
