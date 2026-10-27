@@ -188,6 +188,92 @@ divZ2: macro(?frac, ?fullSign, ...params)
 end
 
 /*
+Generate a rationnal non-decimal division with a period between $Param(Number, minPeriod, 1) and $Param(Number, maxPeriod, 1).$newline
+Dividende will be between $Param(Number, minA, 2) and $Param(Number, maxA, 100).$newline
+Divisor will be between $Param(Number, minB, 2) and $Param(Number, maxB, 100).$newline
+Caped by compute.$newline
+Flag $code(\0?frac) to print it as a fraction, $code(\0greaterA) and $code(\0greaterB).
+*/
+divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, Number minPeriod: 1, Number maxPeriod: 2, period:, minCompute:, maxCompute:, compute:,?frac, ?greaterA, ?greaterB)
+	if period
+		set minPeriod = $period
+		set maxPeriod = $period
+	end
+	if compute
+		set minCompute = $compute
+		set maxCompute = $compute
+	end
+	if minPeriod < 1
+		raise `minPeriod` cannot be under `1`
+	end
+	if minPeriod > maxPeriod
+		raise `minPeriod` cannot be greater than `maxPeriod`
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $ Range(minA, maxB)
+			- $ Range(minB, maxB)
+			- $ Range(minPeriod, maxPeriod)
+		end
+		validate: macro(a, b, period)
+			if a < b and greaterA or a > b and greaterB
+				return
+			end
+
+			let m = $b
+			while m%2==0
+				set m /= 2
+			end
+			while m%5==0
+				set m /= 5
+			end
+
+			if m==1
+				return
+			end
+
+			let k = 1
+			while 10^k % m != 1
+				// to huge
+				if k>30
+					return
+				end
+				set k += 1
+			end
+
+			if k != period
+				return
+			end
+
+
+
+			return $true
+		end
+
+		get: macro(a, b, period)
+			let opp = if frac
+				/
+			else
+				\0-:
+			end
+
+			let realCompute = $ getCompute.div(a, b)
+			if (minCompute and realCompute < minCompute) or (maxCompute and realCompute>maxCompute)
+				return
+			end
+
+			return @Question(calcul)
+				instruction: $Node($opp, $a, $b)
+				solution: $String($(a/b)).sub(1, -1)...
+				id: $a/$b
+				compute: $realCompute
+			end
+		end
+	end
+end
+
+/*
 Use mulN2 to create an equality $formula(a \\times b = c).$newline
 Then get a number $formula(n) between $formula(1) and $formula(b) to transform it into $formula(a \\times b + n= c+n).$newline
 Flag $code(\0?noRest) for make $formula(n=0).
