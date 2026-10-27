@@ -158,7 +158,6 @@ end
 The geometrical notion pools, one per concept (circle, disk, center, radius, ...), used by the $code(ifThen) factories.
 */
 let ifThenPool = do
-	/*aazeazeaze*/
 	circle: do
 		letters: 2
 		number: 1
