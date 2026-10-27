@@ -95,10 +95,11 @@ mulZ2: macro(?fullSign, ...params)
 end
 
 /*
-Convert a $ParamSet(mulN2) to a division capped by compute.
+Convert a $ParamSet(mulN2) to a division capped by compute.$newline
+Flag $code(\0?alt) to show correction as $formula(a = b \\times c) instead of $formula(\\frac a b = c).$newline 
 Flag $code(\0?frac) to print it as a fraction.
 */
-ref divN2: macro(minCompute:, maxCompute:, compute:, ?frac, ...args)
+ref divN2: macro(minCompute:, maxCompute:, compute:, ?frac, ?alt, ...args)
 	// Straightforward, should be enhanced
 	if compute
 		set minCompute = $compute
@@ -128,7 +129,12 @@ ref divN2: macro(minCompute:, maxCompute:, compute:, ?frac, ...args)
 
 			return @Question(calcul)
 				instruction: $ Node(opp, C, B)
-				solution: $A
+				if alt
+					solution: $ Node("=", C, Node("*", A, B))
+					solutionHideCalcul: $true
+				else
+					solution: $A
+				end
 				id: $C/$B
 				compute: $realCompute
 			end
