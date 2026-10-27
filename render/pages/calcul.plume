@@ -102,11 +102,13 @@ calculHole: do
 	end
 	solutionLong: macro(question)
 		@pages.List(indent: 0)
-			- @ardoise.hint
-				@pages.formula
-					$ renderLatexAST(question.solutionCalc)
-					=
-					$ renderLatexAST(question.solution)
+			if question.solutionCalc?
+				- @ardoise.hint
+					@pages.formula
+						$ renderLatexAST(question.solutionCalc)
+						=
+						$ renderLatexAST(question.solution)
+					end
 				end
 			end
 			- @pages.formula

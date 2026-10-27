@@ -13,6 +13,7 @@ let Range, Decimal from $import(../../core/parameters/range)
 let DecimalRepresentation, getCompute from $import(./utils)
 
 let addN2, subN2 from $import(./addsub)
+let mulN2, divQ2 from $import(./muldiv)
 
 /*
 Rewrite an $ParamSet(addN2) exercice as a hole equality (hole first).
@@ -167,6 +168,89 @@ subN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number m
 				instruction: $Node(-, $x, ...)
 				target: $y
 				solution: $Node(>, $y, $x)
+			end
+		end
+	end
+end
+
+/*
+Transform a $ParamSet(mulN2) into an equality with hole first.
+*/
+mulHoleFirst: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $mulN2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(*, ..., $calc.instruction.children[1])
+				solution: $calc.instruction.children[2]
+				solutionCalc: @Node(-:)
+					- $calc.solution
+					- $calc.instruction.children[1]
+				end
+				completed: @Node(*)
+					- $Node(bold, $calc.instruction.children[2])
+					- $calc.instruction.children[1]
+				end
+				target: $calc.solution
+			end
+		end
+	end
+end
+
+/*
+Transform a $ParamSet(divQ2) into an equality with hole first.
+*/
+mulHoleFirst: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $divQ2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(*, ..., $calc.instruction.children[1])
+				solution: @Node(/)
+					- $calc.instruction.children[2]
+					- $calc.instruction.children[1]
+				end
+				completed: @Node(*)
+					- @Node(bold) @Node(/)
+						- $calc.instruction.children[2]
+						- $calc.instruction.children[1]
+					end
+					- $calc.instruction.children[1]
+				end
+				target: $calc.instruction.children[2]
+			end
+		end
+	end
+end
+
+/*
+Transform a $ParamSet(divQ2) into an equality with hole second.
+*/
+mulHoleSecond: macro(...params)
+	@QuestionFactory
+		parameters: do
+			- $divQ2(...params)
+		end
+		get: macro(calc)
+			@Question(calculHole)
+				instruction: $Node(*, $calc.instruction.children[2], ...)
+				solution: @Node(/)
+					- $calc.instruction.children[1]
+					- $calc.instruction.children[2]
+				end
+				completed: @Node(*)
+					- @Node(bold) @Node(/)
+						- $calc.instruction.children[1]
+						- $calc.instruction.children[2]
+					end
+					- $calc.instruction.children[2]
+				end
+				target: $calc.instruction.children[1]
+				id: $calc.instruction.children[1]/$calc.instruction.children[2]
 			end
 		end
 	end
