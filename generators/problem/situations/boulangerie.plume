@@ -10,6 +10,7 @@ use pages
 let invalid = (invalid: $true)
 
 // I've bought a thing at b€ each and c thing at d€ each. I've spend e€ in total (or: i've bought e things in total)
+// Or i've come with a€ and spend it into c * d€
 lin: macro(a, b, sign, c, d, e, u, ?trap)
 	let ka = $a
 	let kb = $b
@@ -24,9 +25,6 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 		return $invalid
 	end
 	if a == 1 or c == 1
-		return $invalid
-	end
-	if sign == "-"
 		return $invalid
 	end
 
@@ -60,6 +58,38 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 		set item2 = croissants
 	end
 
+	if sign == "-"
+		// a - cd = e, doesn't support ab - cd =e
+		if a and b
+			return $invalid
+		end
+
+		if not a
+			set a = $b
+			set b = $empty
+			set ka = $kb
+			set kb = $empty
+			if u == 2
+				set u = 1
+			end
+		end
+		if not c
+			set c = $d
+			set d = $empty
+			set kc = $kd
+			set kd = $empty
+			if u == 4
+				set u = 3
+			end
+		end
+
+		if u==2
+			return $invalid
+		end
+	end
+
+	let f, g
+	let item3 = croissant
 	if trap
 		let r = $Random()
 		if not a
@@ -74,8 +104,62 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 		if not d
 			set d = $ r(5, 15)/10
 		end
+		if not f
+			set c = $r(2, 10)
+		end
+		if not g
+			set d = $ r(5, 15)/10
+		end
 	end
-	return do
+
+	return if sign == "-"
+
+		if u==1
+			instruction: do
+				A la boulangerie,
+				if kc and kd
+					j'ai achetée $c $item1 à $d€ pièce\s
+				elseif kc
+					j'ai dépensé $c€ en $item1\s
+					if d
+						à $d€ pièce
+					end
+				end
+				. Il me reste $e€ ; combien avais-je en entrant?
+			end
+			answer: J'avais $a€ en entrant.
+		elseif u==3
+			instruction: do
+				A la boulangerie, j'ai achetée des $item1
+				if d
+					\sa $d€ pièce.
+				end
+				.\s
+				Je suis arrivé avec $a€ mais il me reste $e€ ; combien ai-je dépensé en $item1?
+			end
+			answer: J'ai dépensé $c€ en$item1.
+		elseif u==4
+			instruction: do
+				A la boulangerie, j'ai achetée $c $item1.
+				Je suis arrivé avec $a€ mais il me reste $e€ ; combien coûte un $item1?
+			end
+			answer: Un $item1 coûte $d€.
+		elseif u==5
+			instruction: do
+				A la boulangerie,
+				if kc and kd
+					j'ai achetée $c $item1 à $d€ pièce\s
+				elseif kc
+					j'ai dépensé $c€ en $item1\s
+					if d
+						à $d€ pièce
+					end
+				end
+				. J'avais $a€ ; combien me reste-t-il après les achats?
+			end
+			answer: Il me reste $e€ après les achats.
+		end
+	else
 		let target = if ka and kc
 		elseif ka
 			\sen $item1

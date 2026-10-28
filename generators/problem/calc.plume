@@ -72,9 +72,9 @@ hole: macro(calc, ?trap)
 end
 
 /*
-Generate a problem from an calc exercices
+Generate a problem from an addSub exercices
 */
-calc: macro(calc, ?trap)
+addSub: macro(calc, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $calc
@@ -87,12 +87,14 @@ calc: macro(calc, ?trap)
 				set b = $empty
 				set c = $calc.instruction.children[2]
 				set d = $empty
-				set sign = $calc.instruction.label == "-"
+				set sign = $calc.instruction.label
 			elseif calc.instruction.label == "*"
 				set a = $calc.instruction.children[1]
 				set b = $calc.instruction.children[2]
 				set c = $empty
 				set d = $empty
+			else
+				raise Unsuported label $calc.instruction.label
 			end
 
 			set e = $calc.solution
