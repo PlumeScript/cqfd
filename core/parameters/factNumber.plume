@@ -170,7 +170,7 @@ Use same parameters as $code(FactNumber).$newline
 The shared factor $code(g) is drawn between 2 and the lesser of $code(maxN/10)
 and 10, and a coprime
 base $code(a_0) and $code(b_0) between $code(minN) and $code(maxN/2): $code(a = a_0 * g)
-and $code(b = b_0 * g) always share $code(g) and stay within $code([minN, maxN]).$newline
+and $code(b = b_0 * g) always share $code(g) and stay within $code([minN\, maxN]).$newline
 Value of $code(a) can be forced with $Param(Number, force, empty).
 */
 ref FactNumber2NoCoprimesNoMultiples: macro(Number minP: 1, Number maxP: 6, Number maxE: 2, Number minN: 2, Number maxN: 1000, force:)
