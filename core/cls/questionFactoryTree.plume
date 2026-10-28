@@ -285,9 +285,13 @@ ref QuestionFactoryTree: macro()
 			// intermediate position (O(n)) and cannot be fast-forwarded.
 			// _windowedSlot then recomputes the target block without a
 			// previous suffix — the window is relaxed across the jump only.
-			for i in seq(len(self.callCache[seed]), n-1)
-				run $ self._get(i, seed)
-			end
+
+				
+			// Desactivated for performance issue with nested QuestionFactory
+			// Todo: think about
+			// for i in seq(len(self.callCache[seed]), n-1)
+			// 	run $ self._get(i, seed)
+			// end
 		end
 
 		// Walk down (seed-driven) until a leaf: the weighted random pick.
