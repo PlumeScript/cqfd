@@ -29,6 +29,7 @@ invPb: macro(pb)
 end
 
 /*
+$deprecated
 Generate a problem with two unknowns (a sum or a loss), from a $code(situations) context.$newline
 Support $code(\0?trap).
 */
@@ -118,6 +119,7 @@ pbCalcN2: macro(context, names:, ?trap)
 end
 
 /*
+$deprecated
 Generate a matrioska problem, a chain of multiplications where one factor or the total is hidden.
 Support $code(\0?trap), and $code(\0?division) for the contexts that set it.
 */
@@ -204,6 +206,7 @@ pbMulX: macro(context, names:, Number minDepth: 1, Number maxDepth: 1,depth:, ?t
 end
 
 /*
+$deprecated
 Generate an evaluation problem, the total of a few items with their quantities, from a $code(situations) context.
 Support $code(\0?trap).
 */

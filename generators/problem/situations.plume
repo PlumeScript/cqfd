@@ -1,0 +1,11 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// lin: problem of class ab + cd = e, with one missing letter.
+for situation in os.Path("./situations").getChildren()
+	- $situation.import()
+end

@@ -43,6 +43,7 @@ let doclib = raw[
 			...items
 		end
 	end
+	let deprecated = $bold(Deprecated). $newline
 ]end
 
 let version = v0.8.0

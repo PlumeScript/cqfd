@@ -1,0 +1,115 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+
+let pool = $Table()
+
+let boulangerie = $import(./situations/boulangerie)
+
+/*
+Generate a problem from an hole exercices
+*/
+hole: macro(calc, ?trap)
+	@QuestionFactory
+		parameters: do
+			- $calc
+		end
+		get: macro(calc)
+			let a, b, sign, c, d, e, u
+
+			if calc.instruction.label == "-" or calc.instruction.label == "+"
+				set a = $calc.instruction.children[1]
+				set b = $empty
+				set c = $calc.instruction.children[2]
+				set d = $empty
+				set e = $calc.target
+				set sign = $calc.instruction.label
+			elseif calc.instruction.label == "*"
+				set a = $calc.instruction.children[1]
+				set b = $calc.instruction.children[2]
+				set c = $empty
+				set d = $empty
+				set e = $calc.target
+			end
+
+			if a == "..."
+				set a = $calc.solution
+				set u = 1
+			elseif b == "..."
+				set b = $calc.solution
+				set u = 2
+			elseif c == "..."
+				set c = $calc.solution
+				set u = 3
+			elseif d == "..."
+				set d = $calc.solution
+				set u = 4
+			elseif e == "..."
+				set e = $calc.solution
+				set u = 5
+			end
+
+			let context = $ boulangerie.lin(a, b, sign, c, d, e, u, trap: trap)
+			if context.invalid?
+				return
+			end
+
+			return @Question(problem)
+				instruction: $context.instruction
+				step: $calc.solutionCalc
+				solution: $calc.solution
+				answer: $context.answer
+				id: $calc.id
+			end
+		end
+	end
+end
+
+/*
+Generate a problem from an calc exercices
+*/
+calc: macro(calc, ?trap)
+	@QuestionFactory
+		parameters: do
+			- $calc
+		end
+		get: macro(calc)
+			let a, b, sign, c, d, e, u
+
+			if calc.instruction.label == "-" or calc.instruction.label == "+"
+				set a = $calc.instruction.children[1]
+				set b = $empty
+				set c = $calc.instruction.children[2]
+				set d = $empty
+				set sign = $calc.instruction.label == "-"
+			elseif calc.instruction.label == "*"
+				set a = $calc.instruction.children[1]
+				set b = $calc.instruction.children[2]
+				set c = $empty
+				set d = $empty
+			end
+
+			set e = $calc.solution
+			set u = 5
+
+			let context = $ boulangerie.lin(a, b, sign, c, d, e, u, trap: trap)
+			if context.invalid?
+				return
+			end
+
+			return @Question(problem)
+				instruction: $context.instruction
+				step: $calc.instruction
+				solution: $calc.solution
+				answer: $context.answer
+				id: $calc.id
+			end
+		end
+	end
+end

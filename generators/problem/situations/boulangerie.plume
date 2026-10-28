@@ -1,0 +1,194 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+use pages
+
+let invalid = (invalid: $true)
+
+// I've bought a thing at b€ each and c thing at d€ each. I've spend e€ in total (or: i've bought e things in total)
+lin: macro(a, b, sign, c, d, e, u, ?trap)
+	let ka = $a
+	let kb = $b
+	let kc = $c
+	let kd = $d
+	let ke = $e
+	
+	if (a and a.floor() != a) or (c and c.floor() != c)
+		return $invalid
+	end
+	if (a and a>20) or (c and c>20)
+		return $invalid
+	end
+	if a == 1 or c == 1
+		return $invalid
+	end
+	if sign == "-"
+		return $invalid
+	end
+
+	let item1, item2
+
+	if b
+		if b<2
+			set item1 = baguettes
+		elseif b<10
+			set item1 = éclairs au chocolat
+		elseif b<50
+			set item1 = gâteaux
+		else
+			return $invalid
+		end
+	else
+		set item1 = baguettes
+	end
+
+	if d
+		if d<2
+			set item2 = croissants
+		elseif d<10
+			set item2 = éclairs au chocolat
+		elseif d<50
+			set item2 = tartes
+		else
+			return $invalid
+		end
+	else
+		set item2 = croissants
+	end
+
+	if trap
+		let r = $Random()
+		if not a
+			set a = $r(2, 10)
+		end
+		if not b
+			set b = $ r(5, 15)/10
+		end
+		if not c
+			set c = $r(2, 10)
+		end
+		if not d
+			set d = $ r(5, 15)/10
+		end
+	end
+	return do
+		let target = if ka and kc
+		elseif ka
+			\sen $item1
+		else
+			\sen $item2
+		end
+
+		if u==1
+			instruction: do
+				if kb
+					A la boulangerie, j'achète des $item1 à $b€ pièce
+					if c
+						et $c $item2 à $d€ pièce
+					end
+					.
+					En tout je dépense $e€ ; combien ai-je acheté de $item1?
+				else
+					A la boulangerie, j'achète $e articles:\s
+					des $item1
+					if b
+						\s à $b€ pièce
+					end
+					\set $c $item2
+					if d
+						\s à $d€ pièce
+					end
+					.\sCombien ai-je acheté de $item1?
+				end
+			end
+			answer: J'ai acheté $a $item1.
+		elseif u==2
+			instruction: do
+				A la boulangerie, j'achète $a $item1
+				if c
+					\set $c $item2 à $d€ pièce
+				end
+				. En tout je dépense $e€$target ; combien coûte un $item1?
+			end
+			answer: Un $item1 coûte $b€.
+		elseif u==3
+			instruction: do
+				if kd
+					A la boulangerie, j'achète \s
+					if a
+						$a $item2 à $b€ pièce et
+					end
+					des $item1 à $b€ pièce.\s
+					En tout je dépense $e€ ; combien ai-je acheté de $item2?
+				else
+					A la boulangerie, j'achète $e articles:\s
+					$a $item1
+					if b
+						\s à $b€ pièce
+					end
+					\set des $item2
+					if d
+						\s à $d€ pièce
+					end
+					.\sCombien ai-je acheté de $item2?
+				end
+			end
+			answer: J'ai acheté $c $item2.
+		elseif u==4
+			instruction: do
+				A la boulangerie, j'achète\s 
+				if a
+					$a $item1 à $b€ pièce et 
+				end
+				$c $item2
+				.\s
+				En tout je dépense $e€$target ; combien coûte un $item2?
+			end
+			answer: Un $item2 coûte $d€.
+		elseif u==5
+			if not kb and not kd
+				instruction: do
+					A la boulangerie, j'achète\s 
+					$a $item1\s
+					if b
+						à $b€ pièce\s
+					end
+					et\s
+					$c $item2
+					if d
+						à $d€ pièce\s
+					end
+					.\s
+					Combien ai-je acheté d'articles?
+				end
+				answer: J'ai acheté $e articles.
+			else
+				instruction: do
+					A la boulangerie, j'achète\s 
+					if a
+						$a $item1\s
+						if b
+							à $b€ pièce\s
+						end
+						if c
+							et\s
+						end
+					end
+					if c
+						$c $item2
+						if d
+							à $d€ pièce\s
+						end
+						.\s
+					end
+					Combien ai-je dépensé$target?
+				end
+				answer: J'ai dépensé $e€$target.
+			end
+		end
+	end
+end
