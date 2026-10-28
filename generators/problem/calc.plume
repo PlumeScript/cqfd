@@ -7,7 +7,9 @@ Licensed under the MIT License — see LICENSE for details.
 
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
-
+let Range, Decimal from $import(../../core/parameters/range)
+let Choice from $import(../../core/parameters/set)
+let Node from $import(../../core/utils/tree)
 let pool = $Table()
 
 let boulangerie = $import(./situations/boulangerie)
@@ -74,7 +76,7 @@ end
 /*
 Generate a problem from an addSub exercices
 */
-addSub: macro(calc, ?trap)
+addSub1: macro(calc, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $calc
@@ -111,6 +113,97 @@ addSub: macro(calc, ?trap)
 				solution: $calc.solution
 				answer: $context.answer
 				id: $calc.id
+			end
+		end
+	end
+end
+
+/*
+Generate a problem from two mul exercices
+*/
+add2Mul: macro(calc, ?trap)
+	@QuestionFactory
+		parameters: do
+			- $calc
+			- $calc
+			- $Range(5, 5) // Todo: handle Range(1, 5)
+		end
+		get: macro(calc1, calc2, u)
+			let a, b, sign, c, d, e
+
+			
+			set a = $calc1.instruction.children[1]
+			set b = $calc1.instruction.children[2]
+			set c = $calc2.instruction.children[1]
+			set d = $calc2.instruction.children[2]
+
+			set e = $ calc1.solution+calc2.solution
+			if e<0
+				set e *= -1
+				set a, b, c, d = ($c, $d, $a, $b)
+			end
+
+			let context = $ boulangerie.lin(a, b, "+", c, d, e, u, trap: trap)
+			if context.invalid?
+				return
+			end
+
+			return @Question(problem)
+				instruction: $context.instruction
+				step: @Node(+)
+					- $calc1.instruction
+					- $calc2.instruction
+				end
+				solution: $e
+				answer: $context.answer
+				id: $calc1.id + $calc2.id
+			end
+		end
+	end
+end
+
+/*
+Generate a problem from one mul exercices and one number 
+*/
+addsubMulInt: macro(mul, Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, ?trap)
+	@QuestionFactory
+		parameters: do
+			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $mul
+			- $Range(5, 5) // Todo: handle Range(1, 5)
+			- $Range(1, 100)
+			- $Choice(+, -)
+		end
+		get: macro(n, calc, u, s, opp)
+			let a, b, sign, c, d, e
+			
+			set a = $n
+			set c = $calc.instruction.children[1]
+			set d = $calc.instruction.children[2]
+
+			set e = if opp=="+"
+				$ n+calc.solution
+			else
+				$ n-calc.solution
+			end
+			if e<0
+				return
+			end
+
+			let context = $ boulangerie.lin(a, b, opp, c, d, e, u, trap: trap)
+			if context.invalid?
+				return
+			end
+
+			return @Question(problem)
+				instruction: $context.instruction
+				step: @Node($opp)
+					- $n
+					- $calc.instruction
+				end
+				solution: $e
+				answer: $context.answer
+				id: $n $opp $calc.id
 			end
 		end
 	end

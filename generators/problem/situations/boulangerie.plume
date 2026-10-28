@@ -105,10 +105,10 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 			set d = $ r(5, 15)/10
 		end
 		if not f
-			set c = $r(2, 10)
+			set f = $r(2, 10)
 		end
 		if not g
-			set d = $ r(5, 15)/10
+			set g = $ r(5, 15)/10
 		end
 	end
 
@@ -172,7 +172,7 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 				if kb
 					A la boulangerie, j'achète des $item1 à $b€ pièce
 					if c
-						et $c $item2 à $d€ pièce
+						\set $c $item2 à $d€ pièce
 					end
 					.
 					En tout je dépense $e€ ; combien ai-je acheté de $item1?
@@ -252,18 +252,22 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 				answer: J'ai acheté $e articles.
 			else
 				instruction: do
-					A la boulangerie, j'achète\s 
+					A la boulangerie, j'achète\s
 					if a
-						$a $item1\s
-						if b
-							à $b€ pièce\s
+						if ka and kb
+							$a $item1\s
+							if b
+								à $b€ pièce\s
+							end
+						else
+							pour $a€ de $item1 à 1€ pièce
 						end
 						if c
-							et\s
+							\set\s
 						end
 					end
 					if c
-						$c $item2
+						$c $item2\s
 						if d
 							à $d€ pièce\s
 						end
