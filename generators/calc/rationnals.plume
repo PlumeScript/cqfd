@@ -219,9 +219,10 @@ end
 /*
 Generate an addition or a subtraction between two fractions, using $ParamSet(FactNumber4).$newline
 Use flag $code(\0?integer) to generate an addition or a substraction between a integer and a fraction.$newline
-Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).
+Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).$newline
+Use flag $code(\0?noSimplification) to prevent simplification.
 */
-addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer, ?percentage)
+addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer, ?percentage, ?noSimplification)
 	@QuestionFactory
 		parameters: do
 			if integer
@@ -285,9 +286,17 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 					- $top.value
 					- $bottom.value
 				end
-				simplification: $k.value
-				
-				solution: if top.value/bottom.value == (top.value/bottom.value).floor()
+				simplification: if noSimplification
+					1
+				else
+					$k.value
+				end
+				solution: if noSimplification
+					@Node(/)
+						- $ top.value
+						- $ bottom.value
+					end
+				elseif top.value/bottom.value == (top.value/bottom.value).floor()
 					$ top.value/bottom.value
 				else
 					@Node(/)
@@ -303,9 +312,10 @@ end
 /*
 Generate a multiplication between two fractions $ParamSet(FactNumber2Coprimes), capped by the simplification factor between $Param(Number, minK, 2) and $Param(Number, maxK, 10)..$newline
 Use flag $code(\0?integer) to generate a multiplication between a integer and a fraction.$newline
-Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).
+Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).$newline
+Use flag $code(\0?noSimplification) to prevent simplification.
 */
-ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percentage, ?integer)
+ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percentage, ?integer, ?noSimplification)
 	@QuestionFactory
 		parameters:do
 			if integer
@@ -376,10 +386,21 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percen
 					- $top.value
 					- $bottom.value
 				end
-				simplification: $k.value
-				solution: @prettyFrac
-					- $ top.value / k.value
-					- $ bottom.value / k.value
+				simplification: if noSimplification
+					1
+				else
+					$k.value
+				end
+				solution: if noSimplification
+					@Node(/)
+						- $top.value
+						- $bottom.value
+					end
+				else
+					@prettyFrac
+						- $ top.value / k.value
+						- $ bottom.value / k.value
+					end
 				end
 			end
 		end
