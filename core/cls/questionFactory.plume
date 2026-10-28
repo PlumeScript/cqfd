@@ -11,6 +11,11 @@ let FeistelWalker, derive from $import(../utils/walkers)
 let hyperParameterMap = $Table()
 
 let qfid = 0
+// Hard bound on consecutive rejected draws in getUntilValid: a healthy
+// factory accepts long before this (worst case measured ~43 tries), so
+// 10000 failures means these parameters are infeasible - fail fast
+// instead of scanning the ~10^13 positions.
+let maxTries = 10000
 // Wraps named Parameters into a deterministic question generator. `size` is
 // the product of all parameter sizes (argument combinations); get(n, seed)
 // returns the n-th question, stable per seed.
@@ -158,6 +163,9 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 			set result = $ self.get(n+try, seed: seed)
 			set try += 1
 			if result == empty
+				if try > maxTries
+					raise Too many draws without a valid exercise (acceptance too low for these parameters).
+				end
 				if try > self.size and not self.validSeen
 					raise No valid exercise was found among the `$self.size` existing parameter combinations.
 				end
