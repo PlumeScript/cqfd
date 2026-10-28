@@ -220,9 +220,10 @@ end
 Generate an addition or a subtraction between two fractions, using $ParamSet(FactNumber4).$newline
 Use flag $code(\0?integer) to generate an addition or a substraction between a integer and a fraction.$newline
 Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).$newline
-Use flag $code(\0?noSimplification) to prevent simplification.
+Use flag $code(\0?noSimplification) to prevent simplification..$newline
+Use flag $code(\0?noNegative) to prevent negatives numbers.
 */
-addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer, ?percentage, ?noSimplification)
+addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sameDenominator, ?noSameNumerator, ?multiple, ?coprime, ?integer, ?percentage, ?noSimplification, ?noNegative)
 	@QuestionFactory
 		parameters: do
 			if integer
@@ -251,14 +252,17 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 					set a, b, c, d = ($c, $d, $a, $b)
 				end
 
-				
-
 				let bottom = $ b.lcm(d)
 				let left  = $ a.value * bottom.value / b.value
 				let right = $ c.value * bottom.value / d.value
 
 				if opp == "-"
 					set right *= -1
+				end
+
+				if noNegative and left + right < 0
+					set left, right = ($(-right), $(-left))
+					set a, b, c, d = ($c, $d, $a, $b)
 				end
 
 				let top = $ FactNumberCls.fromNumber(left + right)
