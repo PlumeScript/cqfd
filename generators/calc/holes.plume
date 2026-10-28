@@ -33,6 +33,7 @@ ref addN2HoleFirst: macro(...params)
 					- $calc.instruction.children[2]
 				end
 				target: $calc.instruction.children[1]
+				id: $calc.id-1
 			end
 		end
 	end
@@ -56,6 +57,7 @@ ref addN2HoleSecond: macro(...params)
 					- $Node(bold, $calc.solution)
 				end
 				target: $calc.instruction.children[1]
+				id: $calc.id-2
 			end
 		end
 	end
@@ -86,6 +88,7 @@ ref subN2HoleFirst: macro(...params)
 					- $calc.instruction.children[1]
 				end
 				target: $calc.instruction.children[2]
+				id: $calc.id-1
 			end
 		end
 	end
@@ -109,6 +112,7 @@ ref subN2HoleSecond: macro(...params)
 					- $Node(bold, $calc.solution)
 				end
 				target: $calc.instruction.children[2]
+				id: $calc.id-2
 			end
 		end
 	end
@@ -138,6 +142,7 @@ ref addN2HoleFirstNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Numbe
 				instruction: $Node(+, ..., $x)
 				target: $y
 				solution: $Node(>, $x, $y)
+				id: $x+...=$y-ns-1
 			end
 		end
 	end
@@ -160,6 +165,7 @@ ref addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Numb
 				instruction: $Node(+, $x, ...)
 				target: $y
 				solution: $Node(>, $x, $y)
+				id: $x+...=$y-ns-2
 			end
 		end
 	end
@@ -190,6 +196,7 @@ subN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Number m
 				instruction: $Node(-, $x, ...)
 				target: $y
 				solution: $Node(>, $y, $x)
+				id: $x+...=$y-ns-2
 			end
 		end
 	end
@@ -215,7 +222,7 @@ ref mulHoleFirst: macro(...params)
 					- $Node(bold, $calc.instruction.children[2])
 					- $calc.instruction.children[1]
 				end
-				target: $calc.solution
+				target: $calc.solution-1
 			end
 		end
 	end
@@ -241,7 +248,7 @@ ref mulHoleSecond: macro(...params)
 					- $Node(bold, $calc.instruction.children[2])
 					- $calc.instruction.children[1]
 				end
-				target: $calc.solution
+				target: $calc.solution-2
 			end
 		end
 	end
@@ -278,6 +285,7 @@ ref mulHoleFirstRationnal: macro(...params)
 					- $calc.instruction.children[1]
 				end
 				target: $calc.instruction.children[2]
+				id: $calc.id-1
 			end
 		end
 	end
