@@ -20,7 +20,7 @@ macro makeExpression(x)
 	elseif type(x) == "string" and not x.isNumber()
 		return $ Expression(left: x, kind: "symbol")
 	elseif (type(x) == "string" and x.isNumber()) or type(x) == "number"
-		return $ Expression(left: x, kind: "number")
+		return $ Expression(left: Number(x), kind: "number")
 	else
 		raise Cannot convert a `$type($x)` to an expression
 	end
@@ -52,6 +52,57 @@ macro flattenprod(x)
 	end
 end
 
+// True when t carries a minus: a negative number, or a mul with exactly one
+// negative number factor.
+macro isNegativeTerm(t)
+	if isExpression(t) and t.kind == "number"
+		return $ t.left < 0
+	end
+	if isExpression(t) and t.kind == "mul"
+		let nl = $ isExpression(t.left) and t.left.kind == "number" and t.left.left < 0
+		let nr = $ isExpression(t.right) and t.right.kind == "number" and t.right.left < 0
+		return $ (nl and not nr) or (nr and not nl)
+	end
+	return $false
+end
+
+// The positive twin of a negative term (25, or the mul without its minus).
+macro positivePart(t)
+	if isExpression(t) and t.kind == "number"
+		let n = $ -t.left
+		return $ makeExpression(n)
+	end
+	if isExpression(t) and t.kind == "mul"
+		if isExpression(t.left) and t.left.kind == "number" and t.left.left < 0
+			let n = $ -t.left.left
+			return $ makeExpression(n) * t.right
+		end
+		if isExpression(t.right) and t.right.kind == "number" and t.right.left < 0
+			let n = $ -t.right.left
+			return $ t.left * makeExpression(n)
+		end
+	end
+	return $t
+end
+
+// Table(c: <number expr>, u: <factor expr>) when t is a bare factor (c = 1) or
+// a number×factor mul (either order); empty otherwise.
+macro unitTerm(t)
+	if not isExpression(t)
+		return $empty
+	end
+	if t.kind == "mul"
+		if isExpression(t.left) and t.left.kind == "number" and isExpression(t.right) and t.right.kind != "number"
+			return (c:$t.left, u: $t.right)
+		end
+		if isExpression(t.right) and t.right.kind == "number" and isExpression(t.left) and t.left.kind != "number"
+			return (c: $t.right, u: $t.left)
+		end
+		return (c: $makeExpression(1), u: $t)
+	end
+	return (c: $makeExpression(1), u: $t)
+end
+
 
 set Expression = macro(kind:, left:, right:)
 	type: Expression
@@ -63,19 +114,53 @@ set Expression = macro(kind:, left:, right:)
 		if kind == "symbol" or kind == "number"
 			$left
 		elseif kind == "add"
-			$ String(left)
-			\s+\s
-			$ String(right)
+			// A negative operand is rendered as a subtraction: x + -5 → x - 5,
+			// -3 + x → x - 3.
+			if isNegativeTerm(right)
+				$ String(left)
+				\s-\s
+				$ String(positivePart(right))
+			elseif isNegativeTerm(left)
+				$ String(right)
+				\s-\s
+				$ String(positivePart(left))
+			else
+				$ String(left)
+				\s+\s
+				$ String(right)
+			end
 		elseif kind == "sub"
 			$ String(left)
 			\s-\s
-			$ paren(right)
-		elseif kind == "mul"
-			$ paren(left)
-			if (left.kind == "number" or right.kind == "number") and right.kind != "symbol"
-				\s\\times\s
+			// x - (y + z) is distributed: x - y - z.
+			if isExpression(right) and right.kind == "add"
+				let flat = $ flattensum(right)
+				for i in seq(1, len(flat))
+					\s-\s
+					$ String(flat[i])
+				end
+			else
+				$ paren(right)
 			end
-			$ paren(right)
+		elseif kind == "mul"
+			if isExpression(left) and left.kind == "number" and isExpression(right) and right.kind == "symbol"
+				// number×symbol juxtaposition: 3x, -3x, -x, x (no \times).
+				if left.left == -1
+					$ ("-" .. String(right))
+				elseif left.left == 1
+					$ String(right)
+				else
+					$ String(left)
+					$ String(right)
+				end
+			elseif isExpression(left) and left.kind == "symbol" and isExpression(right) and right.kind == "symbol"
+				$ String(left)
+				$ String(right)
+			else
+				$ paren(left)
+				\s\\times\s
+				$ paren(right)
+			end
 		elseif kind == "div"
 			\\frac{
 				$ String(left)
@@ -93,7 +178,7 @@ set Expression = macro(kind:, left:, right:)
 		end
 	end
 
-	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1
+	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1, and reorient x·3 to 3x
 	pretty: macro()
 		if not isExpression(self.left)
 			return $self
@@ -110,6 +195,11 @@ set Expression = macro(kind:, left:, right:)
 				return $left
 			end
 		end
+		if self.kind == "sub"
+			if right == 0
+				return $left
+			end
+		end
 		if self.kind == "mul"
 			if left == 0
 				return $makeExpression(0)
@@ -122,6 +212,10 @@ set Expression = macro(kind:, left:, right:)
 			end
 			if right == 1
 				return $left
+			end
+			// x·3 → 3x (number first); x·(-1) → -x via the tostring above.
+			if isExpression(left) and left.kind == "symbol" and isExpression(right) and right.kind == "number"
+				return $ Expression(kind: "mul", left: right, right: left)
 			end
 		end
 		if self.kind == "pow"
@@ -144,11 +238,29 @@ set Expression = macro(kind:, left:, right:)
 
 	// Apply linear simplifications
 	reduce: macro()
-		let left  = $ isExpression(self.left) and self.left.reduce() or self.left
-		let right = $ isExpression(self.right) and self.right.reduce() or self.right
+		// if/else on purpose: the `A and B or C` idiom evaluates `false or empty`
+		// to false (plume quirk) and poisoned the reconstructed leaves with
+		// right: false, breaking meta eq.
+		let left
+		let right
+		if isExpression(self.left)
+			set left = $ self.left.reduce()
+		else
+			set left = $ self.left
+		end
+		if isExpression(self.right)
+			set right = $ self.right.reduce()
+		else
+			set right = $ self.right
+		end
 
 		if self.kind == "add" or self.kind == "sub"
 			let flat = $ flattensum(self)
+			// Reduce each term first, so that the pairwise merges compare
+			// reduced terms (x·x and {x}^{2} are the same unit).
+			for i in seq(1, len(flat))
+				set flat[i] = $ flat[i].reduce()
+			end
 			for i in seq(1, len(flat)-1)
 				for j in seq(i+1, len(flat))
 					let left  = $flat[i]
@@ -158,7 +270,7 @@ set Expression = macro(kind:, left:, right:)
 						set flat[i] = $ makeExpression(right.left + left.left)
 						set flat[j] = $ makeExpression(0)
 					elseif right == left
-						set flat[i] = $ 2*makeExpression(right).reduce()
+						set flat[i] = $ (2*makeExpression(right)).reduce()
 						set flat[j] = $ makeExpression(0)
 					elseif right.kind == "mul" and left.kind == "mul"
 						let rl = $right.left
@@ -166,31 +278,56 @@ set Expression = macro(kind:, left:, right:)
 						let ll = $left.left
 						let lr = $left.right
 
+						// Align the two terms: the shared factor on the same side.
 						if rl==lr or rr==ll
 							set ll, lr = ($lr, $ll)
 						end
 
 						if rl==ll and rr==lr
-							if rl.kind != "symbol" and rr.kind == "symbol"
-								set rl, rr, ll, lr = ($ll, $lr, $rl, $rr)
-							end
-						end
-
-						if rl==ll
-							set flat[i] = $ makeExpression(rr + lr).reduce() * rl
+							// Same coefficient and same factor: (rr+lr)·rl, re-reduced.
+							set flat[i] = $ (makeExpression(rr + lr).reduce() * rl).reduce()
 							set flat[j] = $ makeExpression(0)
 						elseif rr==lr
-							set flat[i] = $ makeExpression(rl + ll).reduce() * rr
+							// Same factor, different coefficients: try to reduce the
+							// coefficients rl+ll — if it merges to a single term,
+							// factorize (rl+ll)·rr, otherwise leave the terms alone.
+							let sum = $ makeExpression(rl + ll).reduce()
+							if isExpression(sum) and sum.kind != "add" and sum.kind != "sub"
+								set flat[i] = $ (sum * rr).reduce()
+								set flat[j] = $ makeExpression(0)
+							end
+						elseif rl==ll
+							// Same coefficient, different factors: try to reduce the
+							// factors rr+lr — if it merges to a single term,
+							// factorize rl·(rr+lr), otherwise leave the terms alone.
+							let sum = $ makeExpression(rr + lr).reduce()
+							if isExpression(sum) and sum.kind != "add" and sum.kind != "sub"
+								set flat[i] = $ (rl * sum).reduce()
+								set flat[j] = $ makeExpression(0)
+							end
+						end
+					else
+						// A bare factor and a number×(same factor): merge the
+						// coefficients — x + 2x → 3x, x - x → 0, x² - x² → 0.
+						let a = $ unitTerm(left)
+						let b = $ unitTerm(right)
+						if type(a) == "table" and type(b) == "table" and a.c? and b.c? and a.u == b.u
+							set flat[i] = $ makeExpression(a.c.left + b.c.left) * a.u
 							set flat[j] = $ makeExpression(0)
 						end
 					end
 				end
 			end
 
+			// Rebuild with explicit signs: a negative term is subtracted.
 			let value = $flat[1]
 			for i in seq(2, len(flat))
 				if flat[i] != 0
-					set value += $flat[i]
+					if isNegativeTerm(flat[i])
+						set value -= $ positivePart(flat[i])
+					else
+						set value += $flat[i]
+					end
 				end
 			end
 			return $value.pretty()
@@ -298,8 +435,18 @@ set Expression = macro(kind:, left:, right:)
 	meta eq: macro(x, y)
 		set x = $ makeExpression(x)
 		set y = $ makeExpression(y)
-
-		return $ x.kind == y.kind and x.left == y.left and x.right == y.right
+		// kind and left first (leaves carry no right field); .right only
+		// compared for operator kinds.
+		if x.kind != y.kind
+			return $false
+		end
+		if x.left != y.left
+			return $false
+		end
+		if x.kind == "number" or x.kind == "symbol"
+			return $true
+		end
+		return $ x.right == y.right
 	end
 end
 
