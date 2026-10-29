@@ -1,0 +1,65 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+let Range from $import(../../core/parameters/range)
+let Node from $import(../../core/utils/tree)
+let variableNames from $import(./utils)
+
+macro inject(calc, letter, pos)
+	set calc = $ Table.deepcopy(calc)
+	let pool = $ Table(calc)
+	let flat = $ Table()
+
+	while len(pool) > 0
+		let top = $ Table.remove(pool)
+		for i, child in enumerate(top.children)
+			if type(child) == "table"
+				run $ Table.append(pool, child)
+			else
+				run $ Table.append(flat, (parent: top, pos: i))
+			end
+		end
+		
+	end
+
+	let spot = $flat[1 + pos%len(flat)]
+	let value = $spot.parent.children[spot.pos]
+	set spot.parent.children[spot.pos] = $Node(var, $letter)
+
+	return ($calc, $value)
+end
+
+/*
+Create an exercice in the form $code(Si a=4\, alors a+1=...)$newline
+$posParam(QuestionFactory, source, 1) maybe any calc exercice.
+*/
+eval: macro(source)
+	@QuestionFactory
+		parameters: do
+			- $source
+		end
+		hyperParameters: do
+			- $variableNames.classic
+			- $ Range(1, 1000)
+		end
+		get: macro(source, letter, injectionSpot)
+			let calc, value = $ inject(source.instruction, letter, injectionSpot)
+			@Question(eval)
+				instruction: do
+					value: $value
+					letter: $letter
+					calc: $calc
+				end
+				solutionCalc: $source.instruction
+				solution: $source.solution
+				id: $source.id
+			end
+		end
+	end
+end

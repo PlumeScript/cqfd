@@ -7,6 +7,7 @@ Licensed under the MIT License — see LICENSE for details.
 
 let pages = $import(pages)
 let ardoise = $import(ardoise)
+let renderLatexAST from $import(./utils)
 
 eq: do
 	instruction:macro(question)
@@ -31,6 +32,44 @@ eq: do
 				=
 				$ String(question.steps[i])
 			end
+		end
+	end
+end
+
+eval: do
+	instruction:macro(question)
+		Si\s
+		@pages.formula
+			$question.instruction.letter
+			=
+			$question.instruction.value
+		end
+		, alors\s
+		@pages.formula
+			$ renderLatexAST(question.instruction.calc)
+			=
+			\0...
+		end
+	end
+	solutionShort: macro(question)
+		@pages.formula
+			$ renderLatexAST(question.solution)
+		end
+	end
+	solution: macro(question)
+		Si\s
+		@pages.formula
+			$question.instruction.letter
+			=
+			$question.instruction.value
+		end
+		, alors\s
+		@pages.formula
+			$ renderLatexAST(question.instruction.calc)
+			=
+			$ renderLatexAST(question.solutionCalc)
+			=
+			$ renderLatexAST(question.solution)
 		end
 	end
 end
