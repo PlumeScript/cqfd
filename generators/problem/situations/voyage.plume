@@ -1,0 +1,214 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Voyage situations: a word problem drawn from a linear equation with one
+// missing letter, a journey in two parts (distance = speed x duration):
+//
+//   sign "+" : a*b + c*d = e    a, c the durations of the parts (h);
+//                               b, d the speeds (km/h); e the total
+//                               distance (km)
+//   sign ""  : a*b = e          the "hole" caller's "*" label — a bare
+//                               product: one part only, c and d must be
+//                               missing
+//   sign "-" : never supported
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// `name` is a (name, gender) pair — (Léa, f) — or empty: the question is
+// told in the 1st person ("j'ai roulé…") or in the gendered 3rd person
+// ("Léa a roulé… elle a parcouru… combien a-t-elle roulé… ?").
+// `trap` applies to a bare product only: the statement then mentions a
+// second part — a detail of the scene, with no duration nor speed for it —
+// and the question stays about the first part (a*b = e).
+// Returns a (instruction:, answer:) table, or the `invalid` table when the
+// configuration is unsupported or the equation doesn't hold.
+
+let invalid = (invalid: $true)
+
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
+	// Only "+" (the full equation) and "" (the bare product of the "hole"
+	// caller's "*" label) are told in a journey; any other sign — in
+	// particular "-" — is not supported.
+	set sign = $ sign or ""
+	if sign != "+" and sign != ""
+		return $invalid
+	end
+
+	// The trap is a distractor of the bare product: on the full equation
+	// (sign "+") the equation is complete, the trap is not posed.
+	if trap and sign == "+"
+		return $invalid
+	end
+
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — "Léa a roulé", "elle a parcouru", "a-t-elle roulé",
+	// "Quelle distance a-t-elle parcourue", …
+	let who = if name and name[1]
+		do
+			rolled: $name[1] a roulé
+			parcouru: $ (name[2] == "f" and "elle a parcouru" or "il a parcouru")
+			poss: sa
+			qTime: $ (name[2] == "f" and "a-t-elle roulé" or "a-t-il roulé")
+			qDist: $ (name[2] == "f" and "a-t-elle parcourue" or "a-t-il parcourue")
+			ansRolled: $name[1] a roulé
+			ansParcouru: $name[1] a parcouru
+		end
+	else
+		do
+			// "rolled" opens the statement (and the answer): capitalized.
+			rolled: J'ai roulé
+			parcouru: j'ai parcouru
+			poss: ma
+			qTime: ai-je roulé
+			qDist: ai-je parcourue
+			ansRolled: J'ai roulé
+			ansParcouru: J'ai parcouru
+		end
+	end
+
+	if sign == "+"
+		// The full equation a*b + c*d = e: the four data of the two parts
+		// are all there — integers, in plausible sizes (hours on a road
+		// trip, km/h on a road).
+		if not a or not b or not c or not d
+			return $invalid
+		end
+		if (a.floor() != a) or (c.floor() != c) or (b.floor() != b) or (d.floor() != d)
+			return $invalid
+		end
+		if (a < 1 or a > 12) or (c < 1 or c > 12)
+			return $invalid
+		end
+		if (b < 1 or b > 150) or (d < 1 or d > 150)
+			return $invalid
+		end
+		if not e or e.floor() != e
+			return $invalid
+		end
+
+		// The caller passes a consistent equation (the missing letter is
+		// its computed solution): check it.
+		if ((a * b + c * d) * 100).round() != (e * 100).round()
+			return $invalid
+		end
+		if u < 1 or u > 5
+			return $invalid
+		end
+
+		return if u == 1
+			instruction: do
+				$(who.rolled) à $b km/h sur la 1re partie, puis $c h à $d km/h, et $(who.parcouru) $e km en tout.\s
+				Combien de temps $(who.qTime) sur la 1re partie ?
+			end
+			answer: $(who.ansRolled) $a h sur la 1re partie.
+		elseif u == 2
+			instruction: do
+				$(who.rolled) $a h à vitesse constante sur la 1re partie, puis $c h à $d km/h, et $(who.parcouru) $e km en tout.\s
+				Quelle était $(who.poss) vitesse sur la 1re partie ?
+			end
+			answer: $(who.ansRolled) à $b km/h sur la 1re partie.
+		elseif u == 3
+			instruction: do
+				$(who.rolled) $a h à $b km/h, puis à $d km/h, et $(who.parcouru) $e km en tout.\s
+				Combien de temps $(who.qTime) sur la 2e partie ?
+			end
+			answer: $(who.ansRolled) $c h sur la 2e partie.
+		elseif u == 4
+			instruction: do
+				$(who.rolled) $a h à $b km/h, puis $c h à vitesse constante, et $(who.parcouru) $e km en tout.\s
+				Quelle était $(who.poss) vitesse sur la 2e partie ?
+			end
+			answer: $(who.ansRolled) à $d km/h sur la 2e partie.
+		elseif u == 5
+			instruction: do
+				$(who.rolled) $a h à $b km/h, puis $c h à $d km/h.\s
+				Quelle distance $(who.qDist) en tout ?
+			end
+			answer: $(who.ansParcouru) $e km.
+		end
+	else
+		// sign "" : the bare product a*b = e — one part only, so c and d
+		// must be missing, and the question asks for a, b or e.
+		if c or d
+			return $invalid
+		end
+		if not a or not b
+			return $invalid
+		end
+		if (a.floor() != a) or (b.floor() != b)
+			return $invalid
+		end
+		if (a < 1 or a > 12) or (b < 1 or b > 150)
+			return $invalid
+		end
+		if not e or e.floor() != e
+			return $invalid
+		end
+
+		// The caller passes a consistent equation (the missing letter is
+		// its computed solution): check it.
+		if ((a * b) * 100).round() != (e * 100).round()
+			return $invalid
+		end
+		if u != 1 and u != 2 and u != 5
+			return $invalid
+		end
+
+		return if u == 1
+			instruction: do
+				if trap
+					$(who.rolled) à $b km/h sur la 1re partie, et $(who.parcouru) $e km.\s
+					Il y a eu une 2e partie.\s
+					Combien de temps $(who.qTime) sur la 1re partie ?
+				else
+					$(who.rolled) à $b km/h et $(who.parcouru) $e km.\s
+					Combien de temps $(who.qTime) ?
+				end
+			end
+			answer: do
+				if trap
+					$(who.ansRolled) $a h sur la 1re partie.
+				else
+					$(who.ansRolled) $a h.
+				end
+			end
+		elseif u == 2
+			instruction: do
+				if trap
+					$(who.rolled) $a h sur la 1re partie, et $(who.parcouru) $e km.\s
+					Il y a eu une 2e partie.\s
+					Quelle était $(who.poss) vitesse sur la 1re partie ?
+				else
+					$(who.rolled) $a h et $(who.parcouru) $e km.\s
+					Quelle était $(who.poss) vitesse ?
+				end
+			end
+			answer: do
+				if trap
+					$(who.ansRolled) à $b km/h sur la 1re partie.
+				else
+					$(who.ansRolled) à $b km/h.
+				end
+			end
+		elseif u == 5
+			instruction: do
+				if trap
+					$(who.rolled) $a h à $b km/h sur la 1re partie, et il y a eu une 2e partie.\s
+					Quelle distance $(who.qDist) sur la 1re partie ?
+				else
+					$(who.rolled) $a h à $b km/h.\s
+					Quelle distance $(who.qDist) ?
+				end
+			end
+			answer: $(who.ansParcouru) $e km.
+		end
+	end
+
+	// Fallback: every (sign, u) combination is handled or rejected above —
+	// keep the explicit exit.
+	return $invalid
+end
