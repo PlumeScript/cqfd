@@ -42,6 +42,7 @@ ref addN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 				solution: $(x+y)
 				id: $max($x, $y)+$min($x, $y)
 				compute: $realCompute
+				usualTrap: $(x>y and x-y or y-x)
 			end
 		end
 	end
@@ -80,6 +81,7 @@ ref subN2: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Nu
 				solution: $(x-y)
 				id: $x-$y
 				compute: $realCompute
+				usualTrap: $(x+y)
 			end
 		end
 	end
@@ -129,8 +131,8 @@ ref addZ2Plus: macro(?fullSign, ...args)
 				\0-
 			end
 
-			set A, B, C = $ makeZ(A, B, C, signA, signB, bigger)
-			let instr = $Node(+, $A, $B)
+			let _A, _B, _C = $ makeZ(A, B, C, signA, signB, bigger)
+			let instr = $Node(+, $_A, $_B)
 			// fullSign rides on the sum node: the renderer prints every term
 			// with an explicit sign, ex: (+5)+(-3)
 			if fullSign
@@ -139,15 +141,20 @@ ref addZ2Plus: macro(?fullSign, ...args)
 
 			@Question(calcul)
 				instruction: $instr
-				solution: $C
+				solution: $_C
 				id: $signA$signB$bigger$calc.id
 				compute: $calc.compute
 				steps: do
 					- if signA == "+"
-						$ Node("+", Node("+", A, B))
+						$ Node("+", Node("+", _A, _B))
 					else
 						$ Node("-", Node("+", calc.instruction.children[1], calc.instruction.children[2]))
 					end
+				end
+				usualTrap: if _C !=0
+					$ -_C
+				else
+					1 //temp
 				end
 			end
 		end
@@ -209,6 +216,7 @@ ref addZ2Minus: macro(?fullSign, ...args)
 						end
 					end
 				end
+				usualTrap: $calc.usualTrap
 			end
 		end
 	end
@@ -251,6 +259,7 @@ subZ2: macro(?fullSign, ...args)
 					- $calc.instruction
 					...calc.steps
 				end
+				usualTrap: $calc.usualTrap
 			end
 		end
 	end

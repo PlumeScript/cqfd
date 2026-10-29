@@ -308,6 +308,10 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 						- $ bottom.value / k.value
 					end
 				end
+				usualTrap: @prettyFrac
+					- $ a.value + c.value
+					- $ b.value + d.value
+				end
 			end
 		end
 	end
@@ -406,6 +410,10 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percen
 						- $ bottom.value / k.value
 					end
 				end
+				usualTrap: @prettyFrac
+					- $ a.value*b.value
+					- $ c.value
+				end
 			end
 		end
 	end
@@ -435,6 +443,10 @@ divRationnal: macro(...args)
 				steps: do
 					- $calc.instruction
 					...calc.steps
+				end
+				usualTrap: @prettyFrac
+					- $ a.value*b.value
+					- $ c.value*d.value
 				end
 			end
 		end

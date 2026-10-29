@@ -34,6 +34,7 @@ composeAdd: macro(left, right, minCompute:, maxCompute:, compute:)
 				solution: $ left.solution + right.solution
 				compute: $realCompute
 				id: ($left.id)+($right.id)
+				usualTrap: $ (left.usualTrap? or left.solution+1) + (right.usualTrap? or right.solution+1)
 			end
 		end
 	end
@@ -63,6 +64,7 @@ composeSub: macro(left, right, minCompute:, maxCompute:, compute:)
 				solution: $ left.solution - right.solution
 				compute: $realCompute
 				id: ($left.id)-($right.id)
+				usualTrap: $ (left.usualTrap? or left.solution+1) - (right.usualTrap? or right.solution+1)
 			end
 		end
 	end
@@ -92,6 +94,7 @@ composeMul: macro(left, right, minCompute:, maxCompute:, compute:)
 				solution: $ left.solution * right.solution
 				compute: $realCompute
 				id: ($left.id)*($right.id)
+				usualTrap: $ (left.usualTrap? or left.solution+1) * (right.usualTrap? or right.solution+1)
 			end
 		end
 	end
@@ -123,6 +126,7 @@ composeSqrtN: macro(calc, minCompute:, maxCompute:, compute:)
 				solution: $ calc.solution^0.5
 				compute: $realCompute
 				id: sqrt($calc.id)
+				usualTrap: $ calc.solution/2
 			end
 		end
 	end

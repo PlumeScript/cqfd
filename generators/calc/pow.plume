@@ -89,6 +89,7 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 				else
 					$ getCompute.pow(x, y)
 				end
+				usualTrap: $ x*y
 			end
 		end
 	end
@@ -132,6 +133,7 @@ powZ2: macro(?fullSign, ...args)
 						- $mul
 					end
 				end
+				usualTrap: $ -(-x)^y
 			end
 		end
 	end
@@ -186,6 +188,7 @@ powDivN2: macro(minDelta:1, maxDelta: 10, ?frac, ?negativeExposant, ...args)
 				solution: $calc.solution
 				id: $delta-$calc.id-direction
 				compute: $calc.compute
+				usualTrap: $ (-x)^y
 			end
 		end
 	end

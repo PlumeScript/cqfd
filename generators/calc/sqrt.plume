@@ -53,6 +53,7 @@ sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 				solution: $x
 				id: sqrt($(x^2))
 				compute: $realCompute
+				usualTrap: $(x^2/2)
 			end
 		end
 	end
@@ -81,6 +82,7 @@ sqrtC: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 				end
 				solution: $x
 				id: sqrt(-$(x^2))
+				usualTrap: -$x
 				compute: 0
 			end
 		end
@@ -145,6 +147,7 @@ sqrtEasy: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Num
 				end
 				solution: $x
 				id: sqrt($x^2)
+				usualTrap: $Node(^, $x, 2)
 				compute: 0
 			end
 		end
