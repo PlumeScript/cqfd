@@ -5,5 +5,16 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+commondoc: raw[
+$Param(string, style, classic) to specify variables set to use.$newline
+Accepted values:
+@InfosList
+	- $code(classic (a\, b\, c...))
+	- $code(fun (🌻\, 🍎\, 🍌...))
+	- $code(length (AC\, FD\, ...))
+	- $code(angle (hat(BAC)\, hat(ZFD)\, ...))
+end
+]end
+
 ...import(./reduce)
 ...import(./eval)

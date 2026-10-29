@@ -171,7 +171,7 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 				end
 			else
 				set self.validSeen = $true
-				let existing = $self.idhash[result.id]?
+				let existing = $ result.id? and self.idhash[result.id]?
 				if existing
 					if n+try - existing < self.size
 						set result = $empty
@@ -180,7 +180,9 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 			end
 		end
 
-		set self.idhash[result.id] = $(n+try)
+		if result.id?
+			set self.idhash[result.id] = $(n+try)
+		end
 		return (result: $result, try: $try)
 	end
 

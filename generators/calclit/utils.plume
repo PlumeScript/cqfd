@@ -5,9 +5,11 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+let QuestionFactory from $import(../../core/cls/questionFactory)
 let Parameter from $import(../../core/cls/parameter)
 
-let letters = (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)
+let letters = (a, b, c, d, e, f, g, h, i, j, k, m, n, p, r, s, t, u, v, w, x, y, z)
+let fun = (🌻, 🍎, 🍌, 💡, 🐙, 🌷, 🍒)
 
 variableNames: do
 	ref classic: @Parameter
@@ -15,6 +17,38 @@ variableNames: do
 		size: $ len(letters)
 		get: macro(i)
 			$letters[1+i]
+		end
+	end
+	length: @QuestionFactory
+		parameters: do
+			- $classic
+			- $classic
+		end
+		validate: macro(a, b)
+			return $ a != b
+		end
+		get: macro(a, b)
+			return $a.upper()$b.upper()
+		end
+	end
+	angle: @QuestionFactory
+		parameters: do
+			- $classic
+			- $classic
+			- $classic
+		end
+		validate: macro(a, b, c)
+			return $ a != b and a!=c and b!=c
+		end
+		get: macro(a, b, c)
+			return \\widehat{$a.upper()$b.upper()$c.upper()}
+		end
+	end
+	fun: @Parameter
+		type: variableName
+		size: $ len(fun)
+		get: macro(i)
+			$fun[1+i]
 		end
 	end
 end

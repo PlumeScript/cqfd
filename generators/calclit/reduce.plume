@@ -24,7 +24,7 @@ Generate a $formula(abcd...) reduction exercice.
 	- $Param(Bool, \0?negativeFactor, false) allow negative factors (orphans only)
 end
 */
-ref reduceMul: macro(Number factors: 2, Number variables: 1, Number orphans: 1, Number minPower: 1, Number maxPower: 1, ?negativeFactor, ?negativeExposant)
+ref reduceMul: macro(Number factors: 2, Number variables: 1, Number orphans: 1, Number minPower: 1, Number maxPower: 1, style: classic, ?negativeFactor, ?negativeExposant)
 	if variables + orphans > factors
 		raise To few factors (currently: `$factors`) for `$variables`  variables and `$orphans`  orphans.
 	end
@@ -51,7 +51,7 @@ ref reduceMul: macro(Number factors: 2, Number variables: 1, Number orphans: 1, 
 		end
 		hyperParameters: do
 			for i in seq(variables)
-				- $variableNames.classic
+				- $variableNames[style]
 			end
 		end
 		validate: macro(...args)
@@ -128,11 +128,14 @@ Generate a $formula(ax+by+cz+...) reduction exercice.
 	- $Param(Number, terms, 2) to set number of terms.
 	- $Param(Number, variables, 1) to set number of differents variables.
 	- $Param(Number, orphans, 1) to set number of differents non-variables factors.
-	- $Param(QuestionFactory, termTemplate, \$variablesNames.classic) used to generate variables. Intended to be use with reduceMul
+	- $Param(QuestionFactory, termTemplate, \$variablesNames[style]) used to generate variables. Intended to be use with reduceMul
 	- $Param(Bool, \0?negativeTerm, false) allow negative terms
 end
 */
-reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTemplate: $variableNames.classic, ?negativeTerm)
+reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTemplate:, style: classic, ?negativeTerm)
+	if not termTemplate
+		set termTemplate = $variableNames[style]
+	end
 	// todo: randomize factor order (acb+bac instead of abc + abc)
 	if terms < 2
 		raise terms cannot be lesser than 2 (currently: `$terms`)

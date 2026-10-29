@@ -40,13 +40,13 @@ end
 Create an exercice in the form $code(Si a=4\, alors a+1=...)$newline
 $posParam(QuestionFactory, source, 1) maybe any calc exercice.
 */
-eval: macro(source)
+eval: macro(source, style: classic)
 	@QuestionFactory
 		parameters: do
 			- $source
 		end
 		hyperParameters: do
-			- $variableNames.classic
+			- $variableNames[style]
 			- $ Range(1, 1000)
 		end
 		get: macro(source, letter, injectionSpot)
@@ -65,13 +65,13 @@ eval: macro(source)
 	end
 end
 
-ref evalCheckSimpleTrue: macro(source)
+ref evalCheckSimpleTrue: macro(source, style: classic)
 	@QuestionFactory
 		parameters: do
 			- $source
 		end
 		hyperParameters: do
-			- $variableNames.classic
+			- $variableNames[style]
 			- $ Range(1, 1000)
 		end
 		get: macro(source, letter, injectionSpot)
@@ -93,13 +93,13 @@ ref evalCheckSimpleTrue: macro(source)
 	end
 end
 
-ref evalCheckSimpleFalse: macro(source)
+ref evalCheckSimpleFalse: macro(source, style: classic)
 	@QuestionFactory
 		parameters: do
 			- $source
 		end
 		hyperParameters: do
-			- $variableNames.classic
+			- $variableNames[style]
 			- $ Range(1, 1000)
 			- $ Choice(-3, -2, -1, 1, 2, 3)
 		end
