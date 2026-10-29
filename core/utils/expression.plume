@@ -143,19 +143,42 @@ set Expression = macro(kind:, left:, right:)
 				$ paren(right)
 			end
 		elseif kind == "mul"
-			if isExpression(left) and left.kind == "number" and isExpression(right) and right.kind == "symbol"
-				// number×symbol juxtaposition: 3x, -3x, -x, x (no \times).
-				if left.left == -1
-					$ ("-" .. String(right))
-				elseif left.left == 1
-					$ String(right)
-				else
-					$ String(left)
-					$ String(right)
+			// Juxtaposition for a product of numbers and symbols only (any
+			// depth), the numbers merged and rendered first: 2xy, -3x, x, xy.
+			// A pure number product keeps \times (2 \times 3); any other factor
+			// (pow, add, div, ...) falls back to \times with parens on sums.
+			let flat = $ flattenprod(self)
+			let simple = $true
+			let hasSymbol = $false
+			for i in seq(1, len(flat))
+				let f = $flat[i]
+				if isExpression(f) and f.kind == "symbol"
+					set hasSymbol = $true
+				elseif not isExpression(f) or (f.kind != "number" and f.kind != "symbol")
+					set simple = $false
 				end
-			elseif isExpression(left) and left.kind == "symbol" and isExpression(right) and right.kind == "symbol"
-				$ String(left)
-				$ String(right)
+			end
+			if simple and hasSymbol
+				let n = 1
+				for i in seq(1, len(flat))
+					let f = $flat[i]
+					if isExpression(f) and f.kind == "number"
+						set n *= $ f.left
+					end
+				end
+				// One template line per component: building the string with `..`
+				// in code is a plume trap (the empty string renders as "").
+				if n == -1
+					$ "-"
+				elseif n != 1
+					$ String(n)
+				end
+				for i in seq(1, len(flat))
+					let f = $flat[i]
+					if isExpression(f) and f.kind == "symbol"
+						$f.left
+					end
+				end
 			else
 				$ paren(left)
 				\s\\times\s
@@ -340,6 +363,11 @@ set Expression = macro(kind:, left:, right:)
 
 					if right.kind == "number" and left.kind == "number"
 						set flat[i] = $ makeExpression(right.left * left.left)
+						set flat[j] = $ makeExpression(0)
+					elseif right.kind == "pow" and left.kind == "pow" and right.left == left.left
+						// Same base: (x²)·(x³) → x⁵ — the exponents are added.
+						let e = $ (right.right + left.right).reduce()
+						set flat[i] = $ Expression(kind: "pow", left: right.left, right: e).reduce()
 						set flat[j] = $ makeExpression(0)
 					elseif right == left
 						set flat[i] = $ (makeExpression(right)^2).reduce()
