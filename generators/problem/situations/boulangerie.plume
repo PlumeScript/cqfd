@@ -17,6 +17,9 @@ Licensed under the MIT License — see LICENSE for details.
 //
 // The caller passes every letter (the missing one as its computed solution)
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// `prenom` is a (name, gender) pair — (Léa, f) — or empty: the question is
+// told in the 1st person ("j'ai acheté…") or in the gendered 3rd person
+// ("Léa a acheté… elle dépense… combien a-t-elle acheté… ?").
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -118,7 +121,7 @@ macro term(qty, price)
 	end
 end
 
-lin: macro(a, b, sign, c, d, e, u, ?trap)
+lin: macro(a, b, sign, c, d, e, u, ?trap, ?prenom)
 	if trap
 		// The trap (a distractor drawn at random on top of the caller's
 		// equation) is not implemented yet: the values it would draw don't
@@ -233,6 +236,41 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 		return $invalid
 	end
 
+	// The speaker: 1st person when prenom is empty; otherwise the (name,
+	// gender) pair — "Léa a acheté", "elle dépense", "a-t-elle", "Elle est
+	// arrivée", "Il lui reste", …
+	let who = if prenom and prenom[1]
+		do
+			bought: $prenom[1] a acheté
+			spent: $prenom[1] a dépensé
+			spend: $ (prenom[2] == "f" and "elle dépense" or "il dépense")
+			qBought: $ (prenom[2] == "f" and "a-t-elle" or "a-t-il")
+			qSpent: $ (prenom[2] == "f" and "a-t-elle" or "a-t-il")
+			qHad: $ (prenom[2] == "f" and "avait-elle" or "avait-il")
+			arrived: $ (prenom[2] == "f" and "Elle est arrivée" or "Il est arrivé")
+			had: $ (prenom[2] == "f" and "Elle avait" or "Il avait")
+			ansHad: $prenom[1] avait
+			restQ: lui reste-t-il
+			restA: Il lui reste
+			restLow: il lui reste
+		end
+	else
+		do
+			bought: j'ai acheté
+			spent: j'ai dépensé
+			spend: je dépense
+			qBought: ai-je
+			qSpent: ai-je
+			qHad: avais-je
+			arrived: Je suis arrivé
+			had: J'avais
+			ansHad: J'avais
+			restQ: me reste-t-il
+			restA: Il me reste
+			restLow: il me reste
+		end
+	end
+
 	// Which letters must be known for the question to be solvable.
 	// (sign "" follows the "+" rules: one priced term plus, at most, an
 	// unpriced second term.)
@@ -292,62 +330,62 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 	if sign != "-"
 		return if u == 1
 			instruction: do
-				À la boulangerie, j'ai acheté\s
+				À la boulangerie, $(who.bought)\s
 				if b
 					$(some(item1, b))
 					if c
 						\set $(bought(c, item2, d))
 					end
 					.\s
-					En tout, je dépense $(euros(e)) € ; combien ai-je acheté $(deItem(item1)) ?
+					En tout, $(who.spend) $(euros(e)) € ; combien $(who.qBought) acheté $(deItem(item1)) ?
 				else
 					$(e) articles : des $(item1.plural) et $(c) $(item2.plural).\s
-					Combien ai-je acheté $(deItem(item1)) ?
+					Combien $(who.qBought) acheté $(deItem(item1)) ?
 				end
 			end
-			answer: J'ai acheté $a $item1.plural.
+			answer: $(cap(who.bought)) $a $item1.plural.
 		elseif u == 2
 			instruction: do
-				À la boulangerie, j'ai acheté\s
+				À la boulangerie, $(who.bought)\s
 				$(bought(a, item1, 0))
 				if c
 					\set $(bought(c, item2, d))
 				end
 				.\s
 				if c
-					En tout, je dépense $(euros(e)) € ; combien coûte $(oneOf(item1)) ?
+					En tout, $(who.spend) $(euros(e)) € ; combien coûte $(oneOf(item1)) ?
 				else
-					En tout, je dépense $(euros(e)) € en $(item1.plural) ; combien coûte $(oneOf(item1)) ?
+					En tout, $(who.spend) $(euros(e)) € en $(item1.plural) ; combien coûte $(oneOf(item1)) ?
 				end
 			end
 			answer: $(cap(oneOf(item1))) coûte $(euros(b)) €.
 		elseif u == 3
 			instruction: do
-				À la boulangerie, j'ai acheté\s
+				À la boulangerie, $(who.bought)\s
 				if b
 					$(bought(a, item1, b)) et $(some(item2, d)).\s
-					En tout, je dépense $(euros(e)) € ; combien ai-je acheté $(deItem(item2)) ?
+					En tout, $(who.spend) $(euros(e)) € ; combien $(who.qBought) acheté $(deItem(item2)) ?
 				else
 					$(e) articles : $(bought(a, item1, 0)) et des $(item2.plural).\s
-					Combien ai-je acheté $(deItem(item2)) ?
+					Combien $(who.qBought) acheté $(deItem(item2)) ?
 				end
 			end
-			answer: J'ai acheté $c $item2.plural.
+			answer: $(cap(who.bought)) $c $item2.plural.
 		elseif u == 4
 			instruction: do
-				À la boulangerie, j'ai acheté\s
+				À la boulangerie, $(who.bought)\s
 				if b
 					$(bought(a, item1, b))
 				else
 					$(boughtFor(a, item1))
 				end
 					\set $(bought(c, item2, 0)).\s
-				En tout, je dépense $(euros(e)) € ; combien coûte $(oneOf(item2)) ?
+				En tout, $(who.spend) $(euros(e)) € ; combien coûte $(oneOf(item2)) ?
 			end
 			answer: $(cap(oneOf(item2))) coûte $(euros(d)) €.
 		elseif u == 5
 			instruction: do
-				À la boulangerie, j'ai acheté\s
+				À la boulangerie, $(who.bought)\s
 				if c
 					if b
 						$(bought(a, item1, b)) et $(bought(c, item2, d)).\s
@@ -356,22 +394,22 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 							$(boughtFor(a, item1)) et $(bought(c, item2, d)).\s
 						else
 							$(bought(a, item1, 0)) et $(bought(c, item2, 0)).\s
-							Combien ai-je acheté d'articles ?
+							Combien $(who.qBought) acheté d'articles ?
 						end
 					end
 					if b or d
-						En tout, combien ai-je dépensé ?
+						En tout, combien $(who.qSpent) dépensé ?
 					end
 				else
 					$(bought(a, item1, b)).\s
-					En tout, combien ai-je dépensé ?
+					En tout, combien $(who.qSpent) dépensé ?
 				end
 			end
 			answer: do
 				if b or d
-					J'ai dépensé $(euros(e)) €.
+					$(cap(who.spent)) $(euros(e)) €.
 				else
-					J'ai acheté $(e) articles.
+					$(cap(who.bought)) $(e) articles.
 				end
 			end
 		end
@@ -380,41 +418,41 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 			instruction: do
 				À la boulangerie,\s
 				if d
-					j'ai acheté $(bought(c, item1, d)).\s
+					$(who.bought) $(bought(c, item1, d)).\s
 				else
-					j'ai dépensé $(euros(c)) € en $(item1.plural).\s
+					$(who.spent) $(euros(c)) € en $(item1.plural).\s
 				end
-				Il me reste $(euros(e)) € ; combien avais-je en entrant ?
+				$(who.restA) $(euros(e)) € ; combien $(who.qHad) en entrant ?
 			end
-			answer: J'avais $(euros(a)) € en entrant.
+			answer: $(cap(who.ansHad)) $(euros(a)) € en entrant.
 		elseif u == 3
 			instruction: do
-				À la boulangerie, j'ai acheté $(some(item1, d)).\s
-				Je suis arrivé avec $(euros(a)) € et il me reste $(euros(e)) € ;\s
+				À la boulangerie, $(who.bought) $(some(item1, d)).\s
+				$(who.arrived) avec $(euros(a)) € et $(who.restLow) $(euros(e)) € ;\s
 				if d
-					combien ai-je acheté $(deItem(item1)) ?
+					combien $(who.qBought) acheté $(deItem(item1)) ?
 				else
-					combien ai-je dépensé en $(item1.plural) ?
+					combien $(who.qSpent) dépensé en $(item1.plural) ?
 				end
 			end
 			answer: do
 				if d
-					J'ai acheté $c $item1.plural.
+					$(cap(who.bought)) $c $item1.plural.
 				else
-					J'ai dépensé $(euros(c)) € en $(item1.plural).
+					$(cap(who.spent)) $(euros(c)) € en $(item1.plural).
 				end
 			end
 		elseif u == 5
 			instruction: do
 				À la boulangerie,\s
 				if d
-					j'ai acheté $(bought(c, item1, d)).\s
+					$(who.bought) $(bought(c, item1, d)).\s
 				else
-					j'ai dépensé $(euros(c)) € en $(item1.plural).\s
+					$(who.spent) $(euros(c)) € en $(item1.plural).\s
 				end
-				J'avais $(euros(a)) € ; combien me reste-t-il ?
+				$(who.had) $(euros(a)) € ; combien $(who.restQ) ?
 			end
-			answer: Il me reste $(euros(e)) €.
+			answer: $(who.restA) $(euros(e)) €.
 		end
 	end
 
