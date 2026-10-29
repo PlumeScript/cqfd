@@ -1,0 +1,74 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Choice from $import(../../core/parameters/set)
+let Range from $import(../../core/parameters/range)
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+
+let s from $import(../../core/utils/expression)
+let variableNames from $import(./utils)
+
+/*
+Equation of the form $formula(ax²+bx+c=dx²+fx+g).$newline
+Without flags $code(\0?a), $code(\0?b), $code(\0?c), $code(\0?d), $formula(a) is set to $formula(1), and $formula(bcd) to $formula(0).$newline
+Flag $code(\0?rationalSolution) to make solution non-decimal.$newline
+Will refuse
+*/
+eqn1: macro(style: classic, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?rationalSolution)
+	@QuestionFactory
+		parameters: do
+			- $ a and Range(2, 5) or Choice(1)
+			- $ b and Range(2, 5) or Choice(0)
+			- $ c and Range(2, 5) or Choice(0)
+			- $ d and Range(2, 5) or Choice(0)
+		end
+		hyperParameters: do
+			- $variableNames[style]
+		end
+		validate: macro(a, b, c, d)
+			return $ a != c
+		end
+
+		get: macro(a, b, c, d, letter)
+			let x = $ s(letter)
+			
+			@Question(eqn)
+				steps: do
+					- do
+						l: $ a*s(x) + b
+						r: $ c*s(x) + d
+					end
+					if c!=0
+						- do
+							l: $ a*s(x) + b - c*s(x)
+							r: $ c*s(x) + d - c*s(x)
+						end
+						- do
+							l: $ (a-c)*s(x) + b
+							r: $ s(d)
+						end
+					end
+					- do
+						l: $ (a-c)*s(x) + b - b
+						r: $ s(d) - b
+					end
+					if a-c != 1
+						- do
+							l: $ (a-c)*s(x) / (a-c)
+							r: $ s((d - b)) / (a-c)
+						end
+					end
+					- do
+						l: $ s(x)
+						r: $ s((d - b) / (a-c))
+					end
+				end
+			end
+		end
+	end
+end

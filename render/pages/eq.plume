@@ -36,6 +36,34 @@ eq: do
 	end
 end
 
+eqn: do
+	instruction:macro(question)
+		@pages.formula
+			$ String(question.steps[1].l.pretty())
+			=
+			$ String(question.steps[1].r.pretty())
+		end
+	end
+	solutionShort: macro(question)
+		@pages.formula
+			$ String(Table.at(question.steps, -1).l.pretty())
+			=
+			$ String(Table.at(question.steps, -1).r.pretty())
+		end
+	end
+	solution: macro(question)
+		@pages.EqnAlign
+			for step in question.steps
+				- do
+					- $ String(step.l.pretty())
+					- =
+					- $ String(step.r.pretty())
+				end
+			end
+		end
+	end
+end
+
 eval: do
 	instruction:macro(question)
 		Si\s
