@@ -10,6 +10,7 @@ let QuestionFactory from $import(../../core/cls/questionFactory)
 let Range from $import(../../core/parameters/range)
 let Node from $import(../../core/utils/tree)
 let variableNames from $import(./utils)
+let Choice from $import(../../core/parameters/set)
 
 macro inject(calc, letter, pos)
 	set calc = $ Table.deepcopy(calc)
@@ -62,4 +63,76 @@ eval: macro(source)
 			end
 		end
 	end
+end
+
+ref evalCheckSimpleTrue: macro(source)
+	@QuestionFactory
+		parameters: do
+			- $source
+		end
+		hyperParameters: do
+			- $variableNames.classic
+			- $ Range(1, 1000)
+		end
+		get: macro(source, letter, injectionSpot)
+			let calc, value = $ inject(source.instruction, letter, injectionSpot)
+
+			@Question(evalCheck)
+				instruction: do
+					value: $value
+					letter: $letter
+					left: $calc
+					right: $ source.solution
+				end
+				solutionCalcLeft: $source.instruction
+				validResultLeft: $source.solution
+				solution: $true
+				id: $source.id-true
+			end
+		end
+	end
+end
+
+ref evalCheckSimpleFalse: macro(source)
+	@QuestionFactory
+		parameters: do
+			- $source
+		end
+		hyperParameters: do
+			- $variableNames.classic
+			- $ Range(1, 1000)
+			- $ Choice(-3, -2, -1, 1, 2, 3)
+		end
+		get: macro(source, letter, injectionSpot, delta)
+			let calc, value = $ inject(source.instruction, letter, injectionSpot)
+
+			let right = if source.usualTrap?
+				$source.usualTrap
+			else
+				$ source.solution + delta
+			end
+
+			@Question(evalCheck)
+				instruction: do
+					value: $value
+					letter: $letter
+					left: $calc
+					right: $right
+				end
+				solutionCalcLeft: $source.instruction
+				validResultLeft: $source.solution
+				solution: $false
+				id: $source.id-false
+			end
+		end
+	end
+end
+
+
+/*
+Create an exercice in the form $code(a+1=4 si=4)$newline
+$posParam(QuestionFactory, source, 1) maybe any calc exercice.
+*/
+evalCheckSimple: macro(...args)
+	$ evalCheckSimpleTrue(...args) + evalCheckSimpleFalse(...args)
 end

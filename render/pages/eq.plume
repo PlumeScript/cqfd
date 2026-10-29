@@ -73,3 +73,44 @@ eval: do
 		end
 	end
 end
+
+evalCheck: do
+	instruction:macro(question)
+		@pages.formula
+			$ renderLatexAST(question.instruction.left)
+			=
+			$ renderLatexAST(question.instruction.right)
+		end
+		\ssi\s
+		@pages.formula
+			$question.instruction.letter
+			=
+			$question.instruction.value
+		end
+		
+	end
+	solutionShort: macro(question)
+		if question.solution
+			Vrai.
+		else
+			Faux.
+		end
+	end
+	solution: macro(question)
+		@pages.formula
+			$ renderLatexAST(question.solutionCalcLeft)
+			=
+			$ renderLatexAST(question.validResultLeft)
+			if not question.solution
+				\\neq
+				$ renderLatexAST(question.instruction.right)
+			end
+		end
+		\sdonc\s
+		if question.solution
+			c'est vrai.
+		else
+			c'est faux.
+		end
+	end
+end
