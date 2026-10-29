@@ -121,7 +121,7 @@ macro term(qty, price)
 	end
 end
 
-lin: macro(a, b, sign, c, d, e, u, ?trap, ?prenom)
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	if trap
 		// The trap (a distractor drawn at random on top of the caller's
 		// equation) is not implemented yet: the values it would draw don't
@@ -239,17 +239,17 @@ lin: macro(a, b, sign, c, d, e, u, ?trap, ?prenom)
 	// The speaker: 1st person when prenom is empty; otherwise the (name,
 	// gender) pair — "Léa a acheté", "elle dépense", "a-t-elle", "Elle est
 	// arrivée", "Il lui reste", …
-	let who = if prenom and prenom[1]
+	let who = if name and name[1]
 		do
-			bought: $prenom[1] a acheté
-			spent: $prenom[1] a dépensé
-			spend: $ (prenom[2] == "f" and "elle dépense" or "il dépense")
-			qBought: $ (prenom[2] == "f" and "a-t-elle" or "a-t-il")
-			qSpent: $ (prenom[2] == "f" and "a-t-elle" or "a-t-il")
-			qHad: $ (prenom[2] == "f" and "avait-elle" or "avait-il")
-			arrived: $ (prenom[2] == "f" and "Elle est arrivée" or "Il est arrivé")
-			had: $ (prenom[2] == "f" and "Elle avait" or "Il avait")
-			ansHad: $prenom[1] avait
+			bought: $name[1] a acheté
+			spent: $name[1] a dépensé
+			spend: $ (name[2] == "f" and "elle dépense" or "il dépense")
+			qBought: $ (name[2] == "f" and "a-t-elle" or "a-t-il")
+			qSpent: $ (name[2] == "f" and "a-t-elle" or "a-t-il")
+			qHad: $ (name[2] == "f" and "avait-elle" or "avait-il")
+			arrived: $ (name[2] == "f" and "Elle est arrivée" or "Il est arrivé")
+			had: $ (name[2] == "f" and "Elle avait" or "Il avait")
+			ansHad: $name[1] avait
 			restQ: lui reste-t-il
 			restA: Il lui reste
 			restLow: il lui reste

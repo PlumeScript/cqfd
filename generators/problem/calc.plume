@@ -17,12 +17,19 @@ let boulangerie = $import(./situations/boulangerie)
 /*
 Generate a problem from an hole exercices
 */
-hole: macro(calc, ?trap)
+hole: macro(calc, names:, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $calc
 		end
-		get: macro(calc)
+		hyperParameters: do
+			- if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+		get: macro(calc, name)
 			let a, b, sign, c, d, e, u
 
 			if calc.instruction.label == "-" or calc.instruction.label == "+"
@@ -57,7 +64,7 @@ hole: macro(calc, ?trap)
 				set u = 5
 			end
 
-			let context = $ boulangerie.lin(a, b, sign, c, d, e, u, trap: trap)
+			let context = $ boulangerie.lin(a, b, sign, c, d, e, u, trap: trap, name: name!=0 and name)
 			if context.invalid?
 				return
 			end
