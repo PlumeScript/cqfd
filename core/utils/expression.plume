@@ -201,6 +201,31 @@ set Expression = macro(kind:, left:, right:)
 		end
 	end
 
+	eval: macro(...values)
+		if self.kind == "symbol"
+			for k, v in items(values)
+				if k == self.left
+					return $v
+				end
+			end
+		elseif self.kind == "number"
+			return $self.left
+		else
+			let left  = $ makeExpression(self.left.eval(...values))
+			let right = $ makeExpression(self.right.eval(...values))
+
+			let result = $ Expression(kind: self.kind, left: left, right: right)
+			if left.kind == "number" and right.kind == "number"
+				set result = $result.reduce()
+				if result.kind == "number"
+					return $result.left
+				end
+			end
+
+			return $result
+		end
+	end
+
 	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1, and reorient x·3 to 3x
 	pretty: macro()
 		if not isExpression(self.left)
@@ -386,8 +411,6 @@ set Expression = macro(kind:, left:, right:)
 		else
 			return $ Expression(kind: self.kind, left: left, right: right).pretty()
 		end
-
-		
 	end
 
 	meta addr: macro(x)
