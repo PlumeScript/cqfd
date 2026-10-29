@@ -5,66 +5,168 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-use pages
+// Boulangerie situations: a word problem drawn from a linear equation with
+// one missing letter:
+//
+//   sign "+" : a*b + c*d = e    a, c quantities; b, d unit prices
+//   sign "-" : a - c*d = e      a the money carried in, c the quantity,
+//                               d the unit price (c is the amount spent, in
+//                               euros, when d is missing)
+//   sign ""  : a*b = e          the "hole" caller's "*" label — a bare
+//                               product: one term, c and d must be missing
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// Returns a (instruction:, answer:) table, or the `invalid` table when the
+// configuration is unsupported or the equation doesn't hold.
 
 let invalid = (invalid: $true)
 
-// I've bought a thing at b€ each and c thing at d€ each. I've spend e€ in total (or: i've bought e things in total)
-// Or i've come with a€ and spend it into c * d€
+// The products of the first purchase (priced by b): the cheapest first.
+let items1 = do
+	- (name: baguette, plural: baguettes, article: une, max: 2)
+	- (name: éclair au chocolat, plural: éclairs au chocolat, article: un, max: 10)
+	- (name: gâteau, plural: gâteaux, article: un, max: 50)
+end
+
+// The products of the second purchase (priced by d): `tarte` plays there the
+// role that `gâteau` plays for item1.
+let items2 = do
+	- (name: croissant, plural: croissants, article: un, max: 2)
+	- (name: éclair au chocolat, plural: éclairs au chocolat, article: un, max: 10)
+	- (name: tarte, plural: tartes, article: une, max: 50)
+end
+
+// The first product of `order` whose unit price `price` still fits
+// (price < max). `avoidName` skips a product already chosen, so a problem
+// never buys two quantities of the same product.
+macro pickItem(order, price, avoidName: 0)
+	let found = 0
+	for item in order
+		if price < item.max and (avoidName == 0 or item.name != avoidName)
+			set found = $item
+			break
+		end
+	end
+	$found
+end
+
+// Display a euro amount the french way: 12 → "12", 1.3 → "1,30".
+macro euros(x)
+	let r = $ x.round(digit: 2)
+	if String(r).contains(".")
+		$(Number.format(r, "%.2f", locale: "fr"))
+	else
+		$(Number.format(r, "%.0f", locale: "fr"))
+	end
+end
+
+// "4 croissants" / "4 croissants à 0,80 € pièce" (price = 0: no price)
+macro bought(qty, item, price)
+	let p = $ price or 0
+	if p != 0
+		$qty $(item.plural) à $euros($p) € pièce
+	else
+		$qty $(item.plural)
+	end
+end
+
+// "des croissants" / "des croissants à 0,80 € pièce" (the quantity is the unknown)
+macro some(item, price)
+	let p = $ price or 0
+	if p != 0
+		des $(item.plural) à $euros($p) € pièce
+	else
+		des $(item.plural)
+	end
+end
+
+// "pour 7 € de baguettes" (the amount is known, the quantity is not)
+macro boughtFor(amount, item)
+	pour $(euros(amount)) € de $(item.plural)
+end
+
+// "de croissants" or "d'éclairs au chocolat" (elision before a vowel)
+macro deItem(item)
+	let w = $ item.plural
+	if String.startsWith(w, "a") or String.startsWith(w, "e") or String.startsWith(w, "é") or String.startsWith(w, "h") or String.startsWith(w, "i") or String.startsWith(w, "o") or String.startsWith(w, "u") or String.startsWith(w, "y")
+		d'$(w)
+	else
+		de\s$(w)
+	end
+end
+
+// "une baguette" or "un croissant"
+macro oneOf(item)
+	$(item.article) $(item.name)
+end
+
+// "une baguette" → "Une baguette"
+macro cap(s)
+	$(String.sub(s, 1).upper())$(String.sub(s, 2, -1))
+end
+
+// Value of a purchase: qty*price with a price, the qty itself (an amount in
+// euros, or a number of articles) without, 0 when the purchase is missing.
+macro term(qty, price)
+	if qty and price
+		$(qty * price)
+	elseif qty
+		$(qty)
+	else
+		0
+	end
+end
+
 lin: macro(a, b, sign, c, d, e, u, ?trap)
+	if trap
+		// The trap (a distractor drawn at random on top of the caller's
+		// equation) is not implemented yet: the values it would draw don't
+		// satisfy the equation. Mark the configuration invalid until it is.
+		return $invalid
+	end
+
 	let ka = $a
 	let kb = $b
 	let kc = $c
 	let kd = $d
-	let ke = $e
-	
+
+	// integers where expected, plausible sizes
 	if (a and a.floor() != a) or (c and c.floor() != c)
 		return $invalid
 	end
-	if (a and a>20) or (c and c>20)
+	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
 		return $invalid
 	end
-	if a == 1 or c == 1
+	if (b and (b <= 0 or b >= 50)) or (d and (d <= 0 or d >= 50))
+		return $invalid
+	end
+	if not e or e < 0
 		return $invalid
 	end
 
-	let item1, item2
-
-	if b
-		if b<2
-			set item1 = baguettes
-		elseif b<10
-			set item1 = éclairs au chocolat
-		elseif b<50
-			set item1 = gâteaux
-		else
-			return $invalid
-		end
-	else
-		set item1 = baguettes
+	// sign "" (or missing — the "hole" caller's "*" label passes sign
+	// empty) is the bare product a*b = e: one term only, so the second
+	// purchase (c, d) must be missing.
+	set sign = $ sign or ""
+	if sign != "+" and sign != "-" and sign != ""
+		return $invalid
+	end
+	if sign == "" and (c or d)
+		return $invalid
 	end
 
-	if d
-		if d<2
-			set item2 = croissants
-		elseif d<10
-			set item2 = éclairs au chocolat
-		elseif d<50
-			set item2 = tartes
-		else
-			return $invalid
-		end
-	else
-		set item2 = croissants
-	end
-
+	// sign "-": only "a - cd = e" is supported ("ab - cd" never is). When a
+	// (resp. c) is missing, b (resp. d) takes its place and the target is
+	// remapped accordingly (b is the euros carried in, d the amount spent).
 	if sign == "-"
-		// a - cd = e, doesn't support ab - cd =e
 		if a and b
 			return $invalid
 		end
-
 		if not a
+			if not b
+				return $invalid
+			end
 			set a = $b
 			set b = $empty
 			set ka = $kb
@@ -74,6 +176,9 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 			end
 		end
 		if not c
+			if not d
+				return $invalid
+			end
 			set c = $d
 			set d = $empty
 			set kc = $kd
@@ -82,201 +187,238 @@ lin: macro(a, b, sign, c, d, e, u, ?trap)
 				set u = 3
 			end
 		end
-
-		if u==2
+		if u != 1 and u != 3 and u != 5
 			return $invalid
 		end
 	end
 
-	let f, g
-	let item3 = croissant
-	if trap
-		let r = $Random()
-		if not a
-			set a = $r(2, 10)
-		end
-		if not b
-			set b = $ r(5, 15)/10
-		end
-		if not c
-			set c = $r(2, 10)
-		end
-		if not d
-			set d = $ r(5, 15)/10
-		end
-		if not f
-			set f = $r(2, 10)
-		end
-		if not g
-			set g = $ r(5, 15)/10
-		end
-	end
+	let item1 = 0
+	let item2 = 0
 
-	return if sign == "-"
-
-		if u==1
-			instruction: do
-				A la boulangerie,
-				if kc and kd
-					j'ai achetée $c $item1 à $d€ pièce\s
-				elseif kc
-					j'ai dépensé $c€ en $item1\s
-					if d
-						à $d€ pièce
-					end
-				end
-				. Il me reste $e€ ; combien avais-je en entrant?
-			end
-			answer: J'avais $a€ en entrant.
-		elseif u==3
-			instruction: do
-				A la boulangerie, j'ai achetée des $item1
-				if d
-					\sa $d€ pièce.
-				end
-				.\s
-				Je suis arrivé avec $a€ mais il me reste $e€ ; combien ai-je dépensé en $item1?
-			end
-			answer: J'ai dépensé $c€ en$item1.
-		elseif u==4
-			instruction: do
-				A la boulangerie, j'ai achetée $c $item1.
-				Je suis arrivé avec $a€ mais il me reste $e€ ; combien coûte un $item1?
-			end
-			answer: Un $item1 coûte $d€.
-		elseif u==5
-			instruction: do
-				A la boulangerie,
-				if kc and kd
-					j'ai achetée $c $item1 à $d€ pièce\s
-				elseif kc
-					j'ai dépensé $c€ en $item1\s
-					if d
-						à $d€ pièce
-					end
-				end
-				. J'avais $a€ ; combien me reste-t-il après les achats?
-			end
-			answer: Il me reste $e€ après les achats.
+	// item1 is priced by b ("+") or by d ("-"); item2 by d. With no price,
+	// the cheapest products are assumed (baguette, croissant).
+	if sign == "-"
+		if d
+			set item1 = $ pickItem(items1, d)
+		else
+			set item1 = $ items1[1]
 		end
 	else
-		let target = if ka and kc
-		elseif ka
-			\sen $item1
+		if b
+			set item1 = $ pickItem(items1, b)
 		else
-			\sen $item2
+			set item1 = $ items1[1]
 		end
-
-		if u==1
-			instruction: do
-				if kb
-					A la boulangerie, j'achète des $item1 à $b€ pièce
-					if c
-						\set $c $item2 à $d€ pièce
-					end
-					.
-					En tout je dépense $e€ ; combien ai-je acheté de $item1?
-				else
-					A la boulangerie, j'achète $e articles:\s
-					des $item1
-					if b
-						\s à $b€ pièce
-					end
-					\set $c $item2
-					if d
-						\s à $d€ pièce
-					end
-					.\sCombien ai-je acheté de $item1?
-				end
-			end
-			answer: J'ai acheté $a $item1.
-		elseif u==2
-			instruction: do
-				A la boulangerie, j'achète $a $item1
-				if c
-					\set $c $item2 à $d€ pièce
-				end
-				. En tout je dépense $e€$target ; combien coûte un $item1?
-			end
-			answer: Un $item1 coûte $b€.
-		elseif u==3
-			instruction: do
-				if kd
-					A la boulangerie, j'achète \s
-					if a
-						$a $item2 à $b€ pièce et
-					end
-					des $item1 à $b€ pièce.\s
-					En tout je dépense $e€ ; combien ai-je acheté de $item2?
-				else
-					A la boulangerie, j'achète $e articles:\s
-					$a $item1
-					if b
-						\s à $b€ pièce
-					end
-					\set des $item2
-					if d
-						\s à $d€ pièce
-					end
-					.\sCombien ai-je acheté de $item2?
-				end
-			end
-			answer: J'ai acheté $c $item2.
-		elseif u==4
-			instruction: do
-				A la boulangerie, j'achète\s 
-				if a
-					$a $item1 à $b€ pièce et 
-				end
-				$c $item2
-				.\s
-				En tout je dépense $e€$target ; combien coûte un $item2?
-			end
-			answer: Un $item2 coûte $d€.
-		elseif u==5
-			if not kb and not kd
-				instruction: do
-					A la boulangerie, j'achète\s 
-					$a $item1\s
-					if b
-						à $b€ pièce\s
-					end
-					et\s
-					$c $item2
-					if d
-						à $d€ pièce\s
-					end
-					.\s
-					Combien ai-je acheté d'articles?
-				end
-				answer: J'ai acheté $e articles.
-			else
-				instruction: do
-					A la boulangerie, j'achète\s
-					if a
-						if ka and kb
-							$a $item1\s
-							if b
-								à $b€ pièce\s
-							end
-						else
-							pour $a€ de $item1 à 1€ pièce
-						end
-						if c
-							\set\s
-						end
-					end
-					if c
-						$c $item2\s
-						if d
-							à $d€ pièce\s
-						end
-						.\s
-					end
-					Combien ai-je dépensé$target?
-				end
-				answer: J'ai dépensé $e€$target.
-			end
+		if d
+			set item2 = $ pickItem(items2, d, avoidName: item1.name)
+		else
+			set item2 = $ items2[1]
 		end
 	end
+
+	if not item1 or not item2
+		return $invalid
+	end
+
+	// The caller passes a consistent equation (the missing letter is its
+	// computed solution): check it, rounded to the cent.
+	let lhs = 0
+	if sign == "-"
+		set lhs = $ a - term(c, d)
+	else
+		// "+" : a*b + c*d = e — "" : a*b = e (c and d are missing there)
+		set lhs = $ term(a, b) + term(c, d)
+	end
+	if (lhs * 100).round() != (e * 100).round()
+		return $invalid
+	end
+
+	// Which letters must be known for the question to be solvable.
+	// (sign "" follows the "+" rules: one priced term plus, at most, an
+	// unpriced second term.)
+	if sign != "-"
+		if u == 1
+			if not b
+				// without b, the total only makes sense when it counts
+				// the articles (b and d both missing)
+				if d or not c
+					return $invalid
+				end
+			else
+				if (c and not d) or (not c and d)
+					return $invalid
+				end
+			end
+		elseif u == 2
+			if not a
+				return $invalid
+			end
+			if (c and not d) or (not c and d)
+				return $invalid
+			end
+		elseif u == 3
+			if not a
+				return $invalid
+			end
+			if (b and not d) or (not b and d)
+				return $invalid
+			end
+		elseif u == 4
+			if not a or not c
+				return $invalid
+			end
+		elseif u == 5
+			if not a
+				return $invalid
+			end
+			if c
+				// one price known and the other missing: the missing
+				// purchase is unknown, the total is unsolvable
+				if b and not d
+					return $invalid
+				end
+			else
+				// no second purchase: the first must be priced (b known);
+				// d alone would be a price without a quantity
+				if d or not b
+					return $invalid
+				end
+			end
+		else
+			return $invalid
+		end
+	end
+
+	if sign != "-"
+		return if u == 1
+			instruction: do
+				À la boulangerie, j'ai acheté\s
+				if b
+					$(some(item1, b))
+					if c
+						\set $(bought(c, item2, d))
+					end
+					.\s
+					En tout, je dépense $(euros(e)) € ; combien ai-je acheté $(deItem(item1)) ?
+				else
+					$(e) articles : des $(item1.plural) et $(c) $(item2.plural).\s
+					Combien ai-je acheté $(deItem(item1)) ?
+				end
+			end
+			answer: J'ai acheté $a $item1.plural.
+		elseif u == 2
+			instruction: do
+				À la boulangerie, j'ai acheté\s
+				$(bought(a, item1, 0))
+				if c
+					\set $(bought(c, item2, d))
+				end
+				.\s
+				if c
+					En tout, je dépense $(euros(e)) € ; combien coûte $(oneOf(item1)) ?
+				else
+					En tout, je dépense $(euros(e)) € en $(item1.plural) ; combien coûte $(oneOf(item1)) ?
+				end
+			end
+			answer: $(cap(oneOf(item1))) coûte $(euros(b)) €.
+		elseif u == 3
+			instruction: do
+				À la boulangerie, j'ai acheté\s
+				if b
+					$(bought(a, item1, b)) et $(some(item2, d)).\s
+					En tout, je dépense $(euros(e)) € ; combien ai-je acheté $(deItem(item2)) ?
+				else
+					$(e) articles : $(bought(a, item1, 0)) et des $(item2.plural).\s
+					Combien ai-je acheté $(deItem(item2)) ?
+				end
+			end
+			answer: J'ai acheté $c $item2.plural.
+		elseif u == 4
+			instruction: do
+				À la boulangerie, j'ai acheté\s
+				if b
+					$(bought(a, item1, b))
+				else
+					$(boughtFor(a, item1))
+				end
+					\set $(bought(c, item2, 0)).\s
+				En tout, je dépense $(euros(e)) € ; combien coûte $(oneOf(item2)) ?
+			end
+			answer: $(cap(oneOf(item2))) coûte $(euros(d)) €.
+		elseif u == 5
+			instruction: do
+				À la boulangerie, j'ai acheté\s
+				if c
+					if b
+						$(bought(a, item1, b)) et $(bought(c, item2, d)).\s
+					else
+						if d
+							$(boughtFor(a, item1)) et $(bought(c, item2, d)).\s
+						else
+							$(bought(a, item1, 0)) et $(bought(c, item2, 0)).\s
+							Combien ai-je acheté d'articles ?
+						end
+					end
+					if b or d
+						En tout, combien ai-je dépensé ?
+					end
+				else
+					$(bought(a, item1, b)).\s
+					En tout, combien ai-je dépensé ?
+				end
+			end
+			answer: do
+				if b or d
+					J'ai dépensé $(euros(e)) €.
+				else
+					J'ai acheté $(e) articles.
+				end
+			end
+		end
+	else
+		return if u == 1
+			instruction: do
+				À la boulangerie,\s
+				if d
+					j'ai acheté $(bought(c, item1, d)).\s
+				else
+					j'ai dépensé $(euros(c)) € en $(item1.plural).\s
+				end
+				Il me reste $(euros(e)) € ; combien avais-je en entrant ?
+			end
+			answer: J'avais $(euros(a)) € en entrant.
+		elseif u == 3
+			instruction: do
+				À la boulangerie, j'ai acheté $(some(item1, d)).\s
+				Je suis arrivé avec $(euros(a)) € et il me reste $(euros(e)) € ;\s
+				if d
+					combien ai-je acheté $(deItem(item1)) ?
+				else
+					combien ai-je dépensé en $(item1.plural) ?
+				end
+			end
+			answer: do
+				if d
+					J'ai acheté $c $item1.plural.
+				else
+					J'ai dépensé $(euros(c)) € en $(item1.plural).
+				end
+			end
+		elseif u == 5
+			instruction: do
+				À la boulangerie,\s
+				if d
+					j'ai acheté $(bought(c, item1, d)).\s
+				else
+					j'ai dépensé $(euros(c)) € en $(item1.plural).\s
+				end
+				J'avais $(euros(a)) € ; combien me reste-t-il ?
+			end
+			answer: Il me reste $(euros(e)) €.
+		end
+	end
+
+	// Fallback: every (sign, u) combination is handled or rejected above —
+	// keep the explicit exit.
+	return $invalid
 end
