@@ -1,0 +1,228 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Choice from $import(../../core/parameters/set)
+let Range from $import(../../core/parameters/range)
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+
+let s from $import(../../core/utils/expression)
+let variableNames from $import(./utils)
+
+/*
+Generate a $formula(abcd...) reduction exercice.
+@InfosList
+	- $Param(Number, factors, 2) to set number of factors.
+	- $Param(Number, variables, 1) to set number of differents variables.
+	- $Param(Number, orphans, 1) to set number of differents non-variables factors.
+	- $Param(Number, minPower, 1), $Param(Number, maxPower, 1) to min/max exposant (variables only).
+	- $Param(Bool, \0?negativeExposant, false) allow negative exposant (variables only)
+	- $Param(Bool, \0?negativeFactor, false) allow negative factors (orphans only)
+end
+*/
+ref reduceMul: macro(Number factors: 2, Number variables: 1, Number orphans: 1, Number minPower: 1, Number maxPower: 1, ?negativeFactor, ?negativeExposant)
+	if variables + orphans > factors
+		raise To few factors (currently: `$factors`) for `$variables`  variables and `$orphans`  orphans.
+	end
+
+	@QuestionFactory
+		parameters: do
+			for i in seq(factors)
+				- $ Range(minPower, maxPower)
+				- if negativeExposant
+					$Choice(+, -)
+				else
+					$Choice(+)
+				end
+				- $ Range(1, variables + (orphans>0 and 1 or 0))
+			end
+			for i in seq(orphans)
+				- $Range(1, 5)
+				- if negativeFactor
+					$Choice(+, -)
+				else
+					$Choice(+)
+				end
+			end
+		end
+		hyperParameters: do
+			for i in seq(variables)
+				- $variableNames.classic
+			end
+		end
+		validate: macro(...args)
+			let check = do
+				for i in seq(variables)
+					- $false
+				end
+				for i in seq(orphans)
+					- $false
+				end
+			end
+			let orphanIndex = 0
+			for i in seq(factors)
+				let nameIndex = $args[3*i]
+				if nameIndex <= variables
+					set check[nameIndex] = $true
+				else
+					set orphanIndex += 1
+					set check[variables+orphanIndex] = $true
+					if orphanIndex > orphans
+						return
+					end
+				end
+			end
+			for i in seq(variables+orphans)
+				if not check[i]
+					return
+				end
+			end
+
+			return $true
+		end
+
+		get: macro(...args)
+			let expr = $ s(1)
+			let orphanIndex = 0
+
+			for i in seq(factors)
+				let power     = $args[3*i-2]
+				let powerSign = $args[3*i-1]
+				let nameIndex = $args[3*i]
+
+				let value = if nameIndex <=variables
+					$args[3*factors + 2*orphans + nameIndex]
+				else
+					set orphanIndex += 1
+					let value = $args[3*factors + 2*orphanIndex-1]
+					let sign  = $args[3*factors + 2*orphanIndex]
+					
+					if sign == "-"
+						set value *= -1
+					end
+					$ s(value)
+				end
+				
+				if powerSign=="+"
+					set expr *= $ s(value)^power
+				else
+					set expr *= $ s(value)^(-power)
+				end
+			end
+			@Question(eq)
+				steps: do
+					- $expr.pretty()
+					- $expr.reduce()
+				end
+			end
+		end
+	end
+end
+/*
+Generate a $formula(ax+by+cz+...) reduction exercice.
+@InfosList
+	- $Param(Number, terms, 2) to set number of terms.
+	- $Param(Number, variables, 1) to set number of differents variables.
+	- $Param(Number, orphans, 1) to set number of differents non-variables factors.
+	- $Param(QuestionFactory, termTemplate, \$variablesNames.classic) used to generate variables. Intended to be use with reduceMul
+	- $Param(Bool, \0?negativeTerm, false) allow negative terms
+end
+*/
+reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTemplate: $variableNames.classic, ?negativeTerm)
+	// todo: randomize factor order (acb+bac instead of abc + abc)
+	if terms < 2
+		raise terms cannot be lesser than 2 (currently: `$terms`)
+	end
+	if variables + orphans > terms
+		raise To few terms (currently: `$terms`) for `$variables`  variables and `$orphans`  orphans.
+	end
+	@QuestionFactory
+		parameters: do
+			for i in seq(terms)
+				- $Range(1, 10)
+				- if negativeTerm
+					$Choice(+, -)
+				else
+					$Choice(+)
+				end
+				- $ Range(1, variables + (orphans>0 and 1 or 0))
+			end
+			for i in seq(orphans)
+				- $Range(1, 5)
+			end
+		end
+		hyperParameters: do
+			for i in seq(variables)
+				- $termTemplate
+			end
+		end
+		validate: macro(...args)
+			let check = do
+				for i in seq(variables)
+					- $false
+				end
+				for i in seq(orphans)
+					- $false
+				end
+			end
+			let orphanIndex = 0
+			for i in seq(terms)
+				let nameIndex = $args[3*i]
+				if nameIndex <= variables
+					set check[nameIndex] = $true
+				else
+					set orphanIndex += 1
+					set check[variables+orphanIndex] = $true
+					if orphanIndex > orphans
+						return
+					end
+				end
+			end
+			for i in seq(variables+orphans)
+				if not check[i]
+					return
+				end
+			end
+
+			return $true
+		end
+
+		get: macro(...args)
+			let expr = $ s(0)
+			let orphanIndex = 0
+			for i in seq(terms)
+				let value     = $args[3*i-2]
+				let sign      = $args[3*i-1]
+				let nameIndex = $args[3*i]
+
+				let term = if nameIndex <= variables
+					let term = $args[3*terms + orphans + nameIndex]
+					if type(term) == "table"
+						set term = $term.steps[1]
+					end
+					$ value * s(term)
+				else
+					set orphanIndex += 1
+					$ s(args[3*terms + orphanIndex])
+				end
+
+				if sign == "+"
+					set expr += $term
+				else
+					set expr -= $term
+				end
+			end
+
+			@Question(eq)
+				steps: do
+					- $expr.pretty()
+					- $expr.reduce()
+				end
+			end
+		end
+	end
+end

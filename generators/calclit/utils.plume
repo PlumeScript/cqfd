@@ -1,0 +1,20 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Parameter from $import(../../core/cls/parameter)
+
+let letters = (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)
+
+variableNames: do
+	ref classic: @Parameter
+		type: variableName
+		size: $ len(letters)
+		get: macro(i)
+			$letters[1+i]
+		end
+	end
+end

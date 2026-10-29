@@ -1,0 +1,36 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let pages = $import(pages)
+let ardoise = $import(ardoise)
+
+eq: do
+	instruction:macro(question)
+		$ pages.formula(String(question.steps[1]))
+	end
+	solutionShort: macro(question)
+		@pages.formula
+			$ String(question.steps[1])
+			=
+			$ String(question.steps[2])
+		end
+	end
+	solution: macro(question)
+		@pages.formula
+			$ String(question.steps[1])
+			=
+			$ String(question.steps[2])
+		end
+		for i in seq(3, len(question.steps))
+			$pages.newline
+			@pages.formula
+				=
+				$ String(question.steps[i])
+			end
+		end
+	end
+end
