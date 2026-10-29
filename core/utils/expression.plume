@@ -131,34 +131,66 @@ set Expression = macro(kind:, left:, right:)
 			end
 		elseif kind == "sub"
 			$ String(left)
-			\s-\s
-			// x - (y + z) is distributed: x - y - z.
+			// x - (y + z) is distributed term by term: x - y - z, a negative
+			// term being re-added: x - (y - 3) → x - y + 3; a negative right
+			// operand is kept grouped: x - -5 → x - (-5).
 			if isExpression(right) and right.kind == "add"
 				let flat = $ flattensum(right)
 				for i in seq(1, len(flat))
-					\s-\s
-					$ String(flat[i])
+					let t = $flat[i]
+					if isNegativeTerm(t)
+						\s+\s
+						$ String(positivePart(t))
+					else
+						\s-\s
+						$ String(t)
+					end
 				end
+			elseif isNegativeTerm(right)
+				\s-\s
+				(
+				$ String(right)
+				)
 			else
+				\s-\s
 				$ paren(right)
 			end
 		elseif kind == "mul"
-			// Juxtaposition for a product of numbers and symbols only (any
-			// depth), the numbers merged and rendered first: 2xy, -3x, x, xy.
-			// A pure number product keeps \times (2 \times 3); any other factor
-			// (pow, add, div, ...) falls back to \times with parens on sums.
+			// Juxtaposition, the numbers merged and rendered first:
+			// - 2xy, -3x, x, xy (a product of numbers and symbols);
+			// - 5{x}^{4} (a product of numbers and symbol-based pows);
+			// - 2(x + 1), 6(x + 1)(x - 2) (a product of numbers and sums,
+			//   each sum wrapped in parens).
+			// A mixed product keeps \times (symbol+pow: x \times x², as
+			// x² \times x ; symbol+sum: 2x \times (x + 1) ; sum+sum:
+			// (x + 1) \times (x + 2)), a pure number product too (2 \times 3);
+			// any other factor (div, pow of a compound base, number-based
+			// pow) falls back to \times with parens on sums.
 			let flat = $ flattenprod(self)
 			let simple = $true
 			let hasSymbol = $false
+			let hasNumber = $false
+			let hasPow = $false
+			let hasAdd = $false
 			for i in seq(1, len(flat))
 				let f = $flat[i]
 				if isExpression(f) and f.kind == "symbol"
 					set hasSymbol = $true
+				elseif isExpression(f) and f.kind == "number"
+					set hasNumber = $true
+				elseif isExpression(f) and f.kind == "pow"
+					if isExpression(f.left) and f.left.kind == "symbol"
+						set hasPow = $true
+					else
+						set simple = $false
+					end
+				elseif isExpression(f) and (f.kind == "add" or f.kind == "sub")
+					set hasAdd = $true
 				elseif not isExpression(f) or (f.kind != "number" and f.kind != "symbol")
 					set simple = $false
 				end
 			end
-			if simple and hasSymbol
+			if simple and ((hasSymbol and not hasPow and not hasAdd) or (hasNumber and hasPow and not hasSymbol and not hasAdd) or (hasNumber and hasAdd and not hasSymbol and not hasPow))
 				let n = 1
 				for i in seq(1, len(flat))
 					let f = $flat[i]
@@ -167,7 +199,7 @@ set Expression = macro(kind:, left:, right:)
 					end
 				end
 				// One template line per component: building the string with `..`
-				// in code is a plume trap (the empty string renders as "").
+				// in code is a plume trap (a quoted string keeps its quotes).
 				if n == -1
 					$ "-"
 				elseif n != 1
@@ -175,8 +207,12 @@ set Expression = macro(kind:, left:, right:)
 				end
 				for i in seq(1, len(flat))
 					let f = $flat[i]
-					if isExpression(f) and f.kind == "symbol"
-						$f.left
+					if not isExpression(f) or f.kind != "number"
+						if isExpression(f) and (f.kind == "add" or f.kind == "sub")
+							$ paren(f)
+						else
+							$f
+						end
 					end
 				end
 			else
