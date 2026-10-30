@@ -275,7 +275,9 @@ ref QuestionFactoryTree: macro()
 			set self.windowState[seed] = $Table()
 		end
 
-		if n+1 <= len(self.callCache[seed])
+		// self.callCache[seed][n+1]? should be no-op, but the table is sparse
+		// plume of cqfd bug?
+		if n+1 <= len(self.callCache[seed]) and self.callCache[seed][n+1]?
 			return $self.callCache[seed][n+1]
 		elseif n <= 10000
 			// Sequential fill: draw every position up to n-1 so the window
