@@ -45,22 +45,29 @@ eqn: do
 		end
 	end
 	solutionShort: macro(question)
-		@pages.formula
+		@pages.box @pages.formula
 			$ String(Table.at(question.steps, -1).l.pretty())
 			=
 			$ String(Table.at(question.steps, -1).r.pretty())
 		end
 	end
 	solution: macro(question)
-		@pages.EqnAlign
+		@pages.EqnAlign(boxLast: $(not question.steps.finalLabel?))
 			for step in question.steps
 				- do
 					- $ String(step.l.pretty())
 					- =
 					- $ String(step.r.pretty())
+					if step.r2?
+						- ou
+						- $ String(step.l.pretty())
+						- =
+						- $ String(step.r2.pretty())
+					end
 				end
 			end
 		end
+		$question.steps.finalLabel?
 	end
 end
 
