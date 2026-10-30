@@ -20,17 +20,23 @@ macro inject(calc, letter, pos)
 	while len(pool) > 0
 		let top = $ Table.remove(pool)
 		for i, child in enumerate(top.children)
-			if type(child) == "table"
-				run $ Table.append(pool, child)
+			let isLeaf = $ type(child) != "table"
+
+			if not isLeaf and child.label == "-" and len(child.children) == 1
+				set isLeaf = $true
+				set child = $ -child.children[1]
+			end
+			if isLeaf
+				run $ Table.append(flat, (parent: top, pos: i, value: child))
 			else
-				run $ Table.append(flat, (parent: top, pos: i))
+				run $ Table.append(pool, child)
 			end
 		end
 		
 	end
 
 	let spot = $flat[1 + pos%len(flat)]
-	let value = $spot.parent.children[spot.pos]
+	let value = $spot.value
 	set spot.parent.children[spot.pos] = $Node(var, $letter)
 
 	return ($calc, $value)
