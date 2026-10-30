@@ -16,7 +16,7 @@ Licensed under the MIT License — see LICENSE for details.
 //
 // The caller passes every letter (the missing one as its computed solution)
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
-// `prenom` is a (name, gender) pair — (Léa, f) — or empty: the question is
+// `name` is a (name, gender) pair — (Léa, f) — or empty: the question is
 // told in the 1st person ("j'ai…") or in the gendered 3rd person
 // ("Léa a… a-t-elle… ses pièces… sa tirelire…").
 //
@@ -78,7 +78,7 @@ macro cap(s)
 	$(String.sub(s, 1).upper())$(String.sub(s, 2, -1))
 end
 
-lin: macro(a, b, sign, c, d, e, u, prenom:, ?trap)
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	set sign = $ sign or ""
 
 	// Sign: only "+" (a*b + c*d = e) and the bare product "" (a*b = e).
@@ -154,14 +154,14 @@ lin: macro(a, b, sign, c, d, e, u, prenom:, ?trap)
 		return $invalid
 	end
 
-	// The speaker: 1st person when prenom is empty; otherwise the (name,
+	// The speaker: 1st person when name is empty; otherwise the (name,
 	// gender) pair — "Léa a", "elle a", "a-t-elle", "ses", "sa tirelire".
-	let who = if prenom and prenom[1]
+	let who = if name and name[1]
 		do
-			have: $prenom[1] a
-			has: $ (prenom[2] == "f" and "elle a" or "il a")
-			capPron: $ (prenom[2] == "f" and "Elle a" or "Il a")
-			q: $ (prenom[2] == "f" and "a-t-elle" or "a-t-il")
+			have: $name[1] a
+			has: $ (name[2] == "f" and "elle a" or "il a")
+			capPron: $ (name[2] == "f" and "Elle a" or "Il a")
+			q: $ (name[2] == "f" and "a-t-elle" or "a-t-il")
 			poss: ses
 			tirelire: sa tirelire
 		end

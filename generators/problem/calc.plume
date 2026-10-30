@@ -12,7 +12,7 @@ let Choice from $import(../../core/parameters/set)
 let Node from $import(../../core/utils/tree)
 let pool = $Table()
 
-let boulangerie = $import(./situations/boulangerie)
+let Situation from $import(./utils)
 
 /*
 Generate a problem from an hole exercices
@@ -21,6 +21,7 @@ hole: macro(calc, names:, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $calc
+			- $Situation
 		end
 		hyperParameters: do
 			- if names
@@ -29,7 +30,7 @@ hole: macro(calc, names:, ?trap)
 				$Choice(0)
 			end
 		end
-		get: macro(calc, name)
+		get: macro(calc, situation, name)
 			let a, b, sign, c, d, e, u
 
 			if calc.instruction.label == "-" or calc.instruction.label == "+"
@@ -64,7 +65,10 @@ hole: macro(calc, names:, ?trap)
 				set u = 5
 			end
 
-			let context = $ boulangerie.lin(a, b, sign, c, d, e, u, trap: trap, name: name!=0 and name)
+			if not situation.lin?
+				return
+			end
+			let context = $ situation.lin(a, b, sign, c, d, e, u, trap: trap, name: name!=0 and name)
 			if context.invalid?
 				return
 			end
@@ -83,12 +87,20 @@ end
 /*
 Generate a problem from an addSub exercices
 */
-addSub1: macro(calc, ?trap)
+addSub1: macro(calc, names:, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $calc
+			- $Situation
 		end
-		get: macro(calc)
+		hyperParameters: do
+			- if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+		get: macro(calc, situation, name)
 			let a, b, sign, c, d, e, u
 
 			if calc.instruction.label == "-" or calc.instruction.label == "+"
@@ -109,7 +121,10 @@ addSub1: macro(calc, ?trap)
 			set e = $calc.solution
 			set u = 5
 
-			let context = $ boulangerie.lin(a, b, sign, c, d, e, u, trap: trap)
+			if not situation.lin?
+				return
+			end
+			let context = $ situation.lin(a, b, sign, c, d, e, u, trap: trap, name: name!=0 and name)
 			if context.invalid?
 				return
 			end
@@ -128,14 +143,22 @@ end
 /*
 Generate a problem from two mul exercices
 */
-add2Mul: macro(calc, ?trap)
+add2Mul: macro(calc, names:, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $calc
 			- $calc
 			- $Range(5, 5) // Todo: handle Range(1, 5)
+			- $Situation
 		end
-		get: macro(calc1, calc2, u)
+		hyperParameters: do
+			- if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+		get: macro(calc1, calc2, u, situation, name)
 			let a, b, sign, c, d, e
 
 			
@@ -150,7 +173,10 @@ add2Mul: macro(calc, ?trap)
 				set a, b, c, d = ($c, $d, $a, $b)
 			end
 
-			let context = $ boulangerie.lin(a, b, "+", c, d, e, u, trap: trap)
+			if not situation.lin?
+				return
+			end
+			let context = $ situation.lin(a, b, "+", c, d, e, u, trap: trap, name: name!=0 and name)
 			if context.invalid?
 				return
 			end
@@ -172,7 +198,7 @@ end
 /*
 Generate a problem from one mul exercices and one number 
 */
-addsubMulInt: macro(mul, Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, ?trap)
+addsubMulInt: macro(mul, Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number maxFigures: 3, names:, ?trap)
 	@QuestionFactory
 		parameters: do
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
@@ -180,8 +206,16 @@ addsubMulInt: macro(mul, Number minIndex:-3, Number maxIndex:0, Number minFigure
 			- $Range(5, 5) // Todo: handle Range(1, 5)
 			- $Range(1, 100)
 			- $Choice(+, -)
+			- $Situation
 		end
-		get: macro(n, calc, u, s, opp)
+		hyperParameters: do
+			- if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+		get: macro(n, calc, u, s, opp, situation, name)
 			let a, b, sign, c, d, e
 			
 			set a = $n
@@ -197,7 +231,10 @@ addsubMulInt: macro(mul, Number minIndex:-3, Number maxIndex:0, Number minFigure
 				return
 			end
 
-			let context = $ boulangerie.lin(a, b, opp, c, d, e, u, trap: trap)
+			if not situation.lin?
+				return
+			end
+			let context = $ situation.lin(a, b, opp, c, d, e, u, trap: trap, name: name!=0 and name)
 			if context.invalid?
 				return
 			end
