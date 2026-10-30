@@ -1,0 +1,294 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Bibliotheque situations: a word problem drawn from a linear equation with
+// one missing letter, dressed as the library of a literature doctor:
+//
+//   sign "+" : a*b + c*d = e    a, c shelf counts; b, d books per shelf
+//   sign ""  : a*b = e          a bare product: one group only, c and d
+//                               must be missing
+//   sign "-" : never supported
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// When b (resp. d) is missing, a (resp. c) is a bare count of books in its
+// group, not a shelf count. `name` is a (Prénom, "m"/"f") pair or empty:
+// the story is told in the 1st person ("Je suis docteur en littérature…")
+// or in the gendered 3rd person ("Léa est docteure en littérature",
+// "La bibliothèque de Marc, docteur en littérature,…" — docteur/docteure
+// agreed with the person, sa/ma with the bibliothèque).
+// `trap` is a distractor drawn from the scene (an unvalued "fonds ancien",
+// mentioned but not counted), allowed only on a single-product question
+// (a*b = e); on the complete equation it marks the configuration invalid.
+// Returns a (instruction:, answer:) table, or the `invalid` table when the
+// configuration is unsupported or the equation doesn't hold.
+
+let invalid = (invalid: $true)
+
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
+	// integers, plausible sizes (books and shelves are counts)
+	if (a and a.floor() != a) or (b and b.floor() != b) or (c and c.floor() != c) or (d and d.floor() != d)
+		return $invalid
+	end
+	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+		return $invalid
+	end
+	if (b and (b < 2 or b > 30)) or (d and (d < 2 or d > 30))
+		return $invalid
+	end
+	if not e or e < 0
+		return $invalid
+	end
+
+	// sign "" (or missing — the "hole" caller's "*" label passes sign
+	// empty) is the bare product a*b = e: one group only, so the second
+	// group (c, d) must be missing. sign "-" is never supported here.
+	set sign = $ sign or ""
+	if sign != "+" and sign != ""
+		return $invalid
+	end
+	if sign == "" and (c or d)
+		return $invalid
+	end
+
+	// Which letters must be known for the question to be solvable.
+	if u == 1
+		if not b
+			// without b the first group is a bare count: the total only
+			// makes sense when both groups are counts (d missing, c known)
+			if d or not c
+				return $invalid
+			end
+		else
+			if (c and not d) or (not c and d)
+				return $invalid
+			end
+		end
+	elseif u == 2
+		if not a
+			return $invalid
+		end
+		if (c and not d) or (not c and d)
+			return $invalid
+		end
+	elseif u == 3
+		if not a
+			return $invalid
+		end
+		if (b and not d) or (not b and d)
+			return $invalid
+		end
+	elseif u == 4
+		if not a or not c
+			return $invalid
+		end
+	elseif u == 5
+		if not a
+			return $invalid
+		end
+		if c
+			// one per-shelf count known and the other missing: the missing
+			// group is unknown, the total is unsolvable
+			if b and not d
+				return $invalid
+			end
+		else
+			// no second group: the first must be shelved (b known); d
+			// alone would be a per-shelf count without a shelf count
+			if d or not b
+				return $invalid
+			end
+		end
+	else
+		return $invalid
+	end
+
+	// The caller passes a consistent equation (the missing letter is its
+	// computed solution): check it. A letter without its partner stands
+	// for a bare count of books; a missing group is worth 0.
+	let lhs = 0
+	if a and b
+		set lhs = $ a * b
+	elseif a
+		set lhs = $ a
+	end
+	if c and d
+		set lhs = $ lhs + c * d
+	elseif c
+		set lhs = $ lhs + c
+	end
+	if lhs != e
+		return $invalid
+	end
+
+	// The trap (an unvalued "fonds ancien" mentioned in the scene) is only
+	// meaningful on a single-product question (a*b = e, c and d missing);
+	// on the complete equation it has nothing to point at.
+	if trap and (c or d)
+		return $invalid
+	end
+
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — "Léa est docteure en littérature", "La bibliothèque
+	// de Marc, docteur en littérature", "sa bibliothèque" (the possessive
+	// agrees with bibliothèque, never with the doctor; "a-t-elle" refers
+	// to the bibliothèque).
+	let who = if name and name[1]
+		do
+			introA: $(name[1]) est $(name[2] == "f" and "docteure" or "docteur") en littérature
+			// trailing comma: the templates continue with " a …"
+			introFull: La bibliothèque de $(name[1]), $(name[2] == "f" and "docteure" or "docteur") en littérature,
+			Lib: Sa bibliothèque
+			hasLib: Sa bibliothèque a
+			counts: Sa bibliothèque compte
+			qTotal: Combien de livres compte sa bibliothèque au total ?
+		end
+	else
+		do
+			introA: Je suis docteur en littérature
+			introFull: Je suis docteur en littérature. Ma bibliothèque
+			Lib: Ma bibliothèque
+			hasLib: Ma bibliothèque a
+			counts: Ma bibliothèque compte
+			qTotal: Combien de livres y a-t-il au total ?
+		end
+	end
+
+	if u == 1
+		return do
+			instruction: do
+				if b and c
+					$(who.introFull) a $(b) livres par étagère dans le 1er groupe,\s
+					$(c) étagères de $(d) livres dans le 2e groupe, soit $(e) livres au total.\s
+					Combien d'étagères compte le 1er groupe ?
+				elseif b
+					if trap
+						$(who.introFull) a $(b) livres par étagère et $(e) livres sur ses étagères ;\s
+						il y a aussi un fonds ancien.\s
+						Combien d'étagères a-t-elle ?
+					else
+						$(who.introFull) a $(b) livres par étagère et compte $(e) livres au total.\s
+						Combien d'étagères a-t-elle ?
+					end
+				else
+					$(who.introFull) a $(c) livres dans le 2e groupe et compte $(e) livres au total.\s
+					Combien de livres y a-t-il dans le 1er groupe ?
+				end
+			end
+			answer: do
+				if b and c
+					Le 1er groupe a $(a) étagères.
+				elseif b
+					$(who.hasLib) $(a) étagères.
+				else
+					Il y a $(a) livres dans le 1er groupe.
+				end
+			end
+		end
+	elseif u == 2
+		return do
+			instruction: do
+				if c
+					$(who.introFull) a $(a) étagères du 1er groupe et $(c) étagères de $(d) livres,\s
+					soit $(e) livres au total.\s
+					Combien de livres par étagère sur les étagères du 1er groupe ?
+				else
+					if trap
+						$(who.introFull) a $(a) étagères et $(e) livres sur ses étagères ;\s
+						il y a aussi un fonds ancien.\s
+						Combien de livres par étagère ?
+					else
+						$(who.introFull) a $(a) étagères et compte $(e) livres au total.\s
+						Combien de livres par étagère ?
+					end
+				end
+			end
+			answer: do
+				if c
+					Il y a $(b) livres par étagère sur les étagères du 1er groupe.
+				else
+					Il y a $(b) livres par étagère.
+				end
+			end
+		end
+	elseif u == 3
+		return do
+			instruction: do
+				if b
+					$(who.introFull) a $(a) étagères de $(b) livres et $(d) livres par étagère sur le 2e groupe,\s
+					soit $(e) livres au total.\s
+					Combien d'étagères compte le 2e groupe ?
+				else
+					$(who.introFull) a $(a) livres dans le 1er groupe et compte $(e) livres au total.\s
+					Combien de livres y a-t-il dans le 2e groupe ?
+				end
+			end
+			answer: do
+				if b
+					Le 2e groupe a $(c) étagères.
+				else
+					Il y a $(c) livres dans le 2e groupe.
+				end
+			end
+		end
+	elseif u == 4
+		return do
+			instruction: do
+				if b
+					$(who.introFull) a $(a) étagères de $(b) livres et $(c) étagères du 2e groupe,\s
+					soit $(e) livres au total.\s
+					Combien de livres par étagère sur les étagères du 2e groupe ?
+				else
+					$(who.introFull) a $(a) livres dans le 1er groupe et $(c) étagères du 2e groupe,\s
+					soit $(e) livres au total.\s
+					Combien de livres par étagère sur les étagères du 2e groupe ?
+				end
+			end
+			answer: Il y a $(d) livres par étagère sur les étagères du 2e groupe.
+		end
+	else
+		return do
+			instruction: do
+				$(who.introA).\s
+				if c and b and d
+					$(who.Lib) a $(a) étagères de $(b) livres et $(c) étagères de $(d) livres.\s
+					$(who.qTotal)
+				elseif c and d
+					$(who.Lib) a $(a) livres dans le 1er groupe et $(c) étagères de $(d) livres dans le 2e groupe.\s
+					$(who.qTotal)
+				elseif c
+					$(who.Lib) a $(a) livres dans le 1er groupe et $(c) livres dans le 2e groupe.\s
+					$(who.qTotal)
+				else
+					if trap
+						$(who.Lib) a $(a) étagères de $(b) livres ;\s
+						il y a aussi un fonds ancien.\s
+						Combien de livres sur ces $(a) étagères ?
+					else
+						$(who.Lib) a $(a) étagères de $(b) livres.\s
+						$(who.qTotal)
+					end
+				end
+			end
+			answer: do
+				if c
+					$(who.counts) $(e) livres.
+				else
+					if trap
+						Il y a $(e) livres sur ces $(a) étagères.
+					else
+						$(who.counts) $(e) livres.
+					end
+				end
+			end
+		end
+	end
+
+	// Fallback: every (sign, u) combination is handled or rejected above —
+	// keep the explicit exit.
+	return $invalid
+end
