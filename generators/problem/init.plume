@@ -4,5 +4,22 @@ This file is part of CQFD - A Plume🪶 exercice generator
 Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
 
 ...import(./calc)
+
+/*
+Invert a $code(Problem), the equation with its solution is shown, the answer is a statement.
+*/
+inv: macro(pb)
+	@QuestionFactory
+		parameters: $Table($pb)
+		get: macro(pb)
+			@Question(problemInv)
+				src: $pb
+				id: $pb.id
+			end
+		end
+	end
+end

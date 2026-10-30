@@ -23,3 +23,12 @@ problem: do
 		$question.answer
 	end
 end
+
+problemInv: do
+	instruction:macro(question)
+		$pages.formula($renderLatexAST($question.src.step) = $question.src.solution)\s
+	end
+	solution: macro(question)
+		Exemple de réponse, il y en a plein d'autres: $ardoise.hint($question.src.render(instruction))
+	end
+end
