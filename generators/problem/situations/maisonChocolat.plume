@@ -1,0 +1,332 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Maison chocolat situations: a word problem drawn from a linear equation
+// with one missing letter, about a house built with chocolate bricks:
+//
+//   sign "+" : a*b + c*d = e    a, c the numbers of white (resp. dark)
+//                               bricks; b, d the weight of one white (resp.
+//                               dark) brick, in grams; e the total weight
+//                               of chocolate, in grams
+//   sign ""  : a*b = e          one chocolate only: a white bricks of b grams
+//
+// Without any weight (b and d missing), the equation counts the bricks
+// (a + c = e); with b missing and d known, a is the weight of the white
+// chocolate in grams (a + c*d = e). Sign "-" is never supported.
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// `name` is a (Prénom, "m"|"f") pair or empty: the question is told in the
+// 1st person ("je construis… j'utilise… utilise-je…") or in the gendered
+// 3rd person ("Léa construit… Elle utilise… utilise-t-elle…").
+// The `trap` flag is supported on the bare product (a*b = e) only: the
+// statement then mentions the dark chocolate set aside ("il a aussi du
+// chocolat noir de côté") without any number — a distractor. With the full
+// equation, the sign "-" or any missing letter, the configuration is
+// invalid.
+// Returns a (instruction:, answer:) table, or the `invalid` table.
+
+let invalid = (invalid: $true)
+
+// "15" / "15,50" — a gram amount, french formatted (whole grams without
+// decimals, up to two decimals otherwise — a kitchen scale reads 15,50 g).
+macro g(x)
+	let r = $ x.round(digit: 2)
+	if String(r).contains(".")
+		$(Number.format(r, "%.2f", locale: "fr"))
+	else
+		$(Number.format(r, "%.0f", locale: "fr"))
+	end
+end
+
+// "20 briques de chocolat blanc" / "20 briques de chocolat blanc de 15 g"
+// (weight 0 or empty: no weight — it is the unknown or the term is a bare
+// count).
+macro bricks(color, qty, weight)
+	let w = $ weight or 0
+	if w != 0
+		$qty briques de chocolat $color de $(g(w)) g
+	else
+		$qty briques de chocolat $color
+	end
+end
+
+// "des briques de chocolat blanc" / "des briques de chocolat blanc de 15 g"
+// (the quantity is the unknown).
+macro someBricks(color, weight)
+	let w = $ weight or 0
+	if w != 0
+		des briques de chocolat $color de $(g(w)) g
+	else
+		des briques de chocolat $color
+	end
+end
+
+// Value of a term: qty*weight with a weight, the value itself (a weight in
+// grams, or a bare count) without, 0 when the letter is missing.
+macro term(x, w)
+	if x and w
+		$(x * w)
+	elseif x
+		$(x)
+	else
+		0
+	end
+end
+
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
+	// Normalize the sign (the "hole" caller passes it empty for the "*"
+	// label); "-" and any other label are unsupported.
+	set sign = $ sign or ""
+	if sign != "+" and sign != ""
+		return $invalid
+	end
+	// The trap (the dark chocolate set aside, mentioned without any number)
+	// is a distractor of the bare product only: with the full equation
+	// a*b + c*d = e the total would change.
+	if trap and sign != ""
+		return $invalid
+	end
+	// The bare product a*b = e has one term only: the second chocolate
+	// (c, d) must be missing.
+	if sign == "" and (c or d)
+		return $invalid
+	end
+
+	// a counts the bricks, except when b is missing and d known: then a is
+	// the weight of the white chocolate, in grams. c always counts bricks.
+	let aCount = $ (b or not d)
+	if (aCount and a and a.floor() != a) or (c and c.floor() != c)
+		return $invalid
+	end
+	if (aCount and a and (a < 2 or a > 20)) or (not aCount and (not a or a <= 0 or a > 1000))
+		return $invalid
+	end
+	if c and (c < 2 or c > 20)
+		return $invalid
+	end
+	if (b and (b <= 0 or b >= 100)) or (d and (d <= 0 or d >= 100))
+		return $invalid
+	end
+	if not e or e <= 0
+		return $invalid
+	end
+
+	// Which letters must be known for the question to be solvable.
+	if u == 1
+		// a missing: a*b + c*d = e (b, d), a + c*d = e (d only — a the
+		// white weight), a + c = e (neither — counting) or a*b = e (b).
+		if not a or (b and c and not d) or (not c and d) or (not b and not c)
+			return $invalid
+		end
+	elseif u == 2
+		// b missing: a*b + c*d = e (c, d) or a*b = e.
+		if not a or not b or (c and not d) or (not c and d)
+			return $invalid
+		end
+	elseif u == 3
+		// c missing: a*b + c*d = e (b, d), a + c*d = e (d only — a the
+		// white weight) or a + c = e (neither — counting).
+		if not a or not c or (b and not d)
+			return $invalid
+		end
+	elseif u == 4
+		// d missing: a*b + c*d = e (b) or a + c*d = e (a the white weight).
+		if not a or not c or not d
+			return $invalid
+		end
+	elseif u == 5
+		// e missing: both terms complete, or a*b = e (c missing).
+		if not a
+			return $invalid
+		end
+		if c
+			if b and not d
+				return $invalid
+			end
+		else
+			if d or not b
+				return $invalid
+			end
+		end
+	else
+		return $invalid
+	end
+
+	// The speaker: 1st person when name is empty; otherwise the (Prénom,
+	// gender) pair — "Marc construit", "Il utilise", "utilise-t-il", "il a
+	// aussi" / "Léa construit", "Elle utilise", "utilise-t-elle", "elle a
+	// aussi" / "Je construis", "J'utilise", "utilise-je", "j'ai aussi".
+	let who = if name and name[1]
+		do
+			intro: $name[1] construit une maison en chocolat
+			uses: $ (name[2] == "f" and "Elle utilise" or "Il utilise")
+			qUses: $ (name[2] == "f" and "utilise-t-elle" or "utilise-t-il")
+			also: $ (name[2] == "f" and "elle a aussi" or "il a aussi")
+		end
+	else
+		do
+			intro: Je construis une maison en chocolat
+			uses: J'utilise
+			qUses: utilise-je
+			also: j'ai aussi
+		end
+	end
+
+	// The caller passes a consistent equation (the missing letter is its
+	// computed solution): check it, rounded to the cent.
+	let lhs = $ term(a, b) + term(c, d)
+	if (lhs * 100).round() != (e * 100).round()
+		return $invalid
+	end
+
+	if c
+		if b
+			if d
+				// a*b + c*d = e — both terms weighted (bricks x weight).
+				return if u == 1
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(someBricks("blanc", b)) et $(bricks("noir", c, d)), pour $(g(e)) g de chocolat au total.\s
+						Combien de briques de chocolat blanc $(who.qUses) ?
+					end
+					answer: $(who.uses) $(g(a)) briques de chocolat blanc.
+				elseif u == 2
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(bricks("blanc", a, 0)) et $(bricks("noir", c, d)), pour $(g(e)) g de chocolat au total.\s
+						Combien pèse une brique de chocolat blanc ?
+					end
+					answer: Une brique de chocolat blanc pèse $(g(b)) g.
+				elseif u == 3
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(bricks("blanc", a, b)) et $(someBricks("noir", d)), pour $(g(e)) g de chocolat au total.\s
+						Combien de briques de chocolat noir $(who.qUses) ?
+					end
+					answer: $(who.uses) $(g(c)) briques de chocolat noir.
+				elseif u == 4
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(bricks("blanc", a, b)) et $(bricks("noir", c, 0)), pour $(g(e)) g de chocolat au total.\s
+						Combien pèse une brique de chocolat noir ?
+					end
+					answer: Une brique de chocolat noir pèse $(g(d)) g.
+				else
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(bricks("blanc", a, b)) et $(bricks("noir", c, d)).\s
+						Combien de chocolat $(who.qUses) au total ?
+					end
+					answer: $(who.uses) $(g(e)) g de chocolat au total.
+				end
+			else
+				// a*b + c = e — the dark term has no weight: unsolvable.
+				return $invalid
+			end
+		else
+			if d
+				// a + c*d = e — b missing: a is the weight of the white
+				// chocolate, in grams.
+				return if u == 1
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) du chocolat blanc et $(bricks("noir", c, d)), pour $(g(e)) g de chocolat au total.\s
+						Combien pèse le chocolat blanc ?
+					end
+					answer: Le chocolat blanc pèse $(g(a)) g.
+				elseif u == 3
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(g(a)) g de chocolat blanc et $(someBricks("noir", d)), pour $(g(e)) g de chocolat au total.\s
+						Combien de briques de chocolat noir $(who.qUses) ?
+					end
+					answer: $(who.uses) $(g(c)) briques de chocolat noir.
+				elseif u == 4
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(g(a)) g de chocolat blanc et $(bricks("noir", c, 0)), pour $(g(e)) g de chocolat au total.\s
+						Combien pèse une brique de chocolat noir ?
+					end
+					answer: Une brique de chocolat noir pèse $(g(d)) g.
+				else
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(g(a)) g de chocolat blanc et $(bricks("noir", c, d)).\s
+						Combien de chocolat $(who.qUses) au total ?
+					end
+					answer: $(who.uses) $(g(e)) g de chocolat au total.
+				end
+			else
+				// a + c = e — no weight anywhere: the bricks are counted.
+				return if u == 1
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(g(e)) briques, dont $(g(c)) de chocolat noir.\s
+						Combien de briques de chocolat blanc $(who.qUses) ?
+					end
+					answer: $(who.uses) $(g(a)) briques de chocolat blanc.
+				elseif u == 3
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(g(e)) briques, dont $(g(a)) de chocolat blanc.\s
+						Combien de briques de chocolat noir $(who.qUses) ?
+					end
+					answer: $(who.uses) $(g(c)) briques de chocolat noir.
+				else
+					instruction: do
+						$(who.intro).\s
+						$(who.uses) $(bricks("blanc", a, 0)) et $(bricks("noir", c, 0)).\s
+						Combien de briques $(who.qUses) au total ?
+					end
+					answer: $(who.uses) $(g(e)) briques au total.
+				end
+			end
+		end
+	else
+		// a*b = e — one chocolate only. The trap mentions the dark one set
+		// aside, without any number.
+		return if u == 1
+			instruction: do
+				$(who.intro).\s
+				$(who.uses) $(someBricks("blanc", b)), pour $(g(e)) g de chocolat blanc
+				if trap
+					\s; $(who.also) du chocolat noir de côté
+				end
+				.\s
+				Combien de briques de chocolat blanc $(who.qUses) ?
+			end
+			answer: $(who.uses) $(g(a)) briques de chocolat blanc.
+		elseif u == 2
+			instruction: do
+				$(who.intro).\s
+				$(who.uses) $(bricks("blanc", a, 0)), pour $(g(e)) g de chocolat blanc
+				if trap
+					\s; $(who.also) du chocolat noir de côté
+				end
+				.\s
+				Combien pèse une brique de chocolat blanc ?
+			end
+			answer: Une brique de chocolat blanc pèse $(g(b)) g.
+		elseif u == 5
+			instruction: do
+				$(who.intro).\s
+				$(who.uses) $(bricks("blanc", a, b))
+				if trap
+					\s; $(who.also) du chocolat noir de côté
+				end
+				.\s
+				Combien de chocolat blanc $(who.qUses) ?
+			end
+			answer: $(who.uses) $(g(e)) g de chocolat blanc.
+		end
+	end
+
+	// Fallback: every (sign, u) combination is handled or rejected above —
+	// keep the explicit exit.
+	return $invalid
+end
