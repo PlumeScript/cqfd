@@ -116,7 +116,7 @@ evalCheck: do
 			=
 			$ renderLatexAST(question.instruction.right)
 		end
-		\ssi\s
+		\s$pages.bold(si)\s
 		@pages.formula
 			$question.instruction.letter
 			=
