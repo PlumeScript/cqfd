@@ -1,0 +1,284 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Pieces situations: a word problem drawn from a linear equation with
+// one missing letter, dressed as coins in the pocket (and a piggy bank):
+//
+//   sign "+" : a*b + c*d = e    a, c coin counts; b, d coin values (€)
+//   sign ""  : a*b = e          a bare product: one coin type, c and d
+//                               must be missing
+//   sign "-" : invalid          coins are not taken out of the pocket
+//                               one by one
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// `prenom` is a (name, gender) pair — (Léa, f) — or empty: the question is
+// told in the 1st person ("j'ai…") or in the gendered 3rd person
+// ("Léa a… a-t-elle… ses pièces… sa tirelire…").
+//
+// The trap only dresses a bare product: the statement then mentions a
+// second coin type — the piggy bank, full of coins of a drawn value —
+// without giving it a quantity, and the question is restricted to the
+// pocket coins ("combien d'argent ai-je en pièces de 2 € ?"). On the full
+// equation there is no second term to mention: the configuration is
+// marked invalid.
+//
+// Returns a (instruction:, answer:) table, or the `invalid` table when the
+// configuration is unsupported or the equation doesn't hold.
+
+let invalid = (invalid: $true)
+
+// Euro coin values: the piggy bank of the trap is drawn from this list.
+let coinValues = do
+	- 0.05
+	- 0.1
+	- 0.2
+	- 0.5
+	- 1
+	- 2
+end
+
+// Value of the piggy bank's coins (the trap's second coin type): a coin of
+// the catalogue, always different from the pocket coins' value (b).
+macro trapValue(b)
+	let i = $ ((b * 100).round() % 6) + 1
+	let v = $ coinValues[i]
+	if (v * 100).round() == (b * 100).round()
+		set i = $ i % 6 + 1
+		set v = $ coinValues[i]
+	end
+	$v
+end
+
+// Display a euro amount the french way: 12 → "12", 1.3 → "1,30".
+macro euros(x)
+	let r = $ x.round(digit: 2)
+	if String(r).contains(".")
+		$(Number.format(r, "%.2f", locale: "fr"))
+	else
+		$(Number.format(r, "%.0f", locale: "fr"))
+	end
+end
+
+// Value of a term: qty*price, 0 when the quantity or the price is missing.
+macro term(qty, price)
+	if qty and price
+		$(qty * price)
+	else
+		0
+	end
+end
+
+// "mes" → "Mes"
+macro cap(s)
+	$(String.sub(s, 1).upper())$(String.sub(s, 2, -1))
+end
+
+lin: macro(a, b, sign, c, d, e, u, prenom:, ?trap)
+	set sign = $ sign or ""
+
+	// Sign: only "+" (a*b + c*d = e) and the bare product "" (a*b = e).
+	// An empty sign means the bare product (the "hole" caller's "*" label).
+	if sign != "+" and sign != ""
+		return $invalid
+	end
+	if sign == "" and (c or d)
+		return $invalid
+	end
+
+	// One coin type: the bare product, or the "+" with no second term.
+	let oneProduct = $ sign == "" or (sign == "+" and not c and not d)
+
+	// The trap (the piggy bank full of a second coin type, mentioned
+	// without a quantity) only dresses a bare product: on the full
+	// equation there is no second term to mention.
+	if trap and not oneProduct
+		return $invalid
+	end
+
+	// Plausible sizes: a, c coin counts; b, d coin values in euros;
+	// e the total, in euros.
+	if (a and a.floor() != a) or (c and c.floor() != c)
+		return $invalid
+	end
+	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+		return $invalid
+	end
+	if (b and (b <= 0 or b > 10)) or (d and (d <= 0 or d > 10))
+		return $invalid
+	end
+	if not e or e < 0
+		return $invalid
+	end
+
+	// The caller passes a consistent equation (the missing letter is its
+	// computed solution): check it, rounded to the cent.
+	let lhs = $ term(a, b) + term(c, d)
+	if (lhs * 100).round() != (e * 100).round()
+		return $invalid
+	end
+
+	// Which letters must be known for the question to be solvable
+	// (one product: the c/d pairing accepts "both missing").
+	if u == 1
+		if not b or (c and not d) or (not c and d)
+			return $invalid
+		end
+	elseif u == 2
+		if not a or (c and not d) or (not c and d)
+			return $invalid
+		end
+	elseif u == 3
+		if not a or not b or not d
+			return $invalid
+		end
+	elseif u == 4
+		if not a or not b or not c
+			return $invalid
+		end
+	elseif u == 5
+		if not a or not b or (c and not d) or (not c and d)
+			return $invalid
+		end
+	else
+		return $invalid
+	end
+
+	// u = 1 or 3 asks "how many coins of value X" — with both values
+	// displayed and equal, the two groups are indistinguishable.
+	if (u == 1 or u == 3) and c and (b * 100).round() == (d * 100).round()
+		return $invalid
+	end
+
+	// The speaker: 1st person when prenom is empty; otherwise the (name,
+	// gender) pair — "Léa a", "elle a", "a-t-elle", "ses", "sa tirelire".
+	let who = if prenom and prenom[1]
+		do
+			have: $prenom[1] a
+			has: $ (prenom[2] == "f" and "elle a" or "il a")
+			capPron: $ (prenom[2] == "f" and "Elle a" or "Il a")
+			q: $ (prenom[2] == "f" and "a-t-elle" or "a-t-il")
+			poss: ses
+			tirelire: sa tirelire
+		end
+	else
+		do
+			have: J'ai
+			has: j'ai
+			capPron: J'ai
+			q: ai-je
+			poss: mes
+			tirelire: ma tirelire
+		end
+	end
+
+	// The piggy bank's coin value (drawn when the trap is on).
+	let d2 = $ trap and trapValue(b)
+
+	return if oneProduct
+		if u == 1
+			instruction: do
+				if trap
+					$who.have des pièces de $euros($b) €, et $who.tirelire est pleine de pièces de $euros($d2) €.\s
+					$who.capPron $euros($e) € en pièces de $euros($b) €.\s
+					Combien $who.q de pièces de $euros($b) € ?
+				else
+					$who.have des pièces de $euros($b) €, et $who.has $euros($e) € au total.\s
+					Combien $who.q de pièces ?
+				end
+			end
+			answer: do
+				if trap
+					$who.have $a pièces de $euros($b) €.
+				else
+					$who.have $a pièces.
+				end
+			end
+		elseif u == 2
+			instruction: do
+				if trap
+					$who.have $a pièces, et $who.tirelire est pleine de pièces de $euros($d2) €.\s
+					$(cap(who.poss)) $a pièces font $euros($e) €.\s
+					Combien vaut chacune de $who.poss $a pièces ?
+				else
+					$who.have $a pièces, et $who.has $euros($e) € au total.\s
+					Combien vaut une pièce ?
+				end
+			end
+			answer: do
+				if trap
+					Chacune de $who.poss $a pièces vaut $euros($b) €.
+				else
+					Une pièce vaut $euros($b) €.
+				end
+			end
+		elseif u == 5
+			instruction: do
+				if trap
+					$who.have $a pièces de $euros($b) €, et $who.tirelire est pleine de pièces de $euros($d2) €.\s
+					Combien d'argent $who.q en pièces de $euros($b) € ?
+				else
+					$who.have $a pièces de $euros($b) €.\s
+					Combien d'argent $who.q ?
+				end
+			end
+			answer: do
+				if trap
+					$who.have $euros($e) € en pièces de $euros($b) €.
+				else
+					$who.have $euros($e) €.
+				end
+			end
+		end
+	else
+		if u == 1
+			instruction: do
+				$who.have des pièces de $euros($b) € et $c pièces de $euros($d) €, et $who.has $euros($e) € au total.\s
+				Combien $who.q de pièces de $euros($b) € ?
+			end
+			answer: do
+				$who.have $a pièces de $euros($b) €.
+			end
+		elseif u == 2
+			instruction: do
+				$who.have $a pièces et $c pièces de $euros($d) €, et $who.has $euros($e) € au total.\s
+				Combien vaut chacune de $who.poss $a pièces ?
+			end
+			answer: do
+				Chacune de $who.poss $a pièces vaut $euros($b) €.
+			end
+		elseif u == 3
+			instruction: do
+				$who.have $a pièces de $euros($b) € et des pièces de $euros($d) €, et $who.has $euros($e) € au total.\s
+				Combien $who.q de pièces de $euros($d) € ?
+			end
+			answer: do
+				$who.have $c pièces de $euros($d) €.
+			end
+		elseif u == 4
+			instruction: do
+				$who.have $a pièces de $euros($b) € et $c pièces, et $who.has $euros($e) € au total.\s
+				Combien vaut chacune de $who.poss $c pièces ?
+			end
+			answer: do
+				Chacune de $who.poss $c pièces vaut $euros($d) €.
+			end
+		elseif u == 5
+			instruction: do
+				$who.have $a pièces de $euros($b) € et $c pièces de $euros($d) €.\s
+				Combien d'argent $who.q ?
+			end
+			answer: do
+				$who.have $euros($e) €.
+			end
+		end
+	end
+
+	// Fallback: every (sign, u) combination is handled or rejected above —
+	// keep the explicit exit.
+	return $invalid
+end
