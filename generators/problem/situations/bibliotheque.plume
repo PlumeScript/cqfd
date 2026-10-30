@@ -6,20 +6,26 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 // Bibliotheque situations: a word problem drawn from a linear equation with
-// one missing letter, dressed as the library of a literature doctor:
+// one missing letter, dressed as the library of a literature doctor (the
+// literature is named — country and century, like the old calcN2
+// litterature situation, drawn from two lists seeded by the equation):
 //
 //   sign "+" : a*b + c*d = e    a, c shelf counts; b, d books per shelf
-//   sign ""  : a*b = e          a bare product: one group only, c and d
-//                               must be missing
+//   sign ""  : a*b = e          a bare product: one set of shelves only,
+//                               c and d must be missing
 //   sign "-" : never supported
 //
 // The caller passes every letter (the missing one as its computed solution)
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
 // When b (resp. d) is missing, a (resp. c) is a bare count of books in its
-// group, not a shelf count. `name` is a (Prénom, "m"/"f") pair or empty:
-// the story is told in the 1st person ("Je suis docteur en littérature…")
-// or in the gendered 3rd person ("Léa est docteure en littérature",
-// "La bibliothèque de Marc, docteur en littérature,…" — docteur/docteure
+// category, not a shelf count. The two-term statements say up front that
+// the library is organized in exactly two book categories ("est organisée
+// en 2 catégories de livres : la 1re … et la 2e …"), so the total is the
+// sum of the two named categories only. `name` is a (Prénom, "m"/"f") pair
+// or empty: the story is told in the 1st person
+// ("Je suis docteur en littérature roumaine du XIVe siècle…") or in the
+// gendered 3rd person ("Léa est docteure en littérature…", "La
+// bibliothèque de Marc, docteur en littérature…,…" — docteur/docteure
 // agreed with the person, sa/ma with the bibliothèque).
 // `trap` is a distractor drawn from the scene (an unvalued "fonds ancien",
 // mentioned but not counted), allowed only on a single-product question
@@ -28,6 +34,25 @@ Licensed under the MIT License — see LICENSE for details.
 // configuration is unsupported or the equation doesn't hold.
 
 let invalid = (invalid: $true)
+
+// The literature the doctor specializes in (the decor, like the old
+// calcN2 litterature situation): a country and a century.
+let countries = do
+	- tchèque
+	- polonaise
+	- roumaine
+	- hongroise
+	- finlandaise
+	- danoise
+end
+let centuries = do
+	- IXe
+	- Xe
+	- XIe
+	- XIIe
+	- XIIIe
+	- XIVe
+end
 
 lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	// integers, plausible sizes (books and shelves are counts)
@@ -132,16 +157,27 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return $invalid
 	end
 
+	// The literature the doctor specializes in (country and century, the
+	// decor of the old calcN2 litterature situation). The situation has no
+	// parameter of its own, so the draw is seeded from the equation: a
+	// given question always tells the same story (the factory is
+	// seed-deterministic).
+	let seed = $ (a or 0) * 10000000 + (b or 0) * 100000 + (c or 0) * 1000 + (d or 0) * 10 + (e or 0)
+	let random = $Random($(seed))
+	let country = $ random.choice(countries)
+	let century = $ random.choice(centuries)
+
 	// The speaker: 1st person when name is empty; otherwise the (name,
-	// gender) pair — "Léa est docteure en littérature", "La bibliothèque
-	// de Marc, docteur en littérature", "sa bibliothèque" (the possessive
-	// agrees with bibliothèque, never with the doctor; "a-t-elle" refers
-	// to the bibliothèque).
+	// gender) pair — "Léa est docteure en littérature tchèque du XIe
+	// siècle", "La bibliothèque de Marc, docteur en littérature…", "sa
+	// bibliothèque" (the possessive agrees with bibliothèque, never with
+	// the doctor; "a-t-elle" refers to the bibliothèque).
 	let who = if name and name[1]
 		do
-			introA: $(name[1]) est $(name[2] == "f" and "docteure" or "docteur") en littérature
-			// trailing comma: the templates continue with " a …"
-			introFull: La bibliothèque de $(name[1]), $(name[2] == "f" and "docteure" or "docteur") en littérature,
+			introA: $(name[1]) est $(name[2] == "f" and "docteure" or "docteur") en littérature $country du $century siècle
+			// trailing comma: the templates continue with " a …" or
+			// " est organisée en …"
+			introFull: La bibliothèque de $(name[1]), $(name[2] == "f" and "docteure" or "docteur") en littérature $country du $century siècle,
 			Lib: Sa bibliothèque
 			hasLib: Sa bibliothèque a
 			counts: Sa bibliothèque compte
@@ -149,8 +185,8 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		end
 	else
 		do
-			introA: Je suis docteur en littérature
-			introFull: Je suis docteur en littérature. Ma bibliothèque
+			introA: Je suis docteur en littérature $country du $century siècle
+			introFull: Je suis docteur en littérature $country du $century siècle. Ma bibliothèque
 			Lib: Ma bibliothèque
 			hasLib: Ma bibliothèque a
 			counts: Ma bibliothèque compte
@@ -158,13 +194,16 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		end
 	end
 
+	// The two-group statements say up front that the library is organized
+	// in exactly two book categories ("est organisée en 2 catégories de
+	// livres : la 1re … et la 2e …"), so the total is the sum of the two
+	// named categories only.
 	if u == 1
 		return do
 			instruction: do
 				if b and c
-					$(who.introFull) a $(b) livres par étagère dans le 1er groupe,\s
-					$(c) étagères de $(d) livres dans le 2e groupe, soit $(e) livres au total.\s
-					Combien d'étagères compte le 1er groupe ?
+					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(b) livres par étagère et la 2e $(c) étagères de $(d) livres, soit $(e) livres au total.\s
+					Combien d'étagères compte la 1re catégorie ?
 				elseif b
 					if trap
 						$(who.introFull) a $(b) livres par étagère et $(e) livres sur ses étagères ;\s
@@ -175,17 +214,17 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 						Combien d'étagères a-t-elle ?
 					end
 				else
-					$(who.introFull) a $(c) livres dans le 2e groupe et compte $(e) livres au total.\s
-					Combien de livres y a-t-il dans le 1er groupe ?
+					$(who.introFull) est organisée en 2 catégories de livres : la 2e catégorie a $(c) livres et les 2 catégories ensemble $(e) livres au total.\s
+					Combien de livres y a-t-il dans la 1re catégorie ?
 				end
 			end
 			answer: do
 				if b and c
-					Le 1er groupe a $(a) étagères.
+					La 1re catégorie a $(a) étagères.
 				elseif b
 					$(who.hasLib) $(a) étagères.
 				else
-					Il y a $(a) livres dans le 1er groupe.
+					Il y a $(a) livres dans la 1re catégorie.
 				end
 			end
 		end
@@ -193,9 +232,8 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return do
 			instruction: do
 				if c
-					$(who.introFull) a $(a) étagères du 1er groupe et $(c) étagères de $(d) livres,\s
-					soit $(e) livres au total.\s
-					Combien de livres par étagère sur les étagères du 1er groupe ?
+					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères et la 2e $(c) étagères de $(d) livres, soit $(e) livres au total.\s
+					Combien de livres par étagère dans la 1re catégorie ?
 				else
 					if trap
 						$(who.introFull) a $(a) étagères et $(e) livres sur ses étagères ;\s
@@ -209,7 +247,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 			answer: do
 				if c
-					Il y a $(b) livres par étagère sur les étagères du 1er groupe.
+					Il y a $(b) livres par étagère dans la 1re catégorie.
 				else
 					Il y a $(b) livres par étagère.
 				end
@@ -219,19 +257,18 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return do
 			instruction: do
 				if b
-					$(who.introFull) a $(a) étagères de $(b) livres et $(d) livres par étagère sur le 2e groupe,\s
-					soit $(e) livres au total.\s
-					Combien d'étagères compte le 2e groupe ?
+					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères de $(b) livres et la 2e $(d) livres par étagère, soit $(e) livres au total.\s
+					Combien d'étagères compte la 2e catégorie ?
 				else
-					$(who.introFull) a $(a) livres dans le 1er groupe et compte $(e) livres au total.\s
-					Combien de livres y a-t-il dans le 2e groupe ?
+					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et les 2 catégories ensemble $(e) livres au total.\s
+					Combien de livres y a-t-il dans la 2e catégorie ?
 				end
 			end
 			answer: do
 				if b
-					Le 2e groupe a $(c) étagères.
+					La 2e catégorie a $(c) étagères.
 				else
-					Il y a $(c) livres dans le 2e groupe.
+					Il y a $(c) livres dans la 2e catégorie.
 				end
 			end
 		end
@@ -239,29 +276,27 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return do
 			instruction: do
 				if b
-					$(who.introFull) a $(a) étagères de $(b) livres et $(c) étagères du 2e groupe,\s
-					soit $(e) livres au total.\s
-					Combien de livres par étagère sur les étagères du 2e groupe ?
+					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères de $(b) livres et la 2e $(c) étagères, soit $(e) livres au total.\s
+					Combien de livres par étagère dans la 2e catégorie ?
 				else
-					$(who.introFull) a $(a) livres dans le 1er groupe et $(c) étagères du 2e groupe,\s
-					soit $(e) livres au total.\s
-					Combien de livres par étagère sur les étagères du 2e groupe ?
+					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et la 2e $(c) étagères, soit $(e) livres au total.\s
+					Combien de livres par étagère dans la 2e catégorie ?
 				end
 			end
-			answer: Il y a $(d) livres par étagère sur les étagères du 2e groupe.
+			answer: Il y a $(d) livres par étagère dans la 2e catégorie.
 		end
 	else
 		return do
 			instruction: do
 				$(who.introA).\s
 				if c and b and d
-					$(who.Lib) a $(a) étagères de $(b) livres et $(c) étagères de $(d) livres.\s
+					$(who.Lib) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères de $(b) livres et la 2e $(c) étagères de $(d) livres.\s
 					$(who.qTotal)
 				elseif c and d
-					$(who.Lib) a $(a) livres dans le 1er groupe et $(c) étagères de $(d) livres dans le 2e groupe.\s
+					$(who.Lib) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et la 2e $(c) étagères de $(d) livres.\s
 					$(who.qTotal)
 				elseif c
-					$(who.Lib) a $(a) livres dans le 1er groupe et $(c) livres dans le 2e groupe.\s
+					$(who.Lib) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et la 2e $(c) livres.\s
 					$(who.qTotal)
 				else
 					if trap

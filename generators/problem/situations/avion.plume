@@ -19,8 +19,9 @@ Licensed under the MIT License — see LICENSE for details.
 // The caller passes every letter (the missing one as its computed solution)
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
 // `name` is a (Prénom, "m"|"f") pair — (Léa, f) — or empty: the statement
-// is the impersonal "L'avion a…" or the named "L'avion de Léa a…" (the
-// plane is always masculine, so the gender never changes a form).
+// is the impersonal "L'avion a…" or the named "Léa est pilote, et son
+// avion a…" (the plane is always masculine, so the gender never changes a
+// form; the "a-t-il" questions refer to the plane).
 // `trap` only applies to the single-product equation: the statement then
 // mentions the business class without any value (a scene detail the
 // answer must ignore) and the question is scoped to the economy class.
@@ -29,21 +30,12 @@ Licensed under the MIT License — see LICENSE for details.
 
 let invalid = (invalid: $true)
 
-// "de Léa" / "d'Amélie" (elision of de before a vowel or a mute h)
-macro dePlane(name)
-	let w = $ name.lower()
-	if String.startsWith(w, "a") or String.startsWith(w, "e") or String.startsWith(w, "é") or String.startsWith(w, "è") or String.startsWith(w, "h") or String.startsWith(w, "i") or String.startsWith(w, "o") or String.startsWith(w, "u") or String.startsWith(w, "y")
-		d'$(name)
-	else
-		de $(name)
-	end
-end
-
-// "L'avion" / "L'avion de Léa" / "L'avion d'Amélie"
+// "L'avion" / "Joe est pilote, et son avion" (named: the owner is a pilot
+// and the plane is his/hers; the plane is always masculine, so the gender
+// never changes a form — the "a-t-il" questions refer to the plane).
 macro plane(name)
 	if name and name[1]
-		let w = $ dePlane(name[1])
-		L'avion $w
+		$(name[1]) est pilote, et son avion
 	else
 		L'avion
 	end

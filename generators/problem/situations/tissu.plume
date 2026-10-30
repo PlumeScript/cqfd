@@ -138,7 +138,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		instruction: do
 			$(who.firstHad) $(m2(a)) m² de tissu.\s
 			$(who.pCut) $(m2(c)) carrés de $(m2(d)) m² chacun.\s
-			Combien de tissu $(who.restQ) ?
+			Quelle superficie $(who.restQ) ?
 		end
 		answer: $(who.restA) $(m2(e)) m².
 	end

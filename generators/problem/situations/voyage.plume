@@ -101,31 +101,31 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 
 		return if u == 1
 			instruction: do
-				$(who.rolled) à $b km/h sur la 1re partie, puis $c h à $d km/h, et $(who.parcouru) $e km en tout.\s
+				$(who.rolled) à $b km/h sur la 1re partie, puis $(c)h à $d km/h, et $(who.parcouru) $e km en tout.\s
 				Combien de temps $(who.qTime) sur la 1re partie ?
 			end
-			answer: $(who.ansRolled) $a h sur la 1re partie.
+			answer: $(who.ansRolled) $(a)h sur la 1re partie.
 		elseif u == 2
 			instruction: do
-				$(who.rolled) $a h à vitesse constante sur la 1re partie, puis $c h à $d km/h, et $(who.parcouru) $e km en tout.\s
+				$(who.rolled) $(a)h à vitesse constante sur la 1re partie, puis $(c)h à $d km/h, et $(who.parcouru) $e km en tout.\s
 				Quelle était $(who.poss) vitesse sur la 1re partie ?
 			end
 			answer: $(who.ansRolled) à $b km/h sur la 1re partie.
 		elseif u == 3
 			instruction: do
-				$(who.rolled) $a h à $b km/h, puis à $d km/h, et $(who.parcouru) $e km en tout.\s
+				$(who.rolled) $(a)h à $b km/h, puis à $d km/h, et $(who.parcouru) $e km en tout.\s
 				Combien de temps $(who.qTime) sur la 2e partie ?
 			end
-			answer: $(who.ansRolled) $c h sur la 2e partie.
+			answer: $(who.ansRolled) $(c)h sur la 2e partie.
 		elseif u == 4
 			instruction: do
-				$(who.rolled) $a h à $b km/h, puis $c h à vitesse constante, et $(who.parcouru) $e km en tout.\s
+				$(who.rolled) $(a)h à $b km/h, puis $(c)h à vitesse constante, et $(who.parcouru) $e km en tout.\s
 				Quelle était $(who.poss) vitesse sur la 2e partie ?
 			end
 			answer: $(who.ansRolled) à $d km/h sur la 2e partie.
 		elseif u == 5
 			instruction: do
-				$(who.rolled) $a h à $b km/h, puis $c h à $d km/h.\s
+				$(who.rolled) $(a)h à $b km/h, puis $(c)h à $d km/h.\s
 				Quelle distance $(who.qDist) en tout ?
 			end
 			answer: $(who.ansParcouru) $e km.
@@ -161,7 +161,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return if u == 1
 			instruction: do
 				if trap
-					$(who.rolled) à $b km/h sur la 1re partie, et $(who.parcouru) $e km.\s
+					$(who.rolled) à $b km/h sur la 1re partie, où $(who.parcouru) $e km.\s
 					Il y a eu une 2e partie.\s
 					Combien de temps $(who.qTime) sur la 1re partie ?
 				else
@@ -171,19 +171,19 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 			answer: do
 				if trap
-					$(who.ansRolled) $a h sur la 1re partie.
+					$(who.ansRolled) $(a)h sur la 1re partie.
 				else
-					$(who.ansRolled) $a h.
+					$(who.ansRolled) $(a)h.
 				end
 			end
 		elseif u == 2
 			instruction: do
 				if trap
-					$(who.rolled) $a h sur la 1re partie, et $(who.parcouru) $e km.\s
+					$(who.rolled) $(a)h sur la 1re partie, où $(who.parcouru) $e km.\s
 					Il y a eu une 2e partie.\s
 					Quelle était $(who.poss) vitesse sur la 1re partie ?
 				else
-					$(who.rolled) $a h et $(who.parcouru) $e km.\s
+					$(who.rolled) $(a)h et $(who.parcouru) $e km.\s
 					Quelle était $(who.poss) vitesse ?
 				end
 			end
@@ -197,10 +197,10 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 5
 			instruction: do
 				if trap
-					$(who.rolled) $a h à $b km/h sur la 1re partie, et il y a eu une 2e partie.\s
+					$(who.rolled) $(a)h à $b km/h sur la 1re partie, et il y a eu une 2e partie.\s
 					Quelle distance $(who.qDist) sur la 1re partie ?
 				else
-					$(who.rolled) $a h à $b km/h.\s
+					$(who.rolled) $(a)h à $b km/h.\s
 					Quelle distance $(who.qDist) ?
 				end
 			end

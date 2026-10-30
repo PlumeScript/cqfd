@@ -111,14 +111,17 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		end
 	end
 
+	// sign "+": the two groups are named in the statement ("du 1er groupe",
+	// "du 2e groupe") and the questions are scoped to the mares that
+	// gave birth ("ont mis bas") — the total only counts their births.
 	if sign == "+"
 		return if u == 1
 			instruction: do
 				$(who.intro)\s
-				Au haras, des juments ont chacune eu $(born(b)) et $c autres en ont eu $d ; au total, $e licornes sont nées.\s
-				Combien de juments du 1er groupe ?
+				Au haras, des juments du 1er groupe ont chacune eu $(born(b)) et $c juments du 2e groupe en ont eu $d ; au total, $e licornes sont nées.\s
+				Combien de juments du 1er groupe ont mis bas ?
 			end
-			answer: Il y a donc $a juments dans le 1er groupe.
+			answer: Ce sont donc $a juments du 1er groupe qui ont mis bas.
 		elseif u == 2
 			instruction: do
 				$(who.intro)\s
@@ -129,15 +132,15 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 3
 			instruction: do
 				$(who.intro)\s
-				Au haras, $a juments ont chacune eu $(born(b)) et des juments du 2e groupe en ont eu chacune $d ; au total, $e licornes sont nées.\s
-				Combien de juments y a-t-il dans le 2e groupe ?
+				Au haras, $a juments du 1er groupe ont chacune eu $(born(b)) et des juments du 2e groupe en ont eu chacune $d ; au total, $e licornes sont nées.\s
+				Combien de juments du 2e groupe ont mis bas ?
 			end
-			answer: Il y a donc $c juments dans le 2e groupe.
+			answer: Ce sont donc $c juments du 2e groupe qui ont mis bas.
 		elseif u == 4
 			instruction: do
 				$(who.intro)\s
-				Au haras, $a juments ont chacune eu $(born(b)) ; les $c juments du 2e groupe en ont eu chacune autant les unes que les autres, et au total $e licornes sont nées.\s
-				Combien de licornes chacune a-t-elle eues ?
+				Au haras, $a juments du 1er groupe ont chacune eu $(born(b)) ; les $c juments du 2e groupe en ont eu chacune autant les unes que les autres, et au total $e licornes sont nées.\s
+				Combien de licornes chacune des juments du 2e groupe a-t-elle eues ?
 			end
 			answer: Chaque jument du 2e groupe a donc eu $(born(d)).
 		elseif u == 5
@@ -154,14 +157,17 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	// the scene without any value (a distraction, no number given), so the
 	// total is scoped to the 1st group.
 	if trap
+		// The trap mentions the 2nd group without any value; the 1st group
+		// is named in the first clause so the scoped total (and question)
+		// is unambiguous.
 		return if u == 1
 			instruction: do
 				$(who.intro)\s
-				Au haras, des juments ont chacune eu $(born(b)), et il y a eu d'autres naissances au 2e groupe.\s
+				Au haras, des juments du 1er groupe ont chacune eu $(born(b)), et il y a eu d'autres naissances au 2e groupe.\s
 				Au total, le 1er groupe a eu $e licornes.\s
-				Combien de juments y a-t-il dans le 1er groupe ?
+				Combien de juments du 1er groupe ont mis bas ?
 			end
-			answer: Il y a donc $a juments dans le 1er groupe.
+			answer: Ce sont donc $a juments du 1er groupe qui ont mis bas.
 		elseif u == 2
 			instruction: do
 				$(who.intro)\s
@@ -173,7 +179,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 5
 			instruction: do
 				$(who.intro)\s
-				Au haras, $a juments ont chacune eu $(born(b)), et il y a eu d'autres naissances au 2e groupe.\s
+				Au haras, $a juments du 1er groupe ont chacune eu $(born(b)), et il y a eu d'autres naissances au 2e groupe.\s
 				Combien de licornes le 1er groupe a-t-il eu ?
 			end
 			answer: Le 1er groupe a donc eu $e licornes.
@@ -183,10 +189,10 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	return if u == 1
 		instruction: do
 			$(who.intro)\s
-			Au haras, des juments ont chacune eu $(born(b)) et au total $e licornes sont nées.\s
-			Combien de juments y a-t-il ?
+			Au haras, des juments ont chacune eu $(born(b)) ; au total $e licornes sont nées.\s
+			Combien de juments ont mis bas ?
 		end
-		answer: Il y a donc $a juments.
+		answer: Ce sont donc $a juments qui ont mis bas.
 	elseif u == 2
 		instruction: do
 			$(who.intro)\s
@@ -198,7 +204,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		instruction: do
 			$(who.intro)\s
 			Au haras, $a juments ont chacune eu $(born(b)).\s
-			Combien de licornes sont nées ?
+			Combien de licornes ont-elles eues au total ?
 		end
 		answer: Au total, $e licornes sont nées.
 	end

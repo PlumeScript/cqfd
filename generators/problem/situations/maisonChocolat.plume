@@ -220,7 +220,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					instruction: do
 						$(who.intro).\s
 						$(who.uses) $(bricks("blanc", a, b)) et $(bricks("noir", c, d)).\s
-						Combien de chocolat $(who.qUses) au total ?
+						Combien de grammes $(who.qUses) au total ?
 					end
 					answer: $(who.uses) $(g(e)) g de chocolat au total.
 				end
@@ -257,23 +257,26 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					instruction: do
 						$(who.intro).\s
 						$(who.uses) $(g(a)) g de chocolat blanc et $(bricks("noir", c, d)).\s
-						Combien de chocolat $(who.qUses) au total ?
+						Combien de grammes $(who.qUses) au total ?
 					end
 					answer: $(who.uses) $(g(e)) g de chocolat au total.
 				end
 			else
 				// a + c = e — no weight anywhere: the bricks are counted.
+				// The house has only two brick kinds (white and dark): the
+				// "le reste" makes the two-way split explicit (otherwise
+				// other kinds of bricks would fit the statement).
 				return if u == 1
 					instruction: do
 						$(who.intro).\s
-						$(who.uses) $(g(e)) briques, dont $(g(c)) de chocolat noir.\s
+						$(who.uses) $(g(e)) briques, dont $(g(c)) de chocolat noir et le reste de chocolat blanc.\s
 						Combien de briques de chocolat blanc $(who.qUses) ?
 					end
 					answer: $(who.uses) $(g(a)) briques de chocolat blanc.
 				elseif u == 3
 					instruction: do
 						$(who.intro).\s
-						$(who.uses) $(g(e)) briques, dont $(g(a)) de chocolat blanc.\s
+						$(who.uses) $(g(e)) briques, dont $(g(a)) de chocolat blanc et le reste de chocolat noir.\s
 						Combien de briques de chocolat noir $(who.qUses) ?
 					end
 					answer: $(who.uses) $(g(c)) briques de chocolat noir.
@@ -293,7 +296,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return if u == 1
 			instruction: do
 				$(who.intro).\s
-				$(who.uses) $(someBricks("blanc", b)), pour $(g(e)) g de chocolat blanc
+				$(who.uses) $(someBricks("blanc", b)), pour un total de $(g(e)) g de chocolat blanc
 				if trap
 					\s; $(who.also) du chocolat noir de côté
 				end
@@ -304,7 +307,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 2
 			instruction: do
 				$(who.intro).\s
-				$(who.uses) $(bricks("blanc", a, 0)), pour $(g(e)) g de chocolat blanc
+				$(who.uses) $(bricks("blanc", a, 0)), pour un total de $(g(e)) g de chocolat blanc
 				if trap
 					\s; $(who.also) du chocolat noir de côté
 				end
