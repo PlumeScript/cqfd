@@ -222,7 +222,8 @@ ref mulHoleFirst: macro(...params)
 					- $Node(bold, $calc.instruction.children[2])
 					- $calc.instruction.children[1]
 				end
-				target: $calc.solution-1
+				target: $calc.solution
+				id: $calc.solution-1
 			end
 		end
 	end
@@ -248,7 +249,8 @@ ref mulHoleSecond: macro(...params)
 					- $Node(bold, $calc.instruction.children[2])
 					- $calc.instruction.children[1]
 				end
-				target: $calc.solution-2
+				target: $calc.solution
+				id: $calc.solution-2
 			end
 		end
 	end
