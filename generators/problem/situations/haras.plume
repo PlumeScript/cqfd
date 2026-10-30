@@ -1,0 +1,209 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Haras (stud) situations: the births at a unicorn stud, a word problem
+// drawn from the equation a*b + c*d = e with one missing letter:
+//
+//   sign "+" : a*b + c*d = e    two groups of mares — a, c the number of
+//                               mares, b, d the births per mare, e the
+//                               newborns in total (u = 1..5)
+//   sign ""  : a*b = e          one group — the bare product (c and d
+//                               missing, u = 1, 2 or 5). With trap, the
+//                               2nd group is mentioned in the scene without
+//                               any value (described, never given) and the
+//                               total is scoped to the 1st group
+//   sign "-" : invalid          no loss happens at the stud
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// `name` is a (name, gender) pair — (Léa, "f") — or empty: the scene is
+// told in the 1st person ("Je suis écuyer.") or in the gendered 3rd person
+// ("Léa est écuyère.", "Marc est écuyer.") — the groom of the stud (the
+// decor of the calcN2 licorne and mulX haras situations). The trap has no
+// place in the full sum and is ignored there.
+// Returns a (instruction:, answer:) table, or the `invalid` table when the
+// configuration is unsupported or the equation doesn't hold.
+
+let invalid = (invalid: $true)
+
+// "lea" → "Léa" (upper-case the first letter only)
+macro cap(s)
+	$s.sub(1).upper()$s.sub(2, -1)
+end
+
+// "3 licornes" / "1 licorne" (the singular when the count is 1)
+macro born(n)
+	$n $(n == 1 and "licorne" or "licornes")
+end
+
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
+	// The supported equations: the two-group sum (sign "+", all five
+	// letters) and the bare product (sign "" — or empty, the "hole"
+	// caller's "*" label — one group, c and d missing). A loss (sign "-")
+	// never happens at the stud.
+	set sign = $ sign or ""
+	if sign == "-"
+		return $invalid
+	end
+	if sign != "+" and sign != ""
+		return $invalid
+	end
+
+	// integers where expected
+	if (a and a.floor() != a) or (b and b.floor() != b) or (c and c.floor() != c) or (d and d.floor() != d) or (e and e.floor() != e)
+		return $invalid
+	end
+
+	// sign "+": the two groups — a, b, c, d all present, u = 1..5.
+	// sign "": one group — c and d missing, u = 1, 2 or 5.
+	if sign == ""
+		if c or d
+			return $invalid
+		end
+		if u != 1 and u != 2 and u != 5
+			return $invalid
+		end
+	else
+		if not a or not b or not c or not d
+			return $invalid
+		end
+		if u < 1 or u > 5
+			return $invalid
+		end
+	end
+
+	// plausible sizes (mare counts >= 2 so "juments" stays plural)
+	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+		return $invalid
+	end
+	if (b and (b < 1 or b > 15)) or (d and (d < 1 or d > 15))
+		return $invalid
+	end
+	if not e or e < 1
+		return $invalid
+	end
+
+	// The caller passes a consistent equation (the missing letter is its
+	// computed solution): check it.
+	let lhs = 0
+	if sign == "+"
+		set lhs = $ a * b + c * d
+	else
+		set lhs = $ a * b
+	end
+	if lhs != e
+		return $invalid
+	end
+
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — the groom of the unicorn stud.
+	let who = if name and name[1]
+		do
+			intro: $(cap(name[1])) est $(name[2] == "f" and "écuyère" or "écuyer").
+		end
+	else
+		do
+			intro: Je suis écuyer.
+		end
+	end
+
+	if sign == "+"
+		return if u == 1
+			instruction: do
+				$(who.intro)\s
+				Au haras, des juments ont chacune eu $(born(b)) et $c autres en ont eu $d ; au total, $e licornes sont nées.\s
+				Combien de juments du 1er groupe ?
+			end
+			answer: Il y a donc $a juments dans le 1er groupe.
+		elseif u == 2
+			instruction: do
+				$(who.intro)\s
+				Au haras, les $a juments du 1er groupe ont chacune eu autant de licornes les unes que les autres et les $c juments du 2e groupe en ont eu chacune $d ; au total, $e licornes sont nées.\s
+				Combien de licornes chacune des juments du 1er groupe a-t-elle eues ?
+			end
+			answer: Chaque jument du 1er groupe a donc eu $(born(b)).
+		elseif u == 3
+			instruction: do
+				$(who.intro)\s
+				Au haras, $a juments ont chacune eu $(born(b)) et des juments du 2e groupe en ont eu chacune $d ; au total, $e licornes sont nées.\s
+				Combien de juments y a-t-il dans le 2e groupe ?
+			end
+			answer: Il y a donc $c juments dans le 2e groupe.
+		elseif u == 4
+			instruction: do
+				$(who.intro)\s
+				Au haras, $a juments ont chacune eu $(born(b)) ; les $c juments du 2e groupe en ont eu chacune autant les unes que les autres, et au total $e licornes sont nées.\s
+				Combien de licornes chacune a-t-elle eues ?
+			end
+			answer: Chaque jument du 2e groupe a donc eu $(born(d)).
+		elseif u == 5
+			instruction: do
+				$(who.intro)\s
+				Au haras, $a juments ont chacune eu $(born(b)) et $c juments en ont eu $d.\s
+				Combien de licornes sont nées au total ?
+			end
+			answer: Au total, $e licornes sont nées.
+		end
+	end
+
+	// sign "": the bare product. With trap, the 2nd group is mentioned in
+	// the scene without any value (a distraction, no number given), so the
+	// total is scoped to the 1st group.
+	if trap
+		return if u == 1
+			instruction: do
+				$(who.intro)\s
+				Au haras, des juments ont chacune eu $(born(b)), et il y a eu d'autres naissances au 2e groupe.\s
+				Au total, le 1er groupe a eu $e licornes.\s
+				Combien de juments y a-t-il dans le 1er groupe ?
+			end
+			answer: Il y a donc $a juments dans le 1er groupe.
+		elseif u == 2
+			instruction: do
+				$(who.intro)\s
+				Au haras, les $a juments du 1er groupe ont chacune eu autant de licornes les unes que les autres, et il y a eu d'autres naissances au 2e groupe.\s
+				Au total, le 1er groupe a eu $e licornes.\s
+				Combien de licornes chacune des juments du 1er groupe a-t-elle eues ?
+			end
+			answer: Chaque jument du 1er groupe a donc eu $(born(b)).
+		elseif u == 5
+			instruction: do
+				$(who.intro)\s
+				Au haras, $a juments ont chacune eu $(born(b)), et il y a eu d'autres naissances au 2e groupe.\s
+				Combien de licornes le 1er groupe a-t-il eu ?
+			end
+			answer: Le 1er groupe a donc eu $e licornes.
+		end
+	end
+
+	return if u == 1
+		instruction: do
+			$(who.intro)\s
+			Au haras, des juments ont chacune eu $(born(b)) et au total $e licornes sont nées.\s
+			Combien de juments y a-t-il ?
+		end
+		answer: Il y a donc $a juments.
+	elseif u == 2
+		instruction: do
+			$(who.intro)\s
+			Au haras, $a juments ont chacune eu autant de licornes les unes que les autres et au total $e licornes sont nées.\s
+			Combien de licornes chacune a-t-elle eues ?
+		end
+		answer: Chaque jument a donc eu $(born(b)).
+	elseif u == 5
+		instruction: do
+			$(who.intro)\s
+			Au haras, $a juments ont chacune eu $(born(b)).\s
+			Combien de licornes sont nées ?
+		end
+		answer: Au total, $e licornes sont nées.
+	end
+
+	// Fallback: every (sign, u, trap) combination is handled or rejected
+	// above — keep the explicit exit.
+	return $invalid
+end
