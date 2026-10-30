@@ -245,3 +245,67 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 		end
 	end
 end
+
+let eqn12 from $import(./eqn12)
+/*
+Generate an exercice like $code(Voici une égalité. Faîtes $formula(+5) à chaque membre et réduisez).$newline
+Use $ParamSet(eqn12).
+*/
+reduceBoth: macro(...args)
+	@QuestionFactory
+		parameters: do
+			- $eqn12(...args)
+			- $Choice(1, 3)
+		end
+		get: macro(source, step)
+			set step = $ 1 + (step-1) % len(source.firstSteps)
+			@Question(reduceBoth)
+				instruction: do
+					eqn: $source.steps[1]
+					calc: $source.firstSteps[step]
+				end
+				steps: do
+					- $source.steps[1]
+					if source.firstSteps[step][1] == "+"
+						- do
+							l: $ (source.steps[1].l + source.firstSteps[step][2]).pretty()
+							r: $ (source.steps[1].r + source.firstSteps[step][2]).pretty()
+						end
+						- do
+							l: $ (source.steps[1].l + source.firstSteps[step][2]).reduce()
+							r: $ (source.steps[1].r + source.firstSteps[step][2]).reduce()
+						end
+					elseif source.firstSteps[step][1] == "-"
+						- do
+							l: $ (source.steps[1].l - source.firstSteps[step][2]).pretty()
+							r: $ (source.steps[1].r - source.firstSteps[step][2]).pretty()
+						end
+						- do
+							l: $ (source.steps[1].l - source.firstSteps[step][2]).reduce()
+							r: $ (source.steps[1].r - source.firstSteps[step][2]).reduce()
+						end
+					elseif source.firstSteps[step][1] == "\\times"
+						- do
+							l: $ (source.steps[1].l * source.firstSteps[step][2]).pretty()
+							r: $ (source.steps[1].r * source.firstSteps[step][2]).pretty()
+						end
+						- do
+							l: $ (source.steps[1].l * source.firstSteps[step][2]).reduce()
+							r: $ (source.steps[1].r * source.firstSteps[step][2]).reduce()
+						end
+					elseif source.firstSteps[step][1] == "\\div"
+						- do
+							l: $ (source.steps[1].l / source.firstSteps[step][2]).pretty()
+							r: $ (source.steps[1].r / source.firstSteps[step][2]).pretty()
+						end
+						- do
+							l: $ (source.steps[1].l / source.firstSteps[step][2]).reduce()
+							r: $ (source.steps[1].r / source.firstSteps[step][2]).reduce()
+						end
+					end
+				end
+				id: $source.id-$step
+			end
+		end
+	end
+end

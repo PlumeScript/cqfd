@@ -95,6 +95,37 @@ eqn12: macro(style: classic, steps: full, ?a, ?b, ?c, ?d, ?rationnalSolution, ?q
 			end
 
 			@Question(eqn)
+				firstSteps: do
+					if a != 1
+						if ox == "*"
+							if sa == "+"
+								- (\\div, $a)
+							else
+								- (\\div, $a)
+							end
+						else
+							if sa == "+"
+								- (\\times, $a)
+							else
+								- (\\times, $a)
+							end
+						end
+					end
+					if b!=0
+						if sb == "+"
+							- (-, $(b))
+						else
+							- (+, $(-b))
+						end
+					end
+					if c!=0
+						if sc == "+"
+							- (-, $(c*s(x)))
+						else
+							- (+, $(-c*s(x)))
+						end
+					end
+				end
 				steps: do
 					- do
 						l: $ ax + b

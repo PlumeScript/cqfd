@@ -149,3 +149,37 @@ evalCheck: do
 		end
 	end
 end
+
+reduceBoth: do
+	instruction:macro(question)
+		let opp = $question.instruction.calc[1]
+		let value = $question.instruction.calc[2]
+
+		if opp=="*" and value<0
+			set value = ($value)
+		end
+		Faîtes $pages.hspace(1)$pages.box($pages.underline($pages.formula($opp$value))) à chaque membre de
+		$pages.hspace(2)
+		@pages.box @pages.formula
+			$question.instruction.eqn.l.pretty()
+			=
+			$question.instruction.eqn.r.pretty()
+		end
+		, puis réduisez.
+		
+	end
+	solutionShort: macro(question)
+		a
+	end
+	solution: macro(question)
+		@pages.EqnAlign
+			for step in question.steps
+				- do
+					- $ String(step.l.pretty())
+					- =
+					- $ String(step.r.pretty())
+				end
+			end
+		end
+	end
+end
