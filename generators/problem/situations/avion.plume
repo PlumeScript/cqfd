@@ -1,0 +1,195 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Avion situations: a word problem drawn from a linear equation with
+// one missing letter, dressed as the seats of an airplane with two
+// classes:
+//
+//   sign "+" : a*b + c*d = e    a rows, b seats per row (economy class);
+//                                c rows, d seats per row (business class);
+//                                e total seats
+//   sign ""  : a*b = e          a single-class plane: a rows of b seats,
+//                                e seats in all
+//   sign "-" : invalid          a plane never unseats its classes
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// `name` is a (Prénom, "m"|"f") pair — (Léa, f) — or empty: the statement
+// is the impersonal "L'avion a…" or the named "L'avion de Léa a…" (the
+// plane is always masculine, so the gender never changes a form).
+// `trap` only applies to the single-product equation: the statement then
+// mentions the business class without any value (a scene detail the
+// answer must ignore) and the question is scoped to the economy class.
+// Returns a (instruction:, answer:) table, or the `invalid` table when
+// the configuration is unsupported or the equation doesn't hold.
+
+let invalid = (invalid: $true)
+
+// "de Léa" / "d'Amélie" (elision of de before a vowel or a mute h)
+macro dePlane(name)
+	let w = $ name.lower()
+	if String.startsWith(w, "a") or String.startsWith(w, "e") or String.startsWith(w, "é") or String.startsWith(w, "è") or String.startsWith(w, "h") or String.startsWith(w, "i") or String.startsWith(w, "o") or String.startsWith(w, "u") or String.startsWith(w, "y")
+		d'$(name)
+	else
+		de $(name)
+	end
+end
+
+// "L'avion" / "L'avion de Léa" / "L'avion d'Amélie"
+macro plane(name)
+	if name and name[1]
+		let w = $ dePlane(name[1])
+		L'avion $w
+	else
+		L'avion
+	end
+end
+
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
+	// "-" is not an airplane equation: a plane never unseats a class.
+	// (The "hole" caller's "*" label passes sign empty: empty and "" are
+	// distinct values, "" is truthy, so `sign or ""` normalizes both.)
+	set sign = $ sign or ""
+	if sign != "+" and sign != ""
+		return $invalid
+	end
+
+	// Rows, seats per row, total seats are whole numbers.
+	if (a and a.floor() != a) or (b and b.floor() != b) or (c and c.floor() != c) or (d and d.floor() != d) or (e and e.floor() != e)
+		return $invalid
+	end
+
+	// Plausible sizes — and every count is >= 2, so the plurals
+	// ("rangées", "sièges") are always the right form.
+	if (a and (a < 2 or a > 40)) or (c and (c < 2 or c > 20))
+		return $invalid
+	end
+	if (b and (b < 2 or b > 6)) or (d and (d < 2 or d > 6))
+		return $invalid
+	end
+	if not e or e < 4
+		return $invalid
+	end
+
+	// sign "" (one term only) never carries the second class, and the
+	// trap never dresses the full equation (nothing left to mention).
+	if sign == "" and (c or d)
+		return $invalid
+	end
+	if trap and sign != ""
+		return $invalid
+	end
+
+	// The caller passes a consistent equation (the missing letter is its
+	// computed solution): every letter must be present and the equation
+	// must hold.
+	if sign == ""
+		if not a or not b
+			return $invalid
+		end
+		if u != 1 and u != 2 and u != 5
+			return $invalid
+		end
+		if a*b != e
+			return $invalid
+		end
+	else
+		if not a or not b or not c or not d
+			return $invalid
+		end
+		if u < 1 or u > 5
+			return $invalid
+		end
+		if a*b + c*d != e
+			return $invalid
+		end
+	end
+
+	// The speaker: impersonal when name is empty; otherwise the (name,
+	// gender) pair — "L'avion de Léa" (the plane is masculine, the
+	// gender never changes a form).
+	let planeName = $ plane(name)
+
+	// Single class (a*b = e): with the trap, the business class is
+	// mentioned without any value and the question is scoped to the
+	// economy class.
+	if sign == ""
+		if trap
+			return if u == 1
+				instruction: do
+					$(planeName) a $b sièges par rangée en classe économique, soit $e sièges en classe économique ; il y a aussi une classe affaires.\s
+					Combien de rangées a-t-il en classe économique ?
+				end
+				answer: Il a $a rangées en classe économique.
+			elseif u == 2
+				instruction: do
+					$(planeName) a $a rangées en classe économique, soit $e sièges en classe économique ; il y a aussi une classe affaires.\s
+					Combien de sièges par rangée en classe économique ?
+				end
+				answer: Il a $b sièges par rangée en classe économique.
+			else
+				instruction: do
+					$(planeName) a $a rangées de $b sièges en classe économique ; il y a aussi une classe affaires.\s
+					Combien de sièges a-t-il en classe économique ?
+				end
+				answer: Il a $e sièges en classe économique.
+			end
+		end
+		return if u == 1
+			instruction: do
+				$(planeName) a $b sièges par rangée, soit $e sièges au total.\s
+				Combien de rangées a-t-il ?
+			end
+			answer: Il a $a rangées.
+		elseif u == 2
+			instruction: do
+				$(planeName) a $a rangées, soit $e sièges au total.\s
+				Combien de sièges par rangée ?
+			end
+			answer: Il a $b sièges par rangée.
+		else
+			instruction: do
+				$(planeName) a $a rangées de $b sièges.\s
+				Combien de sièges a-t-il au total ?
+			end
+			answer: Il a $e sièges au total.
+		end
+	end
+
+	// Two classes (a*b + c*d = e), one letter missing.
+	return if u == 1
+		instruction: do
+			$(planeName) a $b sièges par rangée en classe économique et $c rangées de $d sièges en classe affaires, soit $e sièges au total.\s
+			Combien de rangées a-t-il en classe économique ?
+		end
+		answer: Il a $a rangées en classe économique.
+	elseif u == 2
+		instruction: do
+			$(planeName) a $a rangées en classe économique et $c rangées de $d sièges en classe affaires, soit $e sièges au total.\s
+			Combien de sièges par rangée en classe économique ?
+		end
+		answer: Il a $b sièges par rangée en classe économique.
+	elseif u == 3
+		instruction: do
+			$(planeName) a $a rangées de $b sièges en classe économique et $d sièges par rangée en classe affaires, soit $e sièges au total.\s
+			Combien de rangées a-t-il en classe affaires ?
+		end
+		answer: Il a $c rangées en classe affaires.
+	elseif u == 4
+		instruction: do
+			$(planeName) a $a rangées de $b sièges et $c rangées en classe affaires, soit $e sièges au total.\s
+			Combien de sièges par rangée en classe affaires ?
+		end
+		answer: Il a $d sièges par rangée en classe affaires.
+	else
+		instruction: do
+			$(planeName) a $a rangées de $b sièges en classe économique et $c rangées de $d sièges en classe affaires.\s
+			Combien de sièges a-t-il au total ?
+		end
+		answer: Il a $e sièges au total.
+	end
+end
