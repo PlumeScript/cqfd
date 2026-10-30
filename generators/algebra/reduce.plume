@@ -86,7 +86,7 @@ ref reduceMul: macro(Number factors: 2, Number variables: 1, Number orphans: 1, 
 		end
 
 		get: macro(...args)
-			let expr = $ s(1)
+			let expr
 			let orphanIndex = 0
 
 			for i in seq(factors)
@@ -107,10 +107,18 @@ ref reduceMul: macro(Number factors: 2, Number variables: 1, Number orphans: 1, 
 					$ s(value)
 				end
 				
-				if powerSign=="+"
-					set expr *= $ s(value)^power
+				if expr
+					if powerSign=="+"
+						set expr *= $ s(value)^power
+					else
+						set expr *= $ s(value)^(-power)
+					end
 				else
-					set expr *= $ s(value)^(-power)
+					if powerSign=="+"
+						set expr = $ s(value)^power
+					else
+						set expr = $ s(value)^(-power)
+					end
 				end
 			end
 			@Question(eq)
@@ -195,7 +203,7 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 		end
 
 		get: macro(...args)
-			let expr = $ s(0)
+			let expr
 			let orphanIndex = 0
 			for i in seq(terms)
 				let value     = $args[3*i-2]
@@ -213,10 +221,18 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 					$ s(args[3*terms + orphanIndex])
 				end
 
-				if sign == "+"
-					set expr += $term
+				if expr
+					if sign == "+"
+						set expr += $term
+					else
+						set expr -= $term
+					end
 				else
-					set expr -= $term
+					if sign == "+"
+						set expr = $term
+					else
+						set expr = $ (-1*term).pretty()
+					end
 				end
 			end
 
