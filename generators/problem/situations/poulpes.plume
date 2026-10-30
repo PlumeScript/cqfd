@@ -1,0 +1,263 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+// Poulpes situations: a word problem drawn from a linear equation with one
+// missing letter, set in a silly scene of musician octopuses in an aquarium
+// whose strings wear out and get re-stringed:
+//
+//   sign "+" : a*b + c*d = e   two stringed instruments — a, c the number of
+//                               instruments, b, d the strings per instrument,
+//                               e the total number of strings
+//   sign ""  : a*b = e         a single instrument (a of b strings, e the total)
+//   sign "-" : not supported (always invalid)
+//
+// b and d are the strings per instrument: small values, kept consistent with
+// the instrument names (luth 4, banjo 5, guitare 6, mandoline 8 for the first
+// term; violon 4, ukulélé 6, bouzouki 8 for the second). A value of b or d
+// that no instrument matches makes the configuration invalid.
+//
+// The caller passes every letter (the missing one as its computed solution)
+// and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
+// `name` is a (name, gender) pair or empty: the question is told in the 1st
+// person ("j'ai re-cordé…") or in the gendered 3rd person ("Léa a re-cordé…
+// a-t-elle…"). `?trap` only applies to the bare product a*b = e: the
+// statement then mentions the other instruments (a distractor) without giving
+// them a value.
+// Returns a (instruction:, answer:) table, or the `invalid` table when the
+// configuration is unsupported or the equation doesn't hold.
+
+let invalid = (invalid: $true)
+
+// Instruments of the first term, keyed by their string count.
+let instruments1 = do
+	- (name: luth, plural: luths, gender: m, strings: 4)
+	- (name: banjo, plural: banjos, gender: m, strings: 5)
+	- (name: guitare, plural: guitares, gender: f, strings: 6)
+	- (name: mandoline, plural: mandolines, gender: f, strings: 8)
+end
+
+// Instruments of the second term: names disjoint from `instruments1`, so the
+// two terms never play the same instrument.
+let instruments2 = do
+	- (name: violon, plural: violons, gender: m, strings: 4)
+	- (name: ukulélé, plural: ukulélés, gender: m, strings: 6)
+	- (name: bouzouki, plural: bouzoukis, gender: m, strings: 8)
+end
+
+// The instrument of `list` whose string count is `strings` (empty if none).
+macro findInstrument(list, strings)
+	let found
+	for inst in list
+		if inst.strings == strings
+			set found = $inst
+			break
+		end
+	end
+	$found
+end
+
+// "une guitare" / "un violon"
+macro oneOf(inst)
+	$(inst.gender == "f" and "une" or "un") $(inst.name)
+end
+
+// "de 6 cordes" (the strings-per-instrument phrase)
+macro ofStrings(strings)
+	de $(strings) cordes
+end
+
+// "re-cordés" / "re-cordées" (past participle agreeing with the plural
+// instrument it refers to)
+macro rePart(inst)
+	$(inst.gender == "f" and "re-cordées" or "re-cordés")
+end
+
+// "une guitare" → "Une guitare"
+macro cap(s)
+	$(String.sub(s, 1).upper())$(String.sub(s, 2, -1))
+end
+
+lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
+	set sign = $ sign or ""
+	if sign == "-"
+		return $invalid
+	end
+
+	// The trap (a distractor mentioning the other instruments without a
+	// value) only exists for the bare product a*b = e.
+	if trap and sign != ""
+		return $invalid
+	end
+
+	// integers where expected, plausible sizes
+	if (a and a.floor() != a) or (c and c.floor() != c)
+		return $invalid
+	end
+	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+		return $invalid
+	end
+	if not e or e < 0
+		return $invalid
+	end
+
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — "Léa a re-cordé", "a-t-elle", "Léa a acheté", …
+	let who = if name and name[1]
+		do
+			scene: Les poulpes musiciens de l'aquarium de $name[1] ont des cordes usées.
+			restring: $name[1] a re-cordé
+			qRe: $ (name[2] == "f" and "a-t-elle" or "a-t-il")
+			bought: $name[1] a acheté
+			qBought: $ (name[2] == "f" and "a-t-elle" or "a-t-il")
+		end
+	else
+		do
+			scene: Les poulpes musiciens de mon aquarium ont des cordes usées.
+			restring: j'ai re-cordé
+			qRe: ai-je
+			bought: j'ai acheté
+			qBought: ai-je
+		end
+	end
+
+	if sign == "+"
+		// Full equation a*b + c*d = e: every letter is present.
+		if not a or not b or not c or not d
+			return $invalid
+		end
+		if b.floor() != b or d.floor() != d
+			return $invalid
+		end
+		let inst1 = $ findInstrument(instruments1, b)
+		let inst2 = $ findInstrument(instruments2, d)
+		if not inst1 or not inst2
+			return $invalid
+		end
+
+		// The caller passes a consistent equation (the missing letter is its
+		// computed solution): check it.
+		if a * b + c * d != e
+			return $invalid
+		end
+		if u != 1 and u != 2 and u != 3 and u != 4 and u != 5
+			return $invalid
+		end
+
+		return if u == 1
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				des $(inst1.plural) $(ofStrings(b)) et $(c) $(inst2.plural) $(ofStrings(d)),\s
+				pour $(e) cordes au total. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
+			end
+			answer: $(cap(who.restring)) $(a) $(inst1.plural).
+		elseif u == 2
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				$(a) $(inst1.plural) et $(c) $(inst2.plural) $(ofStrings(d)),\s
+				pour $(e) cordes au total. Combien de cordes a $(oneOf(inst1)) ?
+			end
+			answer: $(cap(oneOf(inst1))) a $(b) cordes.
+		elseif u == 3
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				$(a) $(inst1.plural) $(ofStrings(b)) et des $(inst2.plural) $(ofStrings(d)),\s
+				pour $(e) cordes au total. Combien de $(inst2.plural) $(who.qRe) $(rePart(inst2)) ?
+			end
+			answer: $(cap(who.restring)) $(c) $(inst2.plural).
+		elseif u == 4
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				$(a) $(inst1.plural) $(ofStrings(b)) et $(c) $(inst2.plural),\s
+				pour $(e) cordes au total. Combien de cordes a $(oneOf(inst2)) ?
+			end
+			answer: $(cap(oneOf(inst2))) a $(d) cordes.
+		elseif u == 5
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				$(a) $(inst1.plural) $(ofStrings(b)) et $(c) $(inst2.plural) $(ofStrings(d)).\s
+				Combien de cordes $(who.qBought) achetées au total ?
+			end
+			answer: $(cap(who.bought)) $(e) cordes.
+		end
+	end
+
+	if sign == ""
+		// The bare product a*b = e — one instrument only, c and d missing.
+		if c or d
+			return $invalid
+		end
+		if not a or not b
+			return $invalid
+		end
+		if b.floor() != b
+			return $invalid
+		end
+		let inst1 = $ findInstrument(instruments1, b)
+		if not inst1
+			return $invalid
+		end
+		if a * b != e
+			return $invalid
+		end
+		if u != 1 and u != 2 and u != 5
+			return $invalid
+		end
+
+		if trap
+			// The distractor: the other instruments also need strings, but no
+			// value is given — the question stays about the single instrument.
+			return if u == 1
+				instruction: do
+					$(who.scene)\s$(cap(who.restring))\s
+					des $(inst1.plural) $(ofStrings(b)),\s
+					pour $(e) cordes ; les autres instruments ont aussi besoin de cordes. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
+				end
+				answer: $(cap(who.restring)) $(a) $(inst1.plural).
+			elseif u == 2
+				instruction: do
+					$(who.scene)\s$(cap(who.restring))\s
+					$(a) $(inst1.plural),\s
+					pour $(e) cordes ; les autres instruments ont aussi besoin de cordes. Combien de cordes a $(oneOf(inst1)) ?
+				end
+				answer: $(cap(oneOf(inst1))) a $(b) cordes.
+			elseif u == 5
+				instruction: do
+					$(who.scene)\s$(cap(who.restring))\s
+					$(a) $(inst1.plural) $(ofStrings(b)) ; les autres instruments ont aussi besoin de cordes. Combien de cordes pour les $(a) $(inst1.plural) ?
+				end
+				answer: $(e) cordes.
+			end
+		end
+
+		return if u == 1
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				des $(inst1.plural) $(ofStrings(b)),\s
+				pour $(e) cordes au total. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
+			end
+			answer: $(cap(who.restring)) $(a) $(inst1.plural).
+		elseif u == 2
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				$(a) $(inst1.plural),\s
+				pour $(e) cordes au total. Combien de cordes a $(oneOf(inst1)) ?
+			end
+			answer: $(cap(oneOf(inst1))) a $(b) cordes.
+		elseif u == 5
+			instruction: do
+				$(who.scene)\s$(cap(who.restring))\s
+				$(a) $(inst1.plural) $(ofStrings(b)).\s
+				Combien de cordes $(who.qBought) achetées au total ?
+			end
+			answer: $(cap(who.bought)) $(e) cordes.
+		end
+	end
+
+	// Fallback: every (sign, u) combination is handled or rejected above —
+	// keep the explicit exit.
+	return $invalid
+end
