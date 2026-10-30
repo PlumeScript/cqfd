@@ -133,27 +133,20 @@ set Expression = macro(kind:, left:, right:)
 		if kind == "symbol" or kind == "number"
 			$left
 		elseif kind == "add"
-			// A negative operand is rendered as a subtraction: x + -5 → x - 5,
-			// -3 + x → x - 3.
-			if isNegativeTerm(right)
-				$ String(left)
-				\s-\s
-				$ String(positivePart(right))
-			elseif isNegativeTerm(left)
-				$ String(right)
-				\s-\s
-				$ String(positivePart(left))
-			else
-				$ String(left)
-				\s+\s
-				$ String(right)
-			end
+			// Faithful (issue #175): the tree as is — a negative addend keeps
+			// its own sign (x + -5, -3 + x). Inelegant but meaningful; the
+			// subtraction forms (x - 5, x - 3) are built by pretty, which
+			// rewrites a negative addend into a sub.
+			$ String(left)
+			\s+\s
+			$ String(right)
 		elseif kind == "sub"
 			$ String(left)
 			// x - (y + z) is distributed term by term: x - y - z, a negative
-			// term being re-added: x - (y - 3) → x - y + 3; a negative right
-			// operand is kept grouped: x - -5 → x - (-5).
-			if isExpression(right) and right.kind == "add"
+			// term being re-added: x - (y - 3) → x - y + 3 (a right-side sub
+			// distributes too, since pretty rewrites x + -3 into x - 3);
+			// a negative right operand is kept grouped: x - -5 → x - (-5).
+			if isExpression(right) and (right.kind == "add" or right.kind == "sub")
 				let flat = $ flattensum(right)
 				for i in seq(1, len(flat))
 					let t = $flat[i]
@@ -266,7 +259,9 @@ set Expression = macro(kind:, left:, right:)
 		end
 	end
 
-	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1, and reorient x·3 to 3x
+	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1, reorient x·3 to 3x, and
+	// rewrite a negative addend into a sub: x + -5 -> x - 5, -3 + x -> x - 3
+	// (tostring stays faithful and would render "x + -5" as is).
 	pretty: macro()
 		if not isExpression(self.left)
 			return $self
@@ -281,6 +276,12 @@ set Expression = macro(kind:, left:, right:)
 			end
 			if right == 0
 				return $left
+			end
+			if isNegativeTerm(right)
+				return $ Expression(kind: "sub", left: left, right: positivePart(right))
+			end
+			if isNegativeTerm(left)
+				return $ Expression(kind: "sub", left: right, right: positivePart(left))
 			end
 		end
 		if self.kind == "sub"
