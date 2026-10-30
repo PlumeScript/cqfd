@@ -67,6 +67,7 @@ macro isNegativeTerm(t)
 end
 
 // The positive twin of a negative term (25, or the mul without its minus).
+// A coefficient of -1 leaves no coefficient: the twin of -x is x, not 1x.
 macro positivePart(t)
 	if isExpression(t) and t.kind == "number"
 		let n = $ -t.left
@@ -75,14 +76,32 @@ macro positivePart(t)
 	if isExpression(t) and t.kind == "mul"
 		if isExpression(t.left) and t.left.kind == "number" and t.left.left < 0
 			let n = $ -t.left.left
+			if n == 1
+				return $t.right
+			end
 			return $ makeExpression(n) * t.right
 		end
 		if isExpression(t.right) and t.right.kind == "number" and t.right.left < 0
 			let n = $ -t.right.left
+			if n == 1
+				return $t.left
+			end
 			return $ t.left * makeExpression(n)
 		end
 	end
 	return $t
+end
+
+// A factor tostring can render bare inside a product: a number, a symbol,
+// a symbol-based pow, or a sum (paren() keeps it grouped).
+macro isLeafFactor(f)
+	if isExpression(f) and (f.kind == "number" or f.kind == "symbol" or f.kind == "add" or f.kind == "sub")
+		return $true
+	end
+	if isExpression(f) and f.kind == "pow" and isExpression(f.left) and f.left.kind == "symbol"
+		return $true
+	end
+	return $false
 end
 
 // Table(c: <number expr>, u: <factor expr>) when t is a bare factor (c = 1) or
@@ -156,69 +175,54 @@ set Expression = macro(kind:, left:, right:)
 				$ paren(right)
 			end
 		elseif kind == "mul"
-			// Juxtaposition, the numbers merged and rendered first:
-			// - 2xy, -3x, x, xy (a product of numbers and symbols);
-			// - 5{x}^{4} (a product of numbers and symbol-based pows);
-			// - 2(x + 1), 6(x + 1)(x - 2) (a product of numbers and sums,
-			//   each sum wrapped in parens).
-			// A mixed product keeps \times (symbol+pow: x \times x², as
-			// x² \times x ; symbol+sum: 2x \times (x + 1) ; sum+sum:
-			// (x + 1) \times (x + 2)), a pure number product too (2 \times 3);
-			// any other factor (div, pow of a compound base, number-based
-			// pow) falls back to \times with parens on sums.
+			// Faithful render (issue #175): the factors in their own tree
+			// order, and no algebra — no coefficient merging, no
+			// number-first reordering, no 1/-1 folding (that is pretty's
+			// and reduce's job); flattenprod only unfolds the mul nodes.
+			// A factor tightens to its predecessor when the whole chain is
+			// clean (leaves only) and the pair cannot be misread: a bare
+			// number only at the head of a run (2x, xy, 5x², 2(x+1) —
+			// never 23, x2 or (x+1)3) and no bare symbol next to a
+			// symbol-based pow (x² \times x — x²x would read as x³); sums
+			// stay parenthesized; any impure factor (div, compound pow)
+			// keeps \times all along. A leading -1 is the sign of the
+			// product (-x, -x², -(x+1)); a non-leading minus number is
+			// grouped: x \times (-3).
 			let flat = $ flattenprod(self)
 			let simple = $true
-			let hasSymbol = $false
-			let hasNumber = $false
-			let hasPow = $false
-			let hasAdd = $false
 			for i in seq(1, len(flat))
 				let f = $flat[i]
-				if isExpression(f) and f.kind == "symbol"
-					set hasSymbol = $true
-				elseif isExpression(f) and f.kind == "number"
-					set hasNumber = $true
-				elseif isExpression(f) and f.kind == "pow"
-					if isExpression(f.left) and f.left.kind == "symbol"
-						set hasPow = $true
-					else
-						set simple = $false
-					end
-				elseif isExpression(f) and (f.kind == "add" or f.kind == "sub")
-					set hasAdd = $true
-				elseif not isExpression(f) or (f.kind != "number" and f.kind != "symbol")
+				if not isLeafFactor(f)
 					set simple = $false
 				end
 			end
-			if simple and ((hasSymbol and not hasPow and not hasAdd) or (hasNumber and hasPow and not hasSymbol and not hasAdd) or (hasNumber and hasAdd and not hasSymbol and not hasPow))
-				let n = 1
-				for i in seq(1, len(flat))
-					let f = $flat[i]
-					if isExpression(f) and f.kind == "number"
-						set n *= $ f.left
-					end
+			let f1 = $flat[1]
+			let f2 = $ len(flat) > 1 and flat[2]
+			let leadMinus = $ simple and isExpression(f1) and f1.kind == "number" and f1.left == -1 and not (isExpression(f2) and f2.kind == "number")
+			let prevSy = $false
+			let prevPow = $false
+			for i in seq(1, len(flat))
+				let f = $flat[i]
+				let isNum = $ isExpression(f) and f.kind == "number"
+				let isSy = $ isExpression(f) and f.kind == "symbol"
+				let isPow = $ isExpression(f) and f.kind == "pow"
+				let tightNow = $ simple and i > 1 and not isNum and not (prevSy and isPow) and not (prevPow and isSy)
+				if i > 1 and not tightNow
+					\s\\times\s
 				end
-				// One template line per component: building the string with `..`
-				// in code is a plume trap (a quoted string keeps its quotes).
-				if n == -1
+				if leadMinus and i == 1
 					$ "-"
-				elseif n != 1
-					$ String(n)
+				elseif isExpression(f) and (f.kind == "add" or f.kind == "sub")
+					$ paren(f)
+				elseif i > 1 and isNum and f.left < 0
+					(
+					$ String(f)
+					)
+				else
+					$f
 				end
-				for i in seq(1, len(flat))
-					let f = $flat[i]
-					if not isExpression(f) or f.kind != "number"
-						if isExpression(f) and (f.kind == "add" or f.kind == "sub")
-							$ paren(f)
-						else
-							$f
-						end
-					end
-				end
-			else
-				$ paren(left)
-				\s\\times\s
-				$ paren(right)
+				set prevSy = $isSy
+				set prevPow = $isPow
 			end
 		elseif kind == "div"
 			\\frac{
