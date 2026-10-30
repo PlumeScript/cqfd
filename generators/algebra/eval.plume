@@ -12,16 +12,26 @@ let Node from $import(../../core/utils/tree)
 let variableNames from $import(./utils)
 let Choice from $import(../../core/parameters/set)
 
-macro inject(calc, letter, pos)
+macro inject(calc, letter, pos, filters)
 	set calc = $ Table.deepcopy(calc)
 	let pool = $ Table(calc)
 	let flat = $ Table()
-
+	
 	while len(pool) > 0
 		let top = $ Table.remove(pool)
 		for i, child in enumerate(top.children)
-			let isLeaf = $ type(child) != "table"
+			if filters.avoid?
+				if filters.avoid[top.label]? == i or filters.avoid[top.label]? == "all"
+					continue
+				end
+			end
+			if filters.only?
+				if not filters.only[top.label]? == i or filters.avoid[top.label]? == "all"
+					continue
+				end
+			end
 
+			let isLeaf = $ type(child) != "table"
 			if not isLeaf and child.label == "-" and len(child.children) == 1
 				set isLeaf = $true
 				set child = $ -child.children[1]
@@ -46,7 +56,7 @@ end
 Create an exercice in the form $code(Si a=4\, alors a+1=...)$newline
 $posParam(QuestionFactory, source, 1) maybe any calc exercice.
 */
-eval: macro(source, style: classic)
+eval: macro(source, style: classic, filters:)
 	@QuestionFactory
 		parameters: do
 			- $source
@@ -56,7 +66,7 @@ eval: macro(source, style: classic)
 			- $ Range(1, 1000)
 		end
 		get: macro(source, letter, injectionSpot)
-			let calc, value = $ inject(source.instruction, letter, injectionSpot)
+			let calc, value = $ inject(source.instruction, letter, injectionSpot, filters)
 			@Question(eval)
 				instruction: do
 					value: $value
@@ -71,7 +81,7 @@ eval: macro(source, style: classic)
 	end
 end
 
-ref evalCheckSimpleTrue: macro(source, style: classic)
+ref evalCheckSimpleTrue: macro(source, style: classic, filters:)
 	@QuestionFactory
 		parameters: do
 			- $source
@@ -81,7 +91,7 @@ ref evalCheckSimpleTrue: macro(source, style: classic)
 			- $ Range(1, 1000)
 		end
 		get: macro(source, letter, injectionSpot)
-			let calc, value = $ inject(source.instruction, letter, injectionSpot)
+			let calc, value = $ inject(source.instruction, letter, injectionSpot, filters)
 
 			@Question(evalCheck)
 				instruction: do
@@ -99,7 +109,7 @@ ref evalCheckSimpleTrue: macro(source, style: classic)
 	end
 end
 
-ref evalCheckSimpleFalse: macro(source, style: classic)
+ref evalCheckSimpleFalse: macro(source, style: classic, filters:)
 	@QuestionFactory
 		parameters: do
 			- $source
@@ -110,7 +120,7 @@ ref evalCheckSimpleFalse: macro(source, style: classic)
 			- $ Choice(-3, -2, -1, 1, 2, 3)
 		end
 		get: macro(source, letter, injectionSpot, delta)
-			let calc, value = $ inject(source.instruction, letter, injectionSpot)
+			let calc, value = $ inject(source.instruction, letter, injectionSpot, filters)
 
 			let right = if source.usualTrap?
 				$source.usualTrap
