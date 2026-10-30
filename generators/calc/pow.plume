@@ -14,7 +14,8 @@ let DecimalRepresentation, getCompute from $import(./utils)
 
 /*
 Generate a power of a $ParamSet(Decimal), capped by $Param(Number, compute, empty).$newline
-Support $code(\0?negativeExposant).
+Exposant may be between $Param(Number, minExposant, 0) and $Param(Number, maxExposant, 10)
+Support $code(\0?negativeExposant).$newline
 */
 ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Number maxFigures: 1, figures:, Number minCompute: 0,Number  maxCompute: 10, compute:, Number minExposant: 0, Number maxExposant:10, ?negativeExposant)
 	if figures
