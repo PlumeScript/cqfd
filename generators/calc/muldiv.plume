@@ -96,6 +96,7 @@ mulZ2: macro(?fullSign, ...params)
 end
 
 /*
+$deprecated\: use $ParamSet(divQ2) instead.$newline
 Convert a $ParamSet(mulN2) to a division capped by compute.$newline
 Flag $code(\0?alt) to show correction as $formula(a = b \\times c) instead of $formula(\\frac a b = c).$newline 
 Flag $code(\0?frac) to print it as a fraction.
@@ -195,13 +196,14 @@ divZ2: macro(?frac, ?fullSign, ...params)
 end
 
 /*
-Generate a rationnal non-decimal division with a period between $Param(Number, minPeriod, 1) and $Param(Number, maxPeriod, 1).$newline
+Generate a rationnal division with a period between $Param(Number, minPeriod, 1) and $Param(Number, maxPeriod, 1).$newline
+If $code(minPeriod) is set to $formula(0).$newline
 Dividende will be between $Param(Number, minA, 2) and $Param(Number, maxA, 100).$newline
 Divisor will be between $Param(Number, minB, 2) and $Param(Number, maxB, 100).$newline
 Caped by compute.$newline
-Flag $code(\0?frac) to print it as a fraction, $code(\0greaterA) and $code(\0greaterB).
+Flag $code(\0?frac) to print it as a fraction, $code(\0?greaterA) and $code(\0g?reaterB) to force $formula(a) or $formula(b) to be the greater, $code(\0?euclidean) to be shown as an integer division.
 */
-divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, Number minPeriod: 1, Number maxPeriod: 2, period:, minCompute:, maxCompute:, compute:,?frac, ?greaterA, ?greaterB)
+ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, Number minPeriod: 1, Number maxPeriod: 2, period:, minCompute:, maxCompute:, compute:,?frac, ?greaterA, ?greaterB, ?euclidean)
 	if period
 		set minPeriod = $period
 		set maxPeriod = $period
@@ -209,9 +211,6 @@ divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, N
 	if compute
 		set minCompute = $compute
 		set maxCompute = $compute
-	end
-	if minPeriod < 1
-		raise `minPeriod` cannot be under `1`
 	end
 	if minPeriod > maxPeriod
 		raise `minPeriod` cannot be greater than `maxPeriod`
@@ -224,15 +223,11 @@ divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, N
 			- $ Range(minPeriod, maxPeriod)
 		end
 		validate: macro(a, b, period)
-			// dirty fix
-			if FactNumberCls.fromNumber(a).gcd(b).value != 1
-				return
-			end
 			if a < b and greaterA or a > b and greaterB
 				return
 			end
 
-			let m = $b
+			let m = $ b / FactNumberCls.fromNumber(a).gcd(b).value
 			while m%2==0
 				set m /= 2
 			end
@@ -241,7 +236,7 @@ divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, N
 			end
 
 			if m==1
-				return
+				return $ period==0
 			end
 
 			let k = 1
@@ -264,6 +259,8 @@ divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, N
 			
 			let opp = if frac
 				/
+			elseif euclidean
+				⊢
 			else
 				\0-:
 			end
@@ -275,49 +272,18 @@ divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, N
 
 			return @Question(calcul)
 				instruction: $Node($opp, $a, $b)
-				solution: $String($(a/b)).sub(1, -1)...
+				solution: if euclidean
+					$ Node("=", a, Node("+", Node("*", b, (a/b).floor()), a%b))
+				elseif period == 0
+					$(a/b)
+				else
+					$String($(a/b)).sub(1, -1)...
+				end
+				solutionHideCalcul: $euclidean
+				euclidean: $euclidean
+				period: $period
 				id: $a/$b
 				compute: $realCompute
-			end
-		end
-	end
-end
-
-/*
-Use mulN2 to create an equality $formula(a \\times b = c).$newline
-Then get a number $formula(n) between $formula(1) and $formula(b) to transform it into $formula(a \\times b + n= c+n).$newline
-Flag $code(\0?noRest) for make $formula(n=0).
-*/
-EuclideanDiv: macro(?noRest, ...args)
-	set args.minIndex = $ max(0, args.minIndex? or 0)
-	@QuestionFactory
-		parameters: do
-			- $divN2(...args)
-			if noRest
-				- $Choice(0)
-			else
-				- $ Range(1, 10^(args.maxFigures? or 3))
-			end
-		end
-
-		validate: macro(div, rest)
-			if rest > div.instruction.children[2]
-				return $false
-			end
-			return $true
-		end
-
-		get: macro(div, rest)
-			let A = $ div.instruction.children[1]
-			let B = $ div.instruction.children[2]
-			let C = $ div.solution
-
-			return @Question(calcul)
-				instruction: $ Node("⊢", (A+rest), B)
-				solution: $ Node("=", (A+rest), Node("+", Node("*", B, C), rest))
-				solutionHideCalcul: $true
-				id: $A ⊢ $B
-				compute: $div.compute
 			end
 		end
 	end
