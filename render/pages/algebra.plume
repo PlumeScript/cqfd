@@ -111,18 +111,29 @@ end
 
 evalCheck: do
 	instruction:macro(question)
-		@pages.formula
-			$ renderLatexAST(question.instruction.left)
-			=
-			$ renderLatexAST(question.instruction.right)
+		if question.alt?
+			@pages.formula
+				$ renderLatexAST(question.instruction.left)
+				=
+				$ renderLatexAST(question.instruction.right)
+			end
+			\s$pages.bold(si)\s
+			@pages.formula
+				$question.instruction.letter
+				=
+				$question.instruction.value
+			end
+		else
+			@pages.formula
+				$question.instruction.value
+			end
+			\sest solution de l'équation\s
+			@pages.formula
+				$ renderLatexAST(question.instruction.left)
+				=
+				$ renderLatexAST(question.instruction.right)
+			end
 		end
-		\s$pages.bold(si)\s
-		@pages.formula
-			$question.instruction.letter
-			=
-			$question.instruction.value
-		end
-		
 	end
 	solutionShort: macro(question)
 		if question.solution

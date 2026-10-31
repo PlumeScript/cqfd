@@ -81,7 +81,7 @@ eval: macro(source, style: classic, filters:)
 	end
 end
 
-ref evalCheckSimpleTrue: macro(source, style: classic, filters:)
+ref evalCheckSimpleTrue: macro(source, style: classic, filters:, ?alt)
 	@QuestionFactory
 		parameters: do
 			- $source
@@ -104,12 +104,13 @@ ref evalCheckSimpleTrue: macro(source, style: classic, filters:)
 				validResultLeft: $source.solution
 				solution: $true
 				id: $source.id-true
+				alt: $alt
 			end
 		end
 	end
 end
 
-ref evalCheckSimpleFalse: macro(source, style: classic, filters:)
+ref evalCheckSimpleFalse: macro(source, style: classic, filters:, ?alt)
 	@QuestionFactory
 		parameters: do
 			- $source
@@ -139,6 +140,7 @@ ref evalCheckSimpleFalse: macro(source, style: classic, filters:)
 				validResultLeft: $source.solution
 				solution: $false
 				id: $source.id-false
+				alt: $alt
 			end
 		end
 	end
@@ -147,7 +149,8 @@ end
 
 /*
 Create an exercice in the form $code(a+1=4 si=4)$newline
-$posParam(QuestionFactory, source, 1) maybe any calc exercice.
+$posParam(QuestionFactory, source, 1) maybe any calc exercice.$newline
+$posParam(Bool, \0?alt, false) to use $code(a+1=2 si a=1) instead of $code(1 est solution de l'équation a+1=2)
 */
 evalCheckSimple: macro(...args)
 	$ evalCheckSimpleTrue(...args) + evalCheckSimpleFalse(...args)
