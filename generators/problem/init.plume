@@ -16,9 +16,16 @@ inv: macro(pb)
 	@QuestionFactory
 		parameters: $Table($pb)
 		get: macro(pb)
-			@Question(problemInv)
-				src: $pb
-				id: $pb.id
+			// legacy
+			if pb.renderClass != "problem"
+				@Question(invPb)
+					src: $pb
+				end
+			else
+				@Question(problemInv)
+					src: $pb
+					id: $pb.id
+				end
 			end
 		end
 	end

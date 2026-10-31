@@ -33,7 +33,18 @@ end
 
 problemInv: do
 	instruction:macro(question)
-		$pages.formula($renderLatexAST($question.src.step) = $question.src.solution)\s
+		let eq = if question.src.approx?
+			\\approx
+		else
+			=
+		end
+		@pages.formula
+			if not question.src.solutionHideCalcul?
+				$renderLatexAST($question.src.step)
+				$eq
+			end
+			$renderLatexAST($question.src.solution)
+		end
 	end
 	solution: macro(question)
 		Exemple de réponse, il y en a plein d'autres: $ardoise.hint($question.src.render(instruction))
