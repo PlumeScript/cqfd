@@ -6,7 +6,9 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 // Voyage situations: a word problem drawn from a linear equation with one
-// missing letter, a journey in two parts (distance = speed x duration):
+// missing letter (`lin`), or from a division a = bq+r / a = bd (`div`):
+//
+// `lin` — a journey in two parts (distance = speed x duration):
 //
 //   sign "+" : a*b + c*d = e    a, c the durations of the parts (h);
 //                               b, d the speeds (km/h); e the total
@@ -28,6 +30,17 @@ Licensed under the MIT License — see LICENSE for details.
 // ignores; the question stays about the first part (a*b = e). The two
 // parts are told in an alternating order (seeded): the 2e part first or
 // last.
+// `div` (a division a = bq + r / a = bd, d the quotient — exact, or
+// rounded to a tenth when ?aprx): d truthy tells the decimal story, two
+// variants — vitesse (a km in b hours, d = a/b km/h, the default) or
+// consommation (a km with b litres, d = a/b km per litre, ?alt); ?trap
+// adds the other variant's quantity as a quantified distractor (B1:
+// a/10 litres, B2: (a/6).ceil()/10 hours — derived from a, never equal
+// to a term of a = bd): the statement reads like the other variant, the
+// student must read the question posed. d empty tells the euclidean
+// story — a pauses de repos reparties sur b jours (nothing is cut), ?alt
+// picks the question (q the pauses per day, r the unallocated ones);
+// ?trap is not posed there.
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -261,5 +274,220 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 
 	// Fallback: every (sign, u) combination is handled or rejected above —
 	// keep the explicit exit.
+	return $invalid
+end
+// Display an exact decimal value the french way (a decimal quotient — a
+// speed, a consumption per litre): 3 → "3", 2.5 → "2,5",
+// 1.125 → "1,125". The quotient is displayed exact, never rounded
+// (num(7/8) is "0,875", not "0,88").
+macro num(x)
+	$(String(x).replace(".", ","))
+end
+
+// a = bq + r (euclidean division: a pauses de repos, b jours, q the
+// pauses per day, r the unallocated ones) or a = bd (decimal division:
+// d the quotient — exact, or rounded to a tenth when ?aprx). The caller
+// passes every value, the missing ones empty: d truthy tells the decimal
+// story, d empty the euclidean one.
+//
+// The decimal story has two variants, chosen by ?alt (only when ?aprx is
+// missing, which keeps the speed story for a rounded quotient):
+//   vitesse    : a the kilometres, b the hours — "quelle est la vitesse ?"
+//   consommation : a the kilometres, b the litres — "quelle est la
+//                  consommation en kilomètres par litre ?"
+// ?trap adds the other variant's quantity as a quantified distractor
+// (a/10 litres in the speed story, (a/6).ceil()/10 hours in the
+// consumption story — derived deterministically from a, never equal to a
+// term of a = bd): the statement then reads like the other variant, the
+// student must read the question posed. ?aprx marks the quotient rounded
+// to a tenth (recurring decimal): the answer is then "environ …".
+// The euclidean story has no other variant: ?trap is not posed there
+// (invalid).
+// Returns a (instruction:, answer:) table, or the `invalid` table.
+
+div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — "a pris"/"a parcouru" have no person agreement,
+	// "elle/il a consommé" takes the gender, "ma/sa" the person.
+	let who = if name and name[1]
+		do
+			took: $name[1] a pris
+			journey: son
+			parcouru: $name[1] a parcouru
+			consumed: $ (name[2] == "f" and "elle a consommé" or "il a consommé")
+			poss: sa
+		end
+	else
+		do
+			took: J'ai pris
+			journey: mon
+			parcouru: J'ai parcouru
+			consumed: j'ai consommé
+			poss: ma
+		end
+	end
+
+	// a and b are the two values the statement always shows: without
+	// them there is no problem.
+	if not a or not b
+		return $invalid
+	end
+
+	if d
+		// d is a speed or a consumption per unit: 0 or less is not a
+		// division problem (it would also slip past the equation check
+		// below, which aprx disables).
+		if d <= 0
+			return $invalid
+		end
+		// The statement shows a and b: the quotient d must satisfy a = bd
+		// (checked to the cent, like lin). With aprx the caller passes a
+		// quotient rounded to a tenth (recurring decimal) — no check.
+		if not aprx and (b * d * 100).round() != (a * 100).round()
+			return $invalid
+		end
+		// The consumption variant is the one ?alt selects; ?aprx keeps
+		// the speed story (the default). (Not a same-named local: in a
+		// do block `let alt = $alt and …` shadows the parameter with
+		// itself.)
+		let w = $ alt and not aprx
+		let fuel = 0
+		let hours = 0
+		if trap
+			// The trap: the other variant's quantity as a quantified
+			// distractor — the statement then reads like the other
+			// variant, the student must read the question posed. The
+			// distractor is derived deterministically from a (the same
+			// values always tell the same story — no Random) and is never
+			// equal to a term of the equation a = bd (the two readings
+			// would then give the same number):
+			//   vitesse  + a/10 litres of fuel (a ÷ fuel = 10 km/l)
+			//   consommation + (a/6).ceil()/10 hours (a ÷ hours ≈ 60 km/h)
+			if w
+				set hours = $ ((a / 6).ceil()) / 10
+				// hours <= 0 keeps the distractor a real duration (it can
+				// only fail with a <= 0, when b <= 0 as well).
+				if hours <= 0
+					return $invalid
+				end
+				// The distractor is never equal to a term of the equation.
+				if (hours * 100).round() == (b * 100).round() or (hours * 100).round() == (d * 100).round()
+					return $invalid
+				end
+			else
+				set fuel = $ a / 10
+				if fuel <= 0
+					return $invalid
+				end
+				if (fuel * 100).round() == (b * 100).round() or (fuel * 100).round() == (d * 100).round()
+					return $invalid
+				end
+			end
+		end
+		return do
+			instruction: do
+				if w
+					$(who.parcouru) $(num(a)) km
+					if trap
+						\sen $(num(hours)) heures
+					end
+					, $(who.consumed) $(num(b)) litres de carburant.\s
+					Quelle est $(who.poss) consommation en kilomètres par litre ?
+				else
+					$(who.parcouru) $(num(a)) km en $(num(b)) heures
+					if trap
+						, $(who.consumed) $(num(fuel)) litres de carburant
+					end
+					.\s
+					Quelle est $(who.poss) vitesse ?
+				end
+			end
+			answer: do
+				if w
+					La consommation est
+					if aprx
+						\sd'environ $(num(d)) km par litre.
+					else
+						\sde $(num(d)) km par litre.
+					end
+				else
+					La vitesse est
+					if aprx
+						\sd'environ $(num(d)) km/h.
+					else
+						\sde $(num(d)) km/h.
+					end
+				end
+			end
+		end
+	else
+		// The euclidean story: a pauses de repos reparties sur b jours —
+		// a repartition nothing is cut in (countable over countable).
+		// The trap dresses the decimal story only (the other variant as
+		// distractor): on the euclidean story there is no other variant.
+		if trap
+			return $invalid
+		end
+		// q and r are the answer(s): without them the problem has none
+		// (the caller always passes them — q = a div b, r = a mod b).
+		if not q or not r
+			return $invalid
+		end
+		// Counts are integers where expected.
+		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
+			return $invalid
+		end
+		// plausibility ranges (a road trip: pauses and days, not 9999):
+		// b >= 2 (a repartition needs at least two days), b <= 10 (a
+		// journey of at most ten days), a <= 30 (at most a few dozen
+		// pauses), q >= 2 (at least two pauses per day — q <= 15 follows
+		// from a <= 30 and b >= 2).
+		if a < 2 or a > 30 or b < 2 or b > 10 or q < 2
+			return $invalid
+		end
+		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
+		// repartition is not maximal and the question admits another answer.
+		if a != b * q + r or r < 0 or r >= b
+			return $invalid
+		end
+		return do
+			instruction: do
+				$(who.took) $a pauses de repos sur les $b jours de $(who.journey) trajet.\s
+				if alt
+					Combien y a-t-il de pauses par jour ?
+				else
+					Combien de pauses ne pourront pas être mises dans une journée ?
+				end
+			end
+			answer: do
+				if alt
+					Il y aura $q pauses par jour
+					if r > 0
+						\s(mais il en restera\s
+						if r == 1
+							1 non répartie).
+						else
+							$r non réparties).
+						end
+					else
+						.
+					end
+				else
+					if r > 0
+						Il y aura\s
+						if r == 1
+							1 pause non répartie.
+						else
+							$r pauses non réparties.
+						end
+					else
+						Toutes les pauses seront réparties.
+					end
+				end
+			end
+		end
+	end
+
+	// Fallback: both branches return above — keep the explicit exit.
 	return $invalid
 end
