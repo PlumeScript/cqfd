@@ -299,6 +299,8 @@ ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:10
 				solutionHideCalcul: $euclidean
 				euclidean: $euclidean
 				period: $period
+				a: $a
+				b: $b
 				id: $a/$b
 				compute: $realCompute
 			end

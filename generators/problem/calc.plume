@@ -252,3 +252,67 @@ addsubMulInt: macro(mul, Number minIndex:-3, Number maxIndex:0, Number minFigure
 		end
 	end
 end
+
+let divQ2 from $import(../calc/mulDiv)
+/*
+Generate a problem from divQ2
+*/
+div: macro(names:, ?trap, ...args)
+	@QuestionFactory
+		parameters: do
+			- $divQ2(...args)
+			- $Situation
+			- $Choice(0, 1)
+		end
+		hyperParameters: do
+			- if names
+				$Choice(...names)
+			else
+				$Choice(0)
+			end
+		end
+		get: macro(calc, situation, alt, name)
+			set name = $ name!=0 and name
+			
+			let a = $calc.a
+			let b = $calc.b
+			let q, r, d, aprx
+			if not args.euclidean?
+				if calc.period != 0
+					set d = $ (a/b*10).round()/10
+					set aprx = $true
+				else
+					set d = $(a/b)
+				end
+				set alt = -1
+			else
+				set q = $(a/b).floor()
+				set r = $ a%b
+			end
+			
+			let context = if situation.div?
+				$ situation.div(a, b, q, r, d, trap: trap, name: name, aprx: aprx, alt: alt==1)
+			else
+				$Table(invalid: $true)
+			end
+
+			if context.invalid?
+				return
+			end
+
+			return @Question(problem)
+				instruction: $context.instruction
+				step: $calc.instruction
+				solution: if aprx
+					$d
+				else
+					$calc.solution
+				end
+				solutionHideCalcul: $calc.solutionHideCalcul
+				approx: $aprx
+				answer: $context.answer
+				id: $calc.id-$alt
+			end
+		end
+	end
+end

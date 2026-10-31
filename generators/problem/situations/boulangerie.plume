@@ -460,3 +460,47 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	// keep the explicit exit.
 	return $invalid
 end
+
+// a = bq+r or a = bd
+div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
+	if d
+		return do
+			instruction: do
+				A la boulangerie, j'achète pour $a kg de viennoiserie (il y a beaucoup de monde au petit déjeuner) que la boulangère réparti équitablement entre $b sachets. Quel est le poid d'un sachet?
+			end
+			answer: do
+				Un sachet pèse\s
+				if aprx
+					environ\s
+				end
+				$d kg.
+			end
+		end
+	else
+		if b<2 or b>20 or q<2 or q>20 or a<2 or a>20
+			return (invalid: $true)
+		end
+		return do
+			instruction: do
+				J'ai acheté $a croissants à la boulangerie. La boulangère veux les répartir équitablement en $b sachets ; \s
+				if alt
+					combien il y aura-t-il de croissant par sachet?
+				else
+					combien de croissants ne pourront pas être mis dans un sachet?
+				end
+			end
+			answer: if alt
+				Il y aura $q croissants par sachet
+				if r>0
+					(mais il en restera $r non répartis)
+				end
+			else
+				if r>0
+					Il y aura $r croissants non répartis.
+				else
+					Tout les croissants seront répartis
+				end
+			end
+		end
+	end
+end

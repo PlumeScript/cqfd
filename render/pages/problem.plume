@@ -14,9 +14,16 @@ problem: do
 		$question.instruction
 	end
 	solution: macro(question)
-		@ardoise.formula
-			$ renderLatexAST(question.step)
+		let eq = if question.approx?
+			\\approx
+		else
 			=
+		end
+		@ardoise.formula
+			if not question.solutionHideCalcul?
+				$ renderLatexAST(question.step)
+				$eq
+			end
 			$ renderLatexAST(question.solution)
 		end
 		$pages.newline
