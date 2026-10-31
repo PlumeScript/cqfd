@@ -145,8 +145,11 @@ Generate a $formula(ax+by+cz+...) reduction exercice.
 end
 */
 reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTemplate:, style: classic, ?negativeTerm)
+	let variableTermCount = $variables
 	if not termTemplate
-		set termTemplate = $variableNames[style]
+		set termTemplate      = $variableNames[style]
+	else
+		set variableTermCount = $ terms - orphans
 	end
 	// todo: randomize factor order (acb+bac instead of abc + abc)
 	if terms < 2
@@ -164,20 +167,20 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 				else
 					$Choice(+)
 				end
-				- $ Range(1, variables + (orphans>0 and 1 or 0))
+				- $ Range(1, variableTermCount + (orphans>0 and 1 or 0))
 			end
 			for i in seq(orphans)
 				- $Range(1, 5)
 			end
 		end
 		hyperParameters: do
-			for i in seq(variables)
+			for i in seq(variableTermCount)
 				- $termTemplate
 			end
 		end
 		validate: macro(...args)
 			let check = do
-				for i in seq(variables)
+				for i in seq(variableTermCount)
 					- $false
 				end
 				for i in seq(orphans)
@@ -187,18 +190,18 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 			let orphanIndex = 0
 			for i in seq(terms)
 				let nameIndex = $args[3*i]
-				if nameIndex <= variables
+				if nameIndex <= variableTermCount
 					set check[nameIndex] = $true
 				else
 					set orphanIndex += 1
-					set check[variables+orphanIndex] = $true
+					set check[variableTermCount+orphanIndex] = $true
 					if orphanIndex > orphans
 						return
 					end
 				end
 			end
-			for i in seq(variables+orphans)
-				if not check[i]
+			for i in seq(variableTermCount+orphans)
+				if not check[i] and (variables == variableTermCount or i>variables)
 					return
 				end
 			end
@@ -216,7 +219,7 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 				let sign      = $args[3*i-1]
 				let nameIndex = $args[3*i]
 
-				let term = if nameIndex <= variables
+				let term = if nameIndex <= variableTermCount
 					let term = $args[3*terms + orphans + nameIndex]
 					if type(term) == "table"
 						let rterm = $term.steps[1]
@@ -238,6 +241,10 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 					$ s(args[3*terms + orphanIndex])
 				end
 
+				if len(variableList) < variables
+					return
+				end
+
 				if expr
 					if sign == "+"
 						set expr += $term
@@ -253,7 +260,7 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 				end
 			end
 
-			@Question(eq)
+			return @Question(eq)
 				steps: do
 					- $expr.pretty()
 					- $expr.reduce()
