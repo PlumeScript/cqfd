@@ -241,6 +241,7 @@ set Expression = macro(kind:, left:, right:)
 					return $v
 				end
 			end
+			return $self
 		elseif self.kind == "number"
 			return $self.left
 		else
