@@ -271,7 +271,7 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 	end
 end
 
-let eqn12 from $import(./eqn12)
+// let eqn12 from $import(./eqn12)
 /*
 Generate an exercice like $code(Voici une égalité. Faîtes $formula(+5) à chaque membre et réduisez).$newline
 Use $ParamSet(eqn12).
@@ -279,7 +279,7 @@ Use $ParamSet(eqn12).
 reduceBoth: macro(...args)
 	@QuestionFactory
 		parameters: do
-			- $eqn12(...args)
+			// - $eqn12(...args)
 			- $Choice(1, 3)
 		end
 		get: macro(source, step)

@@ -16,233 +16,247 @@ let s from $import(../../core/utils/expression)
 let variableNames from $import(./utils)
 
 /*
-Equation of the form $formula(ax+b=cd+d).$newline
-Without flags $code(\0?a), $code(\0?b), $code(\0?c), $code(\0?d), $formula(a) is set to $formula(1), and $formula(bcd) to $formula(0).$newline
-$Param(String, steps, full) can be full(all steps) or light (no steps with added opperations)
-Flag $code(\0?exoticFactors) to use value like $formula(\\sqrt(2)) or $formula(\\pi).$newline
-Flag $code(\0?quad) remplace $formula(x) as $formula(x^2)
+$formula(x=a)-class equation
 */
-eqn12: macro(style: classic, steps: full, ?a, ?b, ?c, ?d, ?rationnalSolution, ?quad)
-	// TODO: to much if else and restriction.
-	
-	if quad and rationnalSolution
-		raise quad and rationnalSolution flags arn't compatibles
-	end
-
+ref eqnX: macro(style: classic, ...args)
 	@QuestionFactory
 		parameters: do
-			- $ a and Range(2, 5) or Choice(1)
-			- $Choice(+, -)
-			- $ b and Range(2, 5) or Choice(0)
-			- $Choice(+, -)
-			- $ c and Range(2, 5) or Choice(0)
-			- $Choice(+, -)
-			- $ d and Range(2, 5) or Choice(0)
-			- $Choice(+, -)
-			- $Choice(*, /)
+			- $Range(-10, 10)
+			- $ Range(0, 1)
 		end
 		hyperParameters: do
 			- $variableNames[style]
 		end
-		validate: macro(a, sa, b, sb, c, sc, d, sd, ox)
-			return $ a != c and b != d and (not rationnalSolution or ox != "/") and ((a != 1 and a != -1) or ox != "/")
-		end
-
-		get: macro(a, sa, b, sb, c, sc, d, sd, ox, letter)
-			let x = if quad
-				$ s(letter)^2
-			else
-				$ s(letter)
-			end
-			if a==1
-				set sa = +
-			end
-			set a = $(sa == "+" and a or -a)
-			set b = $(sb == "+" and b or -b)
-			set c = $(sc == "+" and c or -c)
-			set d = $(sd == "+" and d or -d)
-
-			if ox == "/"
-				set c = 0
-			end
-
-			let top    = $ FactNumberCls.fromNumber((d-b).abs())
-			let bottom = $ FactNumberCls.fromNumber((a-c).abs())
-			let _2     = $ FactNumberCls.fromNumber(2)
-			let _5     = $ FactNumberCls.fromNumber(5)
-
-			let isRationnal = $ ox != "/" and (a-c).abs() != 1 and (a-c).abs() != (d-b).abs() and bottom.gcd(top).gcd(_2).value == 1 and bottom.gcd(top).gcd(_5).value == 1
-
-			if isRationnal and not rationnalSolution
-				set d *= $ bottom.value / bottom.gcd(top).value
-				set b *= $ bottom.value / bottom.gcd(top).value
-			elseif (not isRationnal) and rationnalSolution
-				for i in seq(2, 10)
-					if i!=3 and (top.vp[i]? or 0) == 0
-						set a *= $primes[i]
-						set c *= $primes[i]
-						break
-					end
-				end
-			end
-
-			let ax = if ox == "*"
-				$ a*s(x)
-			else
-				$ s(x)/a
-			end
-			let ax2 = if ox == "*"
-				$ (a-c)*s(x)
-			else
-				$ s(x)/a
-			end
-
+		get: macro(a, sw, name)
 			@Question(eqn)
-				firstSteps: do
-					if a != 1
-						if ox == "*"
-							if sa == "+"
-								- (\\div, $a)
-							else
-								- (\\div, $a)
-							end
-						else
-							if sa == "+"
-								- (\\times, $a)
-							else
-								- (\\times, $a)
-							end
-						end
-					end
-					if b!=0
-						if sb == "+"
-							- (-, $(b))
-						else
-							- (+, $(-b))
-						end
-					end
-					if c!=0
-						if sc == "+"
-							- (-, $(c*s(x)))
-						else
-							- (+, $(-c*s(x)))
-						end
-					end
-				end
 				steps: do
 					- do
-						l: $ ax + b
-						r: $ c*s(x) + d
-					end
-					if c!=0
-						if steps=="full"
-							if sc=="+"
-								- do
-									l: $ ax + b - c*s(x)
-									r: $ c*s(x) + d - c*s(x)
-								end
-							else
-								- do
-									l: $ ax + b + (-c)*s(x)
-									r: $ c*s(x) + d + (-c)*s(x)
-								end
-							end
-						end
-						- do
-							l: $ ax2 + b
-							r: $ s(d)
-						end
-					end
-					if steps=="full"
-						if sb=="+"
-							- do
-								l: $ ax2 + b - b
-								r: $ s(d) - b
-							end
+						if sw==0
+							l: $s($name)
+							r: $s($a)
 						else
-							- do
-								l: $ ax2 + b + s(-b)
-								r: $ s(d) + s(-b)
-							end
-						end
-					end
-						
-					if ox == "*"
-						if a-c != 1 and a-c != -1
-							- do
-								l: $ ax2
-								r: $ s(d - b)
-							end
-							if steps=="full"
-								- do
-									l: $ (a-c)*s(x) / (a-c)
-									r: $ s((d - b)) / (a-c)
-								end
-							end
-						end
-						- do
-							l: $ s(x)
-							r: if rationnalSolution
-								$ s((d - b)) / (a-c)
-							else
-								$ s((d - b) / (a-c))
-							end
-						end
-						if rationnalSolution and top.gcd(bottom).value != 1
-							- do
-								l: $ s(x)
-								r: $ s((d-b)/top.gcd(bottom).value) / s((a-c)/top.gcd(bottom).value)
-							end
-						elseif quad
-							if (d-b)*(a-c) < 0
-								finalLabel: Pas de solutions.
-							elseif (d-b)*(a-c) == 0
-								- do
-									l: $ s(letter)
-									r: 0
-								end
-							else
-								- do
-									l: $ s(letter)
-									r: $ (s((d - b) / (a-c))^0.5).reduce()
-									r2: $ (-1*s((d - b) / (a-c))^0.5).reduce()
-								end
-							end
-						end
-					else
-						- do
-							l: $ ax2
-							r: $ s(d - b)
-						end
-						if steps=="full"
-							- do
-								l: $ ax2 * a
-								r: $ s((d - b)) * a
-							end
-						end
-						- do
-							l: $ s(x)
-							r: $ s((d - b) * a)
-						end
-						if quad
-							if (d - b) * a < 0
-								finalLabel: Pas de solutions.
-							elseif (d - b) * a == 0
-								- do
-									l: $ s(letter)
-									r: 0
-								end
-							else
-								- do
-									l: $ s(letter)
-									r: $ (s((d - b) * a)^0.5).reduce()
-									r2: $ (-1*s((d - b) * a)^0.5).reduce()
-								end
-							end
+							l: $s($a)
+							r: $s($name)
 						end
 					end
 				end
+				id: x=$a
+				solutions: $Table($a)
 			end
 		end
 	end
+end
+
+/*
+$formula(x²=a)-class equation.$newline
+Source maye be $ParamSet(sqrtN), $ParamSet(sqrtC) or $paramSet(sqrtR)
+*/
+ref eqnX2: macro(source, style: classic, ?negative, ...args)
+	@QuestionFactory
+		parameters: do
+			- $source
+			- $Choice(0, 1)
+		end
+		hyperParameters: do
+			- $variableNames[style]
+		end
+		get: macro(source, sw, name)
+			let a = $source.solution
+			@Question(eqn)
+				steps: do
+					- do
+						if sw==0
+							l: $ s(name)^2
+							r: $ s(a^2)
+						else
+							l: $ s(a^2)
+							r: $ s(name)^2
+						end
+					end
+					if a>=0
+						- do
+							l: $s($name)
+							r: $s($a)
+							if a!=0
+								r2: $s($(-a))
+							end
+						end
+					end
+					if a<=0
+						finalLabel: Pas de solution
+					end
+				end
+				id: x=$a
+				solutions: $Table($a)
+			end
+		end
+	end
+end
+
+/*
+$formula(X+a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
+*/
+ref eqnAdd: macro(...args)
+	let sourceA = $ args[1]?
+	if sourceA
+		run $ Table.remove(args)
+	else
+		set sourceA = $ eqnX(...args)
+	end
+	let sourceB = $ args[1]?
+	if sourceB
+		run $ Table.remove(args)
+	else
+		set sourceB = $ Range(1, 10)
+	end
+
+	@QuestionFactory
+		parameters: do
+			- $sourceA
+			- $Range(1, 10)
+			- $ Choice(0, 1)
+			- $ Choice(0, 1)
+		end
+		get: macro(source, a, s1, s2)
+			let left  = if s1==0
+				$ (source.steps[1].l + s(a))
+			else
+				$ (s(a) + source.steps[1].l + s(a))
+			end
+			let right  = if s2==0
+				$ (source.steps[1].r + s(a))
+			else
+				$ (s(a) + source.steps[1].r + s(a))
+			end
+
+			set left  = $ left.reduce()
+			set right = $ right.reduce()
+
+			@Question(eqn)
+				steps: do
+					- do
+						l: $ left
+						r: $ right
+					end
+					- do
+						l: $ left - s(a)
+						r: $ right - s(a)
+					end
+					...source.steps
+				end
+				solutions: $source.solutions
+				id: $source.id+$a
+			end
+		end
+	end
+end
+
+/*
+$formula(X-a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
+*/
+ref eqnSub: macro(source, ...args)
+	@QuestionFactory
+		parameters: do
+			- $source
+			- $Range(1, 10)
+		end
+		get: macro(source, a)
+			let left  = $ (source.steps[1].l - s(a)).reduce()
+			let right = $ (source.steps[1].r - s(a)).reduce()
+
+			@Question(eqn)
+				steps: do
+					- do
+						l: $ left
+						r: $ right
+					end
+					- do
+						l: $ left + s(a)
+						r: $ right + s(a)
+					end
+					...source.steps
+				end
+				solution: $source.solution
+				id: $source.id-$a
+			end
+		end
+	end
+end
+
+/*
+Wrapper for $ParamSet(eqnAdd) and $ParamSet(eqnSub)
+*/
+eqnAddSub: macro(...args)
+	$ eqnAdd(...args) * eqnSub(...args)
+end
+
+/*
+$formula(X*a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
+*/
+ref eqnMul: macro(source, ...args)
+	@QuestionFactory
+		parameters: do
+			- $source
+			- $Range(1, 10)
+		end
+		get: macro(source, a)
+			let left  = $ (source.steps[1].l / s(a)).reduce()
+			let right = $ (source.steps[1].r / s(a)).reduce()
+
+			@Question(eqn)
+				steps: do
+					- do
+						l: $ left
+						r: $ right
+					end
+					- do
+						l: $ left * s(a)
+						r: $ right * s(a)
+					end
+					...source.steps
+				end
+				solution: $source.solution
+				id: $source.id+$a
+			end
+		end
+	end
+end
+
+/*
+$formula(X/a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
+*/
+ref eqnDiv: macro(source, ...args)
+	@QuestionFactory
+		parameters: do
+			- $source
+			- $Range(2, 10)
+		end
+		get: macro(source, a)
+			let left  = $ (source.steps[1].l * s(a)).reduce()
+			let right = $ (source.steps[1].r * s(a)).reduce()
+
+			@Question(eqn)
+				steps: do
+					- do
+						l: $ left
+						r: $ right
+					end
+					- do
+						l: $ left / s(a)
+						r: $ right / s(a)
+					end
+					...source.steps
+				end
+				solution: $source.solution
+				id: $source.id-$a
+			end
+		end
+	end
+end
+
+/*
+Wrapper for $ParamSet(eqnAdd) and $ParamSet(eqnSub)
+*/
+eqnMulDiv: macro(...args)
+	$ eqnMul(...args) * eqnDiv(...args)
 end
