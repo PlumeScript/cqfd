@@ -32,6 +32,23 @@ Licensed under the MIT License — see LICENSE for details.
 // equation).
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
+//
+// `div` draws a division problem, set in the same scene: a = bq + r
+// (euclidean — a strings split over b instruments to re-string: ?alt asks
+// for the strings per instrument or for the strings left over) or a = bd
+// (decimal — d the quotient, exact or rounded to a tenth when ?aprx). The
+// decimal story has two variants, chosen by ?alt (only when ?aprx is
+// missing, which keeps the price story for a rounded quotient): length —
+// a the cm of string for b strings, "quelle est la longueur de corde par
+// corde ?" — and price — a the euros paid for b strings, "quel est le prix
+// d'une corde ?". The caller passes every value, the missing ones empty:
+// d truthy tells the decimal story, d empty the euclidean one. `?trap`
+// adds a quantified distractor of the other story (a cost in the
+// euclidean/length statements, a length in the price one — derived from a
+// and b, never a term of the equation): the statement then reads like the
+// other problem, to the student to read the question posed. The instrument
+// string-count constraint of `lin` (b in {4,5,6,8} / {4,6,8}) does NOT
+// apply to `div`: there b is a number of instruments or of strings.
 
 let invalid = (invalid: $true)
 
@@ -90,6 +107,23 @@ end
 // "une guitare" → "Une guitare"
 macro cap(s)
 	$(String.sub(s, 1).upper())$(String.sub(s, 2, -1))
+end
+
+// Display a euro amount the french way: 12 → "12", 1.3 → "1,30".
+macro euros(x)
+	let r = $ x.round(digit: 2)
+	if String(r).contains(".") or String(r).contains(",")
+		$(Number.format(r, "%.2f", locale: "fr"))
+	else
+		$(Number.format(r, "%.0f", locale: "fr"))
+	end
+end
+
+// Display an exact decimal value the french way (the decimal quotient,
+// e.g. cm or € per string): 3 → "3", 2.5 → "2,5", 0.875 → "0,875"
+// (exact — never rounded to the cent: 7/8 must not show "0,88").
+macro dec(x)
+	$(String(x).replace(".", ","))
 end
 
 lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
@@ -299,5 +333,204 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 
 	// Fallback: every (sign, u) combination is handled or rejected above —
 	// keep the explicit exit.
+	return $invalid
+end
+
+// a = bq + r (euclidean division: a strings split over b instruments to
+// re-string, q the strings per instrument, r the strings left over) or
+// a = bd (decimal division: d the quotient — exact, or rounded to a tenth
+// when ?aprx). The caller passes every value, the missing ones empty:
+// d truthy tells the decimal story, d empty the euclidean one.
+//
+// The decimal story has two variants, chosen by ?alt (only when ?aprx is
+// missing, which keeps the price story for a rounded quotient):
+//   length : a the cm of string, b the strings — "quelle est la longueur
+//            de corde par corde ?"
+//   price  : a the euros paid, b the strings — "quel est le prix d'une
+//            corde ?"
+// ?trap adds a quantified distractor that makes the statement read like
+// the other story (a cost in the euclidean/length statements, a length in
+// the price one — derived from a and b, never a term of the equation) —
+// the same values always tell the same story. ?aprx marks the quotient
+// rounded to a tenth (recurring decimal): the answer is then "environ …".
+// The instrument string-count constraint of `lin` does not apply: b is a
+// number of instruments (euclidean) or of strings (decimal).
+// Returns a (instruction:, answer:) table, or the `invalid` table.
+
+div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — the forms div needs never invert ("a re-cordé",
+	// "a acheté"), only "veut" agrees with the gender.
+	let who = if name and name[1]
+		do
+			scene: Les poulpes musiciens de l'aquarium de $name[1] ont des cordes usées.
+			restring: $name[1] a re-cordé
+			bought: $name[1] a acheté
+			want: $ (name[2] == "f" and "elle veut" or "il veut")
+			cost: Cela lui a coûté
+		end
+	else
+		do
+			scene: Les poulpes musiciens de mon aquarium ont des cordes usées.
+			restring: j'ai re-cordé
+			bought: j'ai acheté
+			want: je veux
+			cost: Cela m'a coûté
+		end
+	end
+
+	// a and b are the two values the statement always shows: without
+	// them there is no problem.
+	if not a or not b
+		return $invalid
+	end
+
+	if d
+		// d is a price or a length per string: 0 or less is not a
+		// division problem (0 is truthy in plume, and it would also slip
+		// past the equation check below, which aprx disables).
+		if d <= 0
+			return $invalid
+		end
+		// The statement shows a and b: the quotient d must satisfy a = bd
+		// (checked to the cent, like lin). With aprx the caller passes a
+		// quotient rounded to a tenth (recurring decimal) — no check.
+		if not aprx and (b * d * 100).round() != (a * 100).round()
+			return $invalid
+		end
+		// b is a count (strings): an integer where expected.
+		if b.floor() != b
+			return $invalid
+		end
+		// Plausible bounds: a the continuous value (cm of string or euros
+		// paid), b the number of strings — both stay in the caller's
+		// [2, 100] draw range (a re-stringing session, however large).
+		if a < 2 or a > 100 or b < 2 or b > 100
+			return $invalid
+		end
+		// B1 (the length story) is the alt-and-not-aprx story: ?alt
+		// selects it, ?aprx keeps the price story (B2) — the caller never
+		// sets both. (Not a same-named local: `let alt = $alt and not
+		// aprx` would shadow the parameter with itself — dead code.)
+		let w = $ alt and not aprx
+		if w and d < 1
+			// B1: a cm of string for b strings — a string shorter than
+			// 1 cm is not a string. (B2 keeps sub-euro prices: a cheap
+			// string — and the exact quotient must stay displayable,
+			// e.g. 7/8 → "0,875 €".)
+			return $invalid
+		end
+		if w
+			// B1 (length): a cm of string for b strings. The trap adds the
+			// cost of the string (2 € per cm of a — with d >= 1, a >= b,
+			// so 2a > b and 2a > d = a/b: never a term of the equation
+			// a = bd).
+			let trapCost = $ a * 2
+			return do
+				instruction: do
+					$(who.scene)\s$(cap(who.restring))\s$b cordes avec\s$a cm de corde
+					if trap
+						.\s$(who.cost)\s$(euros(trapCost)) €
+					end
+					.\sQuelle est la longueur de corde par corde ?
+				end
+				answer: do
+					Chaque corde mesure\s
+					if aprx
+						environ\s
+					end
+					$(dec(d)) cm.
+				end
+			end
+		end
+		// B2 (price): a euros paid for b strings. The trap adds the length
+		// of each string (a + b cm — larger than a and b, and a + b can
+		// never equal a/b: a(b-1) = -b^2 has no positive solution).
+		let trapLen = $ a + b
+		return do
+			instruction: do
+				$(who.scene)\s$(cap(who.bought))\s$a € de cordes, soit\s$b cordes
+				if trap
+					.\sChaque corde mesure\s$trapLen cm
+				end
+				.\sQuel est le prix d'une corde ?
+			end
+			answer: do
+				Le prix d'une corde est
+				if aprx
+					\sd'environ $(dec(d)) €.
+				else
+					\sde $(dec(d)) €.
+				end
+			end
+		end
+	else
+		// q and r are the answer(s): without them the problem has none
+		// (the caller always passes them — q = a div b, r = a mod b).
+		if not q or not r
+			return $invalid
+		end
+		// Counts are integers where expected.
+		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
+			return $invalid
+		end
+		// A small aquarium: a <= 40 strings (five mandolines of 8),
+		// b <= 10 instruments; q >= 2 (1 string per instrument is a
+		// trivial split).
+		if a < 2 or a > 40 or b < 2 or b > 10 or q < 2
+			return $invalid
+		end
+		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
+		// repartition is not maximal and the question admits another answer.
+		if a != b * q + r or r < 0 or r >= b
+			return $invalid
+		end
+		// The trap adds the cost of the strings (2 € per string — with
+		// q >= 2, a >= 2b, so 2a > b, 2a > q and 2a > r: never a term of
+		// the equation a = bq + r).
+		let trapCost = $ a * 2
+		return do
+			instruction: do
+				$(who.scene)\s$(cap(who.bought))\s$a cordes
+				if trap
+					\spour $(euros(trapCost)) €
+				end
+				.\s$(cap(who.want))\sles répartir équitablement sur\s$b instruments à re-corder ;\s
+				if alt
+					combien y a-t-il de cordes par instrument ?
+				else
+					combien de cordes ne pourront pas être mises sur un instrument ?
+				end
+			end
+			answer: do
+				if alt
+					Il y aura\s$q cordes par instrument
+					if r > 0
+						\s(mais il en restera\s
+						if r == 1
+							1 non répartie).
+						else
+							$r non réparties).
+						end
+					else
+						.
+					end
+				else
+					if r > 0
+						Il y aura\s
+						if r == 1
+							1 corde non répartie.
+						else
+							$r cordes non réparties.
+						end
+					else
+						Toutes les cordes seront réparties.
+					end
+				end
+			end
+		end
+	end
+
+	// Fallback: both branches return above — keep the explicit exit.
 	return $invalid
 end
