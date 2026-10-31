@@ -209,8 +209,8 @@ ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:10
 		set maxPeriod = $period
 	end
 	if decimalPart
-		set minDecimalPart = $period
-		set maxDecimalPart = $period
+		set minDecimalPart = $decimalPart
+		set maxDecimalPart = $decimalPart
 	end
 	if compute
 		set minCompute = $compute
@@ -274,7 +274,6 @@ ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:10
 		end
 
 		get: macro(a, b, period, decimalPart)
-			
 			let opp = if frac
 				/
 			elseif euclidean
