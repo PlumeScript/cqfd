@@ -20,11 +20,12 @@ inv: macro(pb)
 			if pb.renderClass != "problem"
 				@Question(invPb)
 					src: $pb
+					id: invPb-$pb.id
 				end
 			else
 				@Question(problemInv)
 					src: $pb
-					id: $pb.id
+					id: problemInv-$pb.id
 				end
 			end
 		end
