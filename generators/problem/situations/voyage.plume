@@ -21,9 +21,11 @@ Licensed under the MIT License — see LICENSE for details.
 // `name` is a (name, gender) pair — (Léa, f) — or empty: the question is
 // told in the 1st person ("j'ai roulé…") or in the gendered 3rd person
 // ("Léa a roulé… elle a parcouru… combien a-t-elle roulé… ?").
-// `trap` applies to a bare product only: the statement then mentions a
-// second part — a detail of the scene, with no duration nor speed for it —
-// and the question stays about the first part (a*b = e).
+// `trap` applies to a bare product only: the statement then opens with
+// "J'ai découpé mon trajet en deux parties." and gives the second part a
+// duration and a speed drawn at random (seeded by the equation, never
+// identical to the first part) — a quantified distractor the answer
+// ignores; the question stays about the first part (a*b = e).
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -50,23 +52,29 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	let who = if name and name[1]
 		do
 			rolled: $name[1] a roulé
+			// mid-sentence (the trap's second part)
+			rolledLow: $name[1] a roulé
 			parcouru: $ (name[2] == "f" and "elle a parcouru" or "il a parcouru")
 			poss: sa
 			qTime: $ (name[2] == "f" and "a-t-elle roulé" or "a-t-il roulé")
 			qDist: $ (name[2] == "f" and "a-t-elle parcourue" or "a-t-il parcourue")
 			ansRolled: $name[1] a roulé
 			ansParcouru: $name[1] a parcouru
+			split: $(name[1]) a découpé son trajet en deux parties.
 		end
 	else
 		do
 			// "rolled" opens the statement (and the answer): capitalized.
 			rolled: J'ai roulé
+			// mid-sentence (the trap's second part)
+			rolledLow: j'ai roulé
 			parcouru: j'ai parcouru
 			poss: ma
 			qTime: ai-je roulé
 			qDist: ai-je parcourue
 			ansRolled: J'ai roulé
 			ansParcouru: J'ai parcouru
+			split: J'ai découpé mon trajet en deux parties.
 		end
 	end
 
@@ -158,11 +166,26 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			return $invalid
 		end
 
+		// The trap: the second part is drawn with a duration and a speed
+		// (plausible on the road — the validity range 1-150, minus the
+		// walking paces below 10 km/h), seeded by the equation — the same
+		// question always tells the same story — never identical to the
+		// first part; the question stays about the first part.
+		if trap
+			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
+			let random = $Random($(seed))
+			set c = $ random(1, 12)
+			set d = $ random(10, 130)
+			if c == a and d == b
+				set c = $ c == 12 and 11 or c + 1
+			end
+		end
+
 		return if u == 1
 			instruction: do
 				if trap
-					$(who.rolled) à $b km/h sur la 1re partie, où $(who.parcouru) $e km.\s
-					Il y a eu une 2e partie.\s
+					$(who.split)\s
+					Sur la 1re partie, $(who.rolledLow) à $b km/h et $(who.parcouru) $e km ; sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h.\s
 					Combien de temps $(who.qTime) sur la 1re partie ?
 				else
 					$(who.rolled) à $b km/h et $(who.parcouru) $e km.\s
@@ -179,8 +202,8 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 2
 			instruction: do
 				if trap
-					$(who.rolled) $(a)h sur la 1re partie, où $(who.parcouru) $e km.\s
-					Il y a eu une 2e partie.\s
+					$(who.split)\s
+					Sur la 1re partie, $(who.rolledLow) $(a)h et $(who.parcouru) $e km ; sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h.\s
 					Quelle était $(who.poss) vitesse sur la 1re partie ?
 				else
 					$(who.rolled) $(a)h et $(who.parcouru) $e km.\s
@@ -197,14 +220,21 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 5
 			instruction: do
 				if trap
-					$(who.rolled) $(a)h à $b km/h sur la 1re partie, et il y a eu une 2e partie.\s
+					$(who.split)\s
+					Sur la 1re partie, $(who.rolledLow) $(a)h à $b km/h ; sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h.\s
 					Quelle distance $(who.qDist) sur la 1re partie ?
 				else
 					$(who.rolled) $(a)h à $b km/h.\s
 					Quelle distance $(who.qDist) ?
 				end
 			end
-			answer: $(who.ansParcouru) $e km.
+			answer: do
+				if trap
+					$(who.ansParcouru) $e km sur la 1re partie.
+				else
+					$(who.ansParcouru) $e km.
+				end
+			end
 		end
 	end
 

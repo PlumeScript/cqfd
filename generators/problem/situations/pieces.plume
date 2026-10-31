@@ -20,12 +20,13 @@ Licensed under the MIT License — see LICENSE for details.
 // told in the 1st person ("j'ai…") or in the gendered 3rd person
 // ("Léa a… a-t-elle… ses pièces… sa tirelire…").
 //
-// The trap only dresses a bare product: the statement then mentions a
-// second coin type — the piggy bank, full of coins of a drawn value —
-// without giving it a quantity, and the question is restricted to the
-// pocket coins ("combien d'argent ai-je en pièces de 2 € ?"). On the full
-// equation there is no second term to mention: the configuration is
-// marked invalid.
+// The trap only dresses a bare product: the piggy bank then holds a drawn
+// quantity of coins of a drawn value (the value always different from the
+// pocket coins' value, the quantity seeded by the equation) — a quantified
+// distractor, never an unvalued mention — and the question is restricted
+// to the pocket coins ("combien d'argent ai-je en pièces de 0,50 € ?").
+// On the full equation there is no second term to mention: the
+// configuration is marked invalid.
 //
 // The non-trap statements scope the total: "Tout mon/son argent est en
 // pièces : …" — every euro of the total is a coin of the type(s) listed,
@@ -98,9 +99,9 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	// One coin type: the bare product, or the "+" with no second term.
 	let oneProduct = $ sign == "" or (sign == "+" and not c and not d)
 
-	// The trap (the piggy bank full of a second coin type, mentioned
-	// without a quantity) only dresses a bare product: on the full
-	// equation there is no second term to mention.
+	// The trap (the piggy bank holding a drawn quantity of a second coin
+	// type) only dresses a bare product: on the full equation there is no
+	// second term to mention.
 	if trap and not oneProduct
 		return $invalid
 	end
@@ -188,14 +189,23 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		end
 	end
 
-	// The piggy bank's coin value (drawn when the trap is on).
+	// The piggy bank's coin value (drawn when the trap is on) and coin
+	// count (drawn too — the trap is quantified: the piggy bank holds a
+	// given number of coins of a given value, never "plein de pièces"
+	// without a count).
 	let d2 = $ trap and trapValue(b)
+	let c2 = 0
+	if trap
+		let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
+		let random = $Random($(seed))
+		set c2 = $ random(2, 20)
+	end
 
 	return if oneProduct
 		if u == 1
 			instruction: do
 				if trap
-					$who.have des pièces de $euros($b) €, et $who.tirelire est pleine de pièces de $euros($d2) €.\s
+					$who.have des pièces de $euros($b) €, et $who.tirelire contient $c2 pièces de $euros($d2) €.\s
 					$who.capPron $euros($e) € en pièces de $euros($b) €.\s
 					Combien $who.q de pièces de $euros($b) € ?
 				else
@@ -213,7 +223,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 2
 			instruction: do
 				if trap
-					$who.have $a pièces, et $who.tirelire est pleine de pièces de $euros($d2) €.\s
+					$who.have $a pièces, et $who.tirelire contient $c2 pièces de $euros($d2) €.\s
 					$(cap(who.poss)) $a pièces font $euros($e) €.\s
 					Combien vaut chacune de $who.poss $a pièces ?
 				else
@@ -231,7 +241,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 5
 			instruction: do
 				if trap
-					$who.have $a pièces de $euros($b) €, et $who.tirelire est pleine de pièces de $euros($d2) €.\s
+					$who.have $a pièces de $euros($b) €, et $who.tirelire contient $c2 pièces de $euros($d2) €.\s
 					Combien d'argent $who.q en pièces de $euros($b) € ?
 				else
 					Tout $who.toutArgent est en pièces : $who.haveLow $a pièces de $euros($b) €.\s

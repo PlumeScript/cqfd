@@ -22,9 +22,10 @@ Licensed under the MIT License — see LICENSE for details.
 // is the impersonal "L'avion a…" or the named "Léa est pilote, et son
 // avion a…" (the plane is always masculine, so the gender never changes a
 // form; the "a-t-il" questions refer to the plane).
-// `trap` only applies to the single-product equation: the statement then
-// mentions the business class without any value (a scene detail the
-// answer must ignore) and the question is scoped to the economy class.
+// `trap` only applies to the single-product equation: the business class
+// is then drawn with arbitrary values (a row count and a seats-per-row
+// count, seeded by the equation) — a quantified distractor the answer
+// ignores — and the question is scoped to the economy class.
 // Returns a (instruction:, answer:) table, or the `invalid` table when
 // the configuration is unsupported or the equation doesn't hold.
 
@@ -106,26 +107,31 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	// gender never changes a form).
 	let planeName = $ plane(name)
 
-	// Single class (a*b = e): with the trap, the business class is
-	// mentioned without any value and the question is scoped to the
-	// economy class.
+	// Single class (a*b = e): with the trap, the business class is drawn
+	// with arbitrary values (a row count and a seats-per-row count, seeded
+	// by the equation) — a quantified distractor — and the question is
+	// scoped to the economy class.
 	if sign == ""
 		if trap
+			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
+			let random = $Random($(seed))
+			set c = $ random(2, 20)
+			set d = $ random(2, 6)
 			return if u == 1
 				instruction: do
-					$(planeName) a $b sièges par rangée en classe économique, soit $e sièges en classe économique ; il y a aussi une classe affaires.\s
+					$(planeName) a $b sièges par rangée en classe économique, soit $e sièges en classe économique ; la classe affaires a $c rangées de $d sièges.\s
 					Combien de rangées a-t-il en classe économique ?
 				end
 				answer: Il a $a rangées en classe économique.
 			elseif u == 2
 				instruction: do
-					$(planeName) a $a rangées en classe économique, soit $e sièges en classe économique ; il y a aussi une classe affaires.\s
+					$(planeName) a $a rangées en classe économique, soit $e sièges en classe économique ; la classe affaires a $c rangées de $d sièges.\s
 					Combien de sièges par rangée en classe économique ?
 				end
 				answer: Il a $b sièges par rangée en classe économique.
 			else
 				instruction: do
-					$(planeName) a $a rangées de $b sièges en classe économique ; il y a aussi une classe affaires.\s
+					$(planeName) a $a rangées de $b sièges en classe économique ; la classe affaires a $c rangées de $d sièges.\s
 					Combien de sièges a-t-il en classe économique ?
 				end
 				answer: Il a $e sièges en classe économique.

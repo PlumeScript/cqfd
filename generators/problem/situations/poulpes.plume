@@ -24,9 +24,10 @@ Licensed under the MIT License — see LICENSE for details.
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
 // `name` is a (name, gender) pair or empty: the question is told in the 1st
 // person ("j'ai re-cordé…") or in the gendered 3rd person ("Léa a re-cordé…
-// a-t-elle…"). `?trap` only applies to the bare product a*b = e: the
-// statement then mentions the other instruments (a distractor) without giving
-// them a value.
+// a-t-elle…"). `?trap` only applies to the bare product a*b = e: a second
+// instrument is then drawn with a count (seeded by the equation) and one of
+// the instruments2 string counts — a quantified distractor, never an
+// unvalued mention (its strings are not part of the total).
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -46,6 +47,14 @@ let instruments2 = do
 	- (name: violon, plural: violons, gender: m, strings: 4)
 	- (name: ukulélé, plural: ukulélés, gender: m, strings: 6)
 	- (name: bouzouki, plural: bouzoukis, gender: m, strings: 8)
+end
+
+// The instruments2 string counts (4, 6, 8): the trap's second instrument is
+// drawn from this list, then found in instruments2.
+let secondStrings = do
+	- 4
+	- 6
+	- 8
 end
 
 // The instrument of `list` whose string count is `strings` (empty if none).
@@ -207,27 +216,34 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			return $invalid
 		end
 
+		// The trap: the other instrument is drawn with a count (seeded by
+		// the equation) and one of the instruments2 string counts — a
+		// quantified distractor (its strings are not part of the total).
+		let trapInst = 0
 		if trap
-			// The distractor: the other instruments also need strings, but no
-			// value is given — the question stays about the single instrument.
+			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
+			let random = $Random($(seed))
+			set c = $ random(2, 20)
+			set d = $ random.choice(secondStrings)
+			set trapInst = $ findInstrument(instruments2, d)
 			return if u == 1
 				instruction: do
 					$(who.scene)\s$(cap(who.restring))\s
 					des $(inst1.plural) $(ofStrings(b)),\s
-					pour $(e) cordes ; les autres instruments ont aussi besoin de cordes. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
+					pour $(e) cordes ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
 				end
 				answer: $(cap(who.restring)) $(a) $(inst1.plural).
 			elseif u == 2
 				instruction: do
 					$(who.scene)\s$(cap(who.restring))\s
 					$(a) $(inst1.plural),\s
-					pour $(e) cordes ; les autres instruments ont aussi besoin de cordes. Combien de cordes a $(oneOf(inst1)) ?
+					pour $(e) cordes ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de cordes a $(oneOf(inst1)) ?
 				end
 				answer: $(cap(oneOf(inst1))) a $(b) cordes.
 			elseif u == 5
 				instruction: do
 					$(who.scene)\s$(cap(who.restring))\s
-					$(a) $(inst1.plural) $(ofStrings(b)) ; les autres instruments ont aussi besoin de cordes. Combien de cordes pour les $(a) $(inst1.plural) ?
+					$(a) $(inst1.plural) $(ofStrings(b)) ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de cordes pour les $(a) $(inst1.plural) ?
 				end
 				answer: $(e) cordes.
 			end

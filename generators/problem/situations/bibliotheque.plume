@@ -27,9 +27,10 @@ Licensed under the MIT License — see LICENSE for details.
 // gendered 3rd person ("Léa est docteure en littérature…", "La
 // bibliothèque de Marc, docteur en littérature…,…" — docteur/docteure
 // agreed with the person, sa/ma with the bibliothèque).
-// `trap` is a distractor drawn from the scene (an unvalued "fonds ancien",
-// mentioned but not counted), allowed only on a single-product question
-// (a*b = e); on the complete equation it marks the configuration invalid.
+// `trap` is a distractor drawn from the scene: a "fonds ancien" with a
+// drawn book count (seeded by the equation, never equal to the total e),
+// allowed only on a single-product question (a*b = e); on the complete
+// equation it marks the configuration invalid.
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -150,7 +151,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return $invalid
 	end
 
-	// The trap (an unvalued "fonds ancien" mentioned in the scene) is only
+	// The trap (a "fonds ancien" with a drawn book count) is only
 	// meaningful on a single-product question (a*b = e, c and d missing);
 	// on the complete equation it has nothing to point at.
 	if trap and (c or d)
@@ -166,6 +167,17 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	let random = $Random($(seed))
 	let country = $ random.choice(countries)
 	let century = $ random.choice(centuries)
+
+	// The trap's "fonds ancien" book count (drawn after the literature,
+	// same seeded generator — the same question always tells the same
+	// story; never equal to the total e).
+	let fonds = 0
+	if trap
+		set fonds = $ random(2, 60)
+		if fonds == e
+			set fonds = $ fonds + 1
+		end
+	end
 
 	// The speaker: 1st person when name is empty; otherwise the (name,
 	// gender) pair — "Léa est docteure en littérature tchèque du XIe
@@ -206,8 +218,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					Combien d'étagères compte la 1re catégorie ?
 				elseif b
 					if trap
-						$(who.introFull) a $(b) livres par étagère et $(e) livres sur ses étagères ;\s
-						il y a aussi un fonds ancien.\s
+						$(who.introFull) a $(b) livres par étagère et $(e) livres sur ses étagères ; le fonds ancien compte $(fonds) livres.\s
 						Combien d'étagères a-t-elle ?
 					else
 						$(who.introFull) a $(b) livres par étagère et compte $(e) livres au total.\s
@@ -236,8 +247,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					Combien de livres par étagère dans la 1re catégorie ?
 				else
 					if trap
-						$(who.introFull) a $(a) étagères et $(e) livres sur ses étagères ;\s
-						il y a aussi un fonds ancien.\s
+						$(who.introFull) a $(a) étagères et $(e) livres sur ses étagères ; le fonds ancien compte $(fonds) livres.\s
 						Combien de livres par étagère ?
 					else
 						$(who.introFull) a $(a) étagères et compte $(e) livres au total.\s
@@ -300,8 +310,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					$(who.qTotal)
 				else
 					if trap
-						$(who.Lib) a $(a) étagères de $(b) livres ;\s
-						il y a aussi un fonds ancien.\s
+						$(who.Lib) a $(a) étagères de $(b) livres ; le fonds ancien compte $(fonds) livres.\s
 						Combien de livres sur ces $(a) étagères ?
 					else
 						$(who.Lib) a $(a) étagères de $(b) livres.\s

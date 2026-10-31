@@ -24,10 +24,11 @@ Licensed under the MIT License — see LICENSE for details.
 // 1st person ("je construis… j'utilise… utilise-je…") or in the gendered
 // 3rd person ("Léa construit… Elle utilise… utilise-t-elle…").
 // The `trap` flag is supported on the bare product (a*b = e) only: the
-// statement then mentions the dark chocolate set aside ("il a aussi du
-// chocolat noir de côté") without any number — a distractor. With the full
-// equation, the sign "-" or any missing letter, the configuration is
-// invalid.
+// dark chocolate is then drawn with arbitrary values (a count and a weight
+// per brick, seeded by the equation so the same question always tells the
+// same story) and set aside — a quantified distractor the answer ignores.
+// With the full equation, the sign "-" or any missing letter, the
+// configuration is invalid.
 // Returns a (instruction:, answer:) table, or the `invalid` table.
 
 let invalid = (invalid: $true)
@@ -159,21 +160,22 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 
 	// The speaker: 1st person when name is empty; otherwise the (Prénom,
 	// gender) pair — "Marc construit", "Il utilise", "utilise-t-il", "il a
-	// aussi" / "Léa construit", "Elle utilise", "utilise-t-elle", "elle a
-	// aussi" / "Je construis", "J'utilise", "utilise-je", "j'ai aussi".
+	// mis de côté" / "Léa construit", "Elle utilise", "utilise-t-elle",
+	// "elle a mis de côté" / "Je construis", "J'utilise", "utilise-je",
+	// "j'ai mis de côté".
 	let who = if name and name[1]
 		do
 			intro: $name[1] construit une maison en chocolat
 			uses: $ (name[2] == "f" and "Elle utilise" or "Il utilise")
 			qUses: $ (name[2] == "f" and "utilise-t-elle" or "utilise-t-il")
-			also: $ (name[2] == "f" and "elle a aussi" or "il a aussi")
+			also: $ (name[2] == "f" and "elle a mis de côté" or "il a mis de côté")
 		end
 	else
 		do
 			intro: Je construis une maison en chocolat
 			uses: J'utilise
 			qUses: utilise-je
-			also: j'ai aussi
+			also: j'ai mis de côté
 		end
 	end
 
@@ -291,14 +293,23 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		end
 	else
-		// a*b = e — one chocolate only. The trap mentions the dark one set
-		// aside, without any number.
+		// a*b = e — one chocolate only. With the trap, the dark chocolate
+		// is drawn with arbitrary values (a count and a weight per brick,
+		// seeded by the equation) and set aside: a quantified distractor
+		// the answer ignores (the total and the question are scoped to the
+		// white chocolate).
+		if trap
+			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
+			let random = $Random($(seed))
+			set c = $ random(2, 20)
+			set d = $ random(5, 99)
+		end
 		return if u == 1
 			instruction: do
 				$(who.intro).\s
 				$(who.uses) $(someBricks("blanc", b)), pour un total de $(g(e)) g de chocolat blanc
 				if trap
-					\s; $(who.also) du chocolat noir de côté
+					\s; $(who.also) $(bricks("noir", c, d))
 				end
 				.\s
 				Combien de briques de chocolat blanc $(who.qUses) ?
@@ -309,7 +320,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 				$(who.intro).\s
 				$(who.uses) $(bricks("blanc", a, 0)), pour un total de $(g(e)) g de chocolat blanc
 				if trap
-					\s; $(who.also) du chocolat noir de côté
+					\s; $(who.also) $(bricks("noir", c, d))
 				end
 				.\s
 				Combien pèse une brique de chocolat blanc ?
@@ -320,7 +331,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 				$(who.intro).\s
 				$(who.uses) $(bricks("blanc", a, b))
 				if trap
-					\s; $(who.also) du chocolat noir de côté
+					\s; $(who.also) $(bricks("noir", c, d))
 				end
 				.\s
 				Combien de chocolat blanc $(who.qUses) ?
