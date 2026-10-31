@@ -33,7 +33,7 @@ let invalid = (invalid: $true)
 // uses the displayed value (String) because a float can carry a hair of
 // error (30.round(2) is worth 30.000000000000007, so `floor(x) == x` fails).
 macro m2(x)
-	if String.contains(String(x), ".")
+	if String.contains(String(x), ".") or String.contains(String(x), ",")
 		let s = $(Number.format(x, "%.2f", locale: "fr"))
 		if String.endsWith(s, "00")
 			set s = $(String.sub(s, 1, -3))

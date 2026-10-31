@@ -39,7 +39,7 @@ let invalid = (invalid: $true)
 // decimals, up to two decimals otherwise — a kitchen scale reads 15,50 g).
 macro g(x)
 	let r = $ x.round(digit: 2)
-	if String(r).contains(".")
+	if String(r).contains(".") or String(r).contains(",")
 		$(Number.format(r, "%.2f", locale: "fr"))
 	else
 		$(Number.format(r, "%.0f", locale: "fr"))
