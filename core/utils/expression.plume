@@ -422,14 +422,41 @@ set Expression = macro(kind:, left:, right:)
 			return $value.pretty()
 		elseif self.kind == "mul"
 			let flat = $ flattenprod(self)
+			// Reduce the compound factors (sums, divs): (0·x + 2)·2 must be
+			// seen as 2·2, not as an unreduced sum. Numbers, symbols and pows
+			// stay raw on purpose — the same-base pow merge (n⁻¹·n → n⁰ → 1)
+			// needs the pow nodes, and reducing pow(n, 1) would unwrap it to n.
+			for i in seq(1, len(flat))
+				if not (isExpression(flat[i]) and (flat[i].kind == "number" or flat[i].kind == "symbol" or flat[i].kind == "pow"))
+					set flat[i] = $ flat[i].reduce()
+				end
+			end
+			// A reduced factor can itself be a product (x + x → 2x): re-flatten
+			// so that its factors join the pairwise merges below.
+			let prod = $flat[1]
+			for i in seq(2, len(flat))
+				set prod *= $flat[i]
+			end
+			set flat = $ flattenprod(prod)
+			// A bare 0 factor kills the whole product (checked before the
+			// merges, so that a real 0 is not mistaken for a consumed slot).
+			for i in seq(1, len(flat))
+				if flat[i] == 0
+					return $makeExpression(0)
+				end
+			end
 			for i in seq(1, len(flat)-1)
 				for j in seq(i+1, len(flat))
 					let left  = $flat[i]
 					let right = $flat[j]
 
 					if right.kind == "number" and left.kind == "number"
-						set flat[i] = $ makeExpression(right.left * left.left)
-						set flat[j] = $ makeExpression(0)
+						// A 0 slot is a consumed factor (merge sentinel): it
+						// must not swallow a live number (0·n would drop n).
+						if left != 0 and right != 0
+							set flat[i] = $ makeExpression(right.left * left.left)
+							set flat[j] = $ makeExpression(0)
+						end
 					elseif right.kind == "pow" and left.kind == "pow" and right.left == left.left
 						// Same base: (x²)·(x³) → x⁵ — the exponents are added.
 						let e = $ (right.right + left.right).reduce()
