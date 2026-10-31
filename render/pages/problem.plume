@@ -47,6 +47,6 @@ problemInv: do
 		end
 	end
 	solution: macro(question)
-		Exemple de réponse, il y en a plein d'autres: $ardoise.hint($question.src.render(instruction))
+		Une réponse parmi d'autres: $ardoise.hint($question.src.render(instruction))
 	end
 end

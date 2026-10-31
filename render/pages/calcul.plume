@@ -215,7 +215,7 @@ invPb: do
 		$pages.formula($renderLatexAST($question.src.calcul) = $question.src.solution)\s
 	end
 	solution: macro(question)
-		Exemple de réponse, il y en a plein d'autres: $ardoise.hint($question.src.render(instruction))
+		Une réponse parmi d'autres:  $ardoise.hint($question.src.render(instruction))
 	end
 end
 
