@@ -241,7 +241,7 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 					$ s(args[3*terms + orphanIndex])
 				end
 
-				if len(variableList) < variables
+				if variables != variableTermCount and len(variableList) < variables
 					return
 				end
 
