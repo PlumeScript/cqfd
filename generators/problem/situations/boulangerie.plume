@@ -528,15 +528,41 @@ end
 div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 	if d
 		return do
+			let alt = $ alt and not aprx
 			instruction: do
-				A la boulangerie, j'achète pour $a kg de viennoiserie (il y a beaucoup de monde au petit déjeuner) que la boulangère réparti équitablement entre $b sachets. Quel est le poid d'un sachet?
+				A la boulangerie, j'achète pour $a kg de viennoiserie (il y a beaucoup de monde au petit déjeuner)
+
+				if alt
+					que la boulangère réparti équitablement entre $b sachets.\s
+					if trap
+						Cela me coûte $euros($(a*20))€.\s
+					end
+				else
+					if trap
+						que la boulangère réparti équitablement entre $(1+a/10).ceil() sachets.\s
+					end
+					Cela me coûte $euros($b)€
+					if d<10
+						\(non, ce n'est vraiment pas cher)
+					end
+					.
+				end
+				if alt
+					Quel est le poid d'un sachet?
+				else
+					Quel est le prix au kg?
+				end
 			end
 			answer: do
-				Un sachet pèse\s
-				if aprx
-					environ\s
+				if alt
+					Un sachet pèse\s
+					if aprx
+						environ\s
+					end
+					$d kg.
+				else
+					Le prix au kilo est de $d€
 				end
-				$d kg.
 			end
 		end
 	else
@@ -545,7 +571,11 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		end
 		return do
 			instruction: do
-				J'ai acheté $a croissants à la boulangerie. La boulangère veux les répartir équitablement en $b sachets ; \s
+				J'ai acheté $a croissants à la boulangerie
+				if trap
+					\spour $euros($(a*0.8))€
+				end
+				. La boulangère veux les répartir équitablement en $b sachets ; \s
 				if alt
 					combien il y aura-t-il de croissant par sachet?
 				else
