@@ -18,7 +18,9 @@ Licensed under the MIT License — see LICENSE for details.
 //                               seeded by the equation, never identical to
 //                               the 1er pré) — a quantified distractor,
 //                               never an unvalued mention — and the total
-//                               is scoped to the 1er pré
+//                               is scoped to the 1er pré. The two meadows
+//                               are named in an alternating order (seeded):
+//                               the 1er pré first or last.
 //   sign "-" : invalid          no loss happens at the stud
 //
 // The caller passes every letter (the missing one as its computed solution)
@@ -154,6 +156,9 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	// mare count and a births-per-mare count (seeded by the equation,
 	// never identical to the 1er pré) — a quantified distractor the answer
 	// ignores; the total (and the question) stays scoped to the 1er pré.
+	// The two meadows are named in an alternating order (seeded, `swap`):
+	// the 1er pré first or last.
+	let swap = 0
 	if trap
 		let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
 		let random = $Random($(seed))
@@ -162,10 +167,15 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		if c == a and d == b
 			set c = $ c == 20 and 19 or c + 1
 		end
+		set swap = $ random(0, 1)
 		return if u == 1
 			instruction: do
 				$(who.intro)\s
-				des juments du 1er pré ont chacune eu $(born(b)) ; les $c juments du 2e pré en ont eu chacune $d.\s
+				if swap == 1
+					les $c juments du 2e pré ont chacune eu $(born(d)) ; des juments du 1er pré en ont eu chacune $(born(b)).\s
+				else
+					des juments du 1er pré ont chacune eu $(born(b)) ; les $c juments du 2e pré en ont eu chacune $d.\s
+				end
 				Au total, le 1er pré a eu $e licornes.\s
 				Combien de juments du 1er pré ont mis bas ?
 			end
@@ -173,7 +183,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 2
 			instruction: do
 				$(who.intro)\s
-				les $a juments du 1er pré ont chacune eu autant de licornes les unes que les autres ; les $c juments du 2e pré en ont eu chacune $d.\s
+				if swap == 1
+					les $c juments du 2e pré ont chacune eu $(born(d)) ; les $a juments du 1er pré en ont eu chacune autant les unes que les autres.\s
+				else
+					les $a juments du 1er pré ont chacune eu autant de licornes les unes que les autres ; les $c juments du 2e pré en ont eu chacune $d.\s
+				end
 				Au total, le 1er pré a eu $e licornes.\s
 				Combien de licornes chacune des juments du 1er pré a-t-elle eues ?
 			end
@@ -181,7 +195,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 5
 			instruction: do
 				$(who.intro)\s
-				les $a juments du 1er pré ont chacune eu $(born(b)) ; les $c juments du 2e pré en ont eu chacune $d.\s
+				if swap == 1
+					les $c juments du 2e pré ont chacune eu $(born(d)) ; les $a juments du 1er pré en ont eu chacune $(born(b)).\s
+				else
+					les $a juments du 1er pré ont chacune eu $(born(b)) ; les $c juments du 2e pré en ont eu chacune $d.\s
+				end
 				Combien de licornes le 1er pré a-t-il eu ?
 			end
 			answer: Le 1er pré a donc eu $e licornes.

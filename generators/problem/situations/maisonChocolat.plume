@@ -26,7 +26,9 @@ Licensed under the MIT License — see LICENSE for details.
 // The `trap` flag is supported on the bare product (a*b = e) only: the
 // dark chocolate is then drawn with arbitrary values (a count and a weight
 // per brick, seeded by the equation so the same question always tells the
-// same story) and set aside — a quantified distractor the answer ignores.
+// same story) and set aside — a quantified distractor the answer ignores;
+// the two chocolates are presented in an alternating order (seeded), the
+// dark one first or last.
 // With the full equation, the sign "-" or any missing letter, the
 // configuration is invalid.
 // Returns a (instruction:, answer:) table, or the `invalid` table.
@@ -167,15 +169,19 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		do
 			intro: $name[1] construit une maison en chocolat
 			uses: $ (name[2] == "f" and "Elle utilise" or "Il utilise")
+			usesLow: $ (name[2] == "f" and "elle utilise" or "il utilise")
 			qUses: $ (name[2] == "f" and "utilise-t-elle" or "utilise-t-il")
 			also: $ (name[2] == "f" and "elle a mis de côté" or "il a mis de côté")
+			alsoCap: $ (name[2] == "f" and "Elle a mis de côté" or "Il a mis de côté")
 		end
 	else
 		do
 			intro: Je construis une maison en chocolat
 			uses: J'utilise
+			usesLow: j'utilise
 			qUses: utilise-je
 			also: j'ai mis de côté
+			alsoCap: J'ai mis de côté
 		end
 	end
 
@@ -297,43 +303,59 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		// is drawn with arbitrary values (a count and a weight per brick,
 		// seeded by the equation) and set aside: a quantified distractor
 		// the answer ignores (the total and the question are scoped to the
-		// white chocolate).
+		// white chocolate). The two chocolates are presented in an
+		// alternating order (seeded, `swap`): the dark one first or last,
+		// so the relevant term never stays in the same place.
+		let swap = 0
 		if trap
 			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
 			let random = $Random($(seed))
 			set c = $ random(2, 20)
 			set d = $ random(5, 99)
+			set swap = $ random(0, 1)
 		end
 		return if u == 1
 			instruction: do
 				$(who.intro).\s
-				$(who.uses) $(someBricks("blanc", b)), pour un total de $(g(e)) g de chocolat blanc
-				if trap
-					\s; $(who.also) $(bricks("noir", c, d))
+				if trap and swap == 1
+					$(who.alsoCap) $(bricks("noir", c, d)) ; $(who.usesLow) $(someBricks("blanc", b)), pour un total de $(g(e)) g de chocolat blanc.\s
+				else
+					$(who.uses) $(someBricks("blanc", b)), pour un total de $(g(e)) g de chocolat blanc
+					if trap
+						\s; $(who.also) $(bricks("noir", c, d))
+					end
+					.\s
 				end
-				.\s
 				Combien de briques de chocolat blanc $(who.qUses) ?
 			end
 			answer: $(who.uses) $(g(a)) briques de chocolat blanc.
 		elseif u == 2
 			instruction: do
 				$(who.intro).\s
-				$(who.uses) $(bricks("blanc", a, 0)), pour un total de $(g(e)) g de chocolat blanc
-				if trap
-					\s; $(who.also) $(bricks("noir", c, d))
+				if trap and swap == 1
+					$(who.alsoCap) $(bricks("noir", c, d)) ; $(who.usesLow) $(bricks("blanc", a, 0)), pour un total de $(g(e)) g de chocolat blanc.\s
+				else
+					$(who.uses) $(bricks("blanc", a, 0)), pour un total de $(g(e)) g de chocolat blanc
+					if trap
+						\s; $(who.also) $(bricks("noir", c, d))
+					end
+					.\s
 				end
-				.\s
 				Combien pèse une brique de chocolat blanc ?
 			end
 			answer: Une brique de chocolat blanc pèse $(g(b)) g.
 		elseif u == 5
 			instruction: do
 				$(who.intro).\s
-				$(who.uses) $(bricks("blanc", a, b))
-				if trap
-					\s; $(who.also) $(bricks("noir", c, d))
+				if trap and swap == 1
+					$(who.alsoCap) $(bricks("noir", c, d)) ; $(who.usesLow) $(bricks("blanc", a, b)).\s
+				else
+					$(who.uses) $(bricks("blanc", a, b))
+					if trap
+						\s; $(who.also) $(bricks("noir", c, d))
+					end
+					.\s
 				end
-				.\s
 				Combien de chocolat blanc $(who.qUses) ?
 			end
 			answer: $(who.uses) $(g(e)) g de chocolat blanc.

@@ -27,7 +27,9 @@ Licensed under the MIT License — see LICENSE for details.
 // a-t-elle…"). `?trap` only applies to the bare product a*b = e: a second
 // instrument is then drawn with a count (seeded by the equation) and one of
 // the instruments2 string counts — a quantified distractor, never an
-// unvalued mention (its strings are not part of the total).
+// unvalued mention (its strings are not part of the total). The two
+// instruments are mentioned in an alternating order (seeded by the
+// equation).
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -220,30 +222,50 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		// the equation) and one of the instruments2 string counts — a
 		// quantified distractor (its strings are not part of the total).
 		let trapInst = 0
+		let swap = 0
 		if trap
 			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
 			let random = $Random($(seed))
 			set c = $ random(2, 20)
 			set d = $ random.choice(secondStrings)
 			set trapInst = $ findInstrument(instruments2, d)
+			set swap = $ random(0, 1)
 			return if u == 1
 				instruction: do
-					$(who.scene)\s$(cap(who.restring))\s
-					des $(inst1.plural) $(ofStrings(b)),\s
-					pour $(e) cordes ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
+					$(who.scene)\s
+					if swap == 1
+						Les $c $(trapInst.plural) $(ofStrings(d)) ont besoin de cordes ; $(who.restring) des $(inst1.plural) $(ofStrings(b)),\s
+						pour $(e) cordes. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
+					else
+						$(cap(who.restring))\s
+						des $(inst1.plural) $(ofStrings(b)),\s
+						pour $(e) cordes ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de $(inst1.plural) $(who.qRe) $(rePart(inst1)) ?
+					end
 				end
 				answer: $(cap(who.restring)) $(a) $(inst1.plural).
 			elseif u == 2
 				instruction: do
-					$(who.scene)\s$(cap(who.restring))\s
-					$(a) $(inst1.plural),\s
-					pour $(e) cordes ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de cordes a $(oneOf(inst1)) ?
+					$(who.scene)\s
+					if swap == 1
+						Les $c $(trapInst.plural) $(ofStrings(d)) ont besoin de cordes ; $(who.restring) $(a) $(inst1.plural),\s
+						pour $(e) cordes. Combien de cordes a $(oneOf(inst1)) ?
+					else
+						$(cap(who.restring))\s
+						$(a) $(inst1.plural),\s
+						pour $(e) cordes ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de cordes a $(oneOf(inst1)) ?
+					end
 				end
 				answer: $(cap(oneOf(inst1))) a $(b) cordes.
 			elseif u == 5
 				instruction: do
-					$(who.scene)\s$(cap(who.restring))\s
-					$(a) $(inst1.plural) $(ofStrings(b)) ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de cordes pour les $(a) $(inst1.plural) ?
+					$(who.scene)\s
+					if swap == 1
+						Les $c $(trapInst.plural) $(ofStrings(d)) ont besoin de cordes ; $(who.restring) $(a) $(inst1.plural) $(ofStrings(b)).\s
+						Combien de cordes pour les $(a) $(inst1.plural) ?
+					else
+						$(cap(who.restring))\s
+						$(a) $(inst1.plural) $(ofStrings(b)) ; les $c $(trapInst.plural) $(ofStrings(d)) ont aussi besoin de cordes. Combien de cordes pour les $(a) $(inst1.plural) ?
+					end
 				end
 				answer: $(e) cordes.
 			end

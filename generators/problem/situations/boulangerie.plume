@@ -20,6 +20,15 @@ Licensed under the MIT License — see LICENSE for details.
 // `prenom` is a (name, gender) pair — (Léa, f) — or empty: the question is
 // told in the 1st person ("j'ai acheté…") or in the gendered 3rd person
 // ("Léa a acheté… elle dépense… combien a-t-elle acheté… ?").
+// `?trap` only applies to the bare product (a*b = e): the second purchase
+// is then drawn with arbitrary values (a quantity and a unit price,
+// seeded by the equation — the same question always tells the same story):
+// a quantified distractor that makes the statement read like a full
+// two-purchase problem (compatible with several questions — the student
+// must read the one posed), while the total is scoped to the first
+// purchase, which alone is part of the equation (the check keeps the
+// known values only). The two purchases are presented in an alternating
+// order — the relevant one first or last.
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -122,13 +131,6 @@ macro term(qty, price)
 end
 
 lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
-	if trap
-		// The trap (a distractor drawn at random on top of the caller's
-		// equation) is not implemented yet: the values it would draw don't
-		// satisfy the equation. Mark the configuration invalid until it is.
-		return $invalid
-	end
-
 	let ka = $a
 	let kb = $b
 	let kc = $c
@@ -156,6 +158,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return $invalid
 	end
 	if sign == "" and (c or d)
+		return $invalid
+	end
+	// The trap only dresses the bare product: on a complete equation every
+	// letter is given — there is nothing to invent.
+	if trap and sign != ""
 		return $invalid
 	end
 
@@ -195,11 +202,30 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		end
 	end
 
+	// The trap (bare product only): the second purchase is invented — a
+	// quantified distractor (a quantity and a unit price, seeded by the
+	// equation — the same question always tells the same story). The
+	// invented values are NOT terms of the equation: the check below keeps
+	// the known values (ka..kd, as the caller passed them — c and d are
+	// missing there), and the statement scopes the total to the first
+	// purchase. The two purchases are presented in an alternating order —
+	// the relevant one first or last (`swap`, drawn from the same seed) —
+	// so the student never learns the relevant term is the first one.
+	let swap = 0
+	if trap
+		let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
+		let random = $Random($(seed))
+		set c = $ random(2, 10)
+		set d = $ random(5, 15) / 10
+		set swap = $ random(0, 1)
+	end
+
 	let item1 = 0
 	let item2 = 0
 
-	// item1 is priced by b ("+") or by d ("-"); item2 by d. With no price,
-	// the cheapest products are assumed (baguette, croissant).
+	// item1 is priced by b ("+") or by d ("-"); item2 by d (the trap's
+	// invented d picks it, as on the full equation). With no price, the
+	// cheapest products are assumed (baguette, croissant).
 	if sign == "-"
 		if d
 			set item1 = $ pickItem(items1, d)
@@ -229,8 +255,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	if sign == "-"
 		set lhs = $ a - term(c, d)
 	else
-		// "+" : a*b + c*d = e — "" : a*b = e (c and d are missing there)
-		set lhs = $ term(a, b) + term(c, d)
+		// The equation only involves the KNOWN values (ka..kd, as the
+		// caller passed them): "+" → a*b + c*d = e — "" → a*b = e. In the
+		// trap the invented c and d are distractors of the statement, not
+		// terms of the equation.
+		set lhs = $ term(ka, kb) + term(kc, kd)
 	end
 	if (lhs * 100).round() != (e * 100).round()
 		return $invalid
@@ -332,12 +361,20 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			instruction: do
 				À la boulangerie, $(who.bought)\s
 				if b
-					$(some(item1, b))
-					if c
-						\set $(bought(c, item2, d))
+					if trap and swap == 1
+						$(bought(c, item2, d)) et $(some(item1, b)).\s
+					else
+						$(some(item1, b))
+						if c
+							\set $(bought(c, item2, d))
+						end
+						.\s
 					end
-					.\s
-					En tout, $(who.spend) $(euros(e)) € ; combien $(who.qBought) acheté $(deItem(item1)) ?
+					if trap
+						En tout, $(who.spend) $(euros(e)) € en $(item1.plural) ; combien $(who.qBought) acheté $(deItem(item1)) ?
+					else
+						En tout, $(who.spend) $(euros(e)) € ; combien $(who.qBought) acheté $(deItem(item1)) ?
+					end
 				else
 					$(e) articles : des $(item1.plural) et $(c) $(item2.plural).\s
 					Combien $(who.qBought) acheté $(deItem(item1)) ?
@@ -347,15 +384,22 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		elseif u == 2
 			instruction: do
 				À la boulangerie, $(who.bought)\s
-				$(bought(a, item1, 0))
-				if c
-					\set $(bought(c, item2, d))
-				end
-				.\s
-				if c
-					En tout, $(who.spend) $(euros(e)) € ; combien coûte $(oneOf(item1)) ?
+				if trap and swap == 1
+					$(bought(c, item2, d)) et $(bought(a, item1, 0)).\s
 				else
+					$(bought(a, item1, 0))
+					if c
+						\set $(bought(c, item2, d))
+					end
+					.\s
+				end
+				// The total is scoped to the first purchase on the bare
+				// product (and in the trap, where c is the invented
+				// second purchase): the second purchase never counts in it.
+				if not c or trap
 					En tout, $(who.spend) $(euros(e)) € en $(item1.plural) ; combien coûte $(oneOf(item1)) ?
+				else
+					En tout, $(who.spend) $(euros(e)) € ; combien coûte $(oneOf(item1)) ?
 				end
 			end
 			answer: $(cap(oneOf(item1))) coûte $(euros(b)) €.
@@ -387,18 +431,33 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			instruction: do
 				À la boulangerie, $(who.bought)\s
 				if c
-					if b
-						$(bought(a, item1, b)) et $(bought(c, item2, d)).\s
-					else
-						if d
-							$(boughtFor(a, item1)) et $(bought(c, item2, d)).\s
+					if trap
+						// The bare product with the invented second
+						// purchase: the question is scoped to the first
+						// one ("dépensé en baguettes"), the invented
+						// purchase never counts in the total.
+						if swap == 1
+							$(bought(c, item2, d)) et $(bought(a, item1, b)).\s
 						else
-							$(bought(a, item1, 0)) et $(bought(c, item2, 0)).\s
-							Combien $(who.qBought) acheté d'articles ?
+							$(bought(a, item1, b))
+							\set $(bought(c, item2, d))
+							.\s
 						end
-					end
-					if b or d
-						En tout, combien $(who.qSpent) dépensé ?
+						En tout, combien $(who.qSpent) dépensé en $(item1.plural) ?
+					else
+						if b
+							$(bought(a, item1, b)) et $(bought(c, item2, d)).\s
+						else
+							if d
+								$(boughtFor(a, item1)) et $(bought(c, item2, d)).\s
+							else
+								$(bought(a, item1, 0)) et $(bought(c, item2, 0)).\s
+								Combien $(who.qBought) acheté d'articles ?
+							end
+						end
+						if b or d
+							En tout, combien $(who.qSpent) dépensé ?
+						end
 					end
 				else
 					$(bought(a, item1, b)).\s
@@ -407,7 +466,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 			answer: do
 				if b or d
-					$(cap(who.spent)) $(euros(e)) €.
+					if trap
+						$(cap(who.spent)) $(euros(e)) € en $(item1.plural).
+					else
+						$(cap(who.spent)) $(euros(e)) €.
+					end
 				else
 					$(cap(who.bought)) $(e) articles.
 				end

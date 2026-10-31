@@ -25,6 +25,8 @@ Licensed under the MIT License — see LICENSE for details.
 // pocket coins' value, the quantity seeded by the equation) — a quantified
 // distractor, never an unvalued mention — and the question is restricted
 // to the pocket coins ("combien d'argent ai-je en pièces de 0,50 € ?").
+// The pocket and the piggy bank are mentioned in an alternating order
+// (seeded by the equation).
 // On the full equation there is no second term to mention: the
 // configuration is marked invalid.
 //
@@ -195,16 +197,22 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	// without a count).
 	let d2 = $ trap and trapValue(b)
 	let c2 = 0
+	let swap = 0
 	if trap
 		let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
 		let random = $Random($(seed))
 		set c2 = $ random(2, 20)
+		set swap = $ random(0, 1)
 	end
 
 	return if oneProduct
 		if u == 1
 			instruction: do
-				if trap
+				if trap and swap == 1
+					$(cap(who.tirelire)) contient $c2 pièces de $euros($d2) €, et $who.haveLow des pièces de $euros($b) €.\s
+					$who.capPron $euros($e) € en pièces de $euros($b) €.\s
+					Combien $who.q de pièces de $euros($b) € ?
+				elseif trap
 					$who.have des pièces de $euros($b) €, et $who.tirelire contient $c2 pièces de $euros($d2) €.\s
 					$who.capPron $euros($e) € en pièces de $euros($b) €.\s
 					Combien $who.q de pièces de $euros($b) € ?
@@ -222,7 +230,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 2
 			instruction: do
-				if trap
+				if trap and swap == 1
+					$(cap(who.tirelire)) contient $c2 pièces de $euros($d2) €, et $who.haveLow $a pièces.\s
+					$(cap(who.poss)) $a pièces font $euros($e) €.\s
+					Combien vaut chacune de $who.poss $a pièces ?
+				elseif trap
 					$who.have $a pièces, et $who.tirelire contient $c2 pièces de $euros($d2) €.\s
 					$(cap(who.poss)) $a pièces font $euros($e) €.\s
 					Combien vaut chacune de $who.poss $a pièces ?
@@ -240,7 +252,10 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 5
 			instruction: do
-				if trap
+				if trap and swap == 1
+					$(cap(who.tirelire)) contient $c2 pièces de $euros($d2) €, et $who.haveLow $a pièces de $euros($b) €.\s
+					Combien d'argent $who.q en pièces de $euros($b) € ?
+				elseif trap
 					$who.have $a pièces de $euros($b) €, et $who.tirelire contient $c2 pièces de $euros($d2) €.\s
 					Combien d'argent $who.q en pièces de $euros($b) € ?
 				else

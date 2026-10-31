@@ -25,7 +25,9 @@ Licensed under the MIT License — see LICENSE for details.
 // "J'ai découpé mon trajet en deux parties." and gives the second part a
 // duration and a speed drawn at random (seeded by the equation, never
 // identical to the first part) — a quantified distractor the answer
-// ignores; the question stays about the first part (a*b = e).
+// ignores; the question stays about the first part (a*b = e). The two
+// parts are told in an alternating order (seeded): the 2e part first or
+// last.
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -170,7 +172,9 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		// (plausible on the road — the validity range 1-150, minus the
 		// walking paces below 10 km/h), seeded by the equation — the same
 		// question always tells the same story — never identical to the
-		// first part; the question stays about the first part.
+		// first part; the question stays about the first part. The two
+		// parts are told in an alternating order (seeded, `swap`).
+		let swap = 0
 		if trap
 			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (e * 100).round()
 			let random = $Random($(seed))
@@ -179,11 +183,16 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			if c == a and d == b
 				set c = $ c == 12 and 11 or c + 1
 			end
+			set swap = $ random(0, 1)
 		end
 
 		return if u == 1
 			instruction: do
-				if trap
+				if trap and swap == 1
+					$(who.split)\s
+					Sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h ; sur la 1re partie, $(who.rolledLow) à $b km/h et $(who.parcouru) $e km.\s
+					Combien de temps $(who.qTime) sur la 1re partie ?
+				elseif trap
 					$(who.split)\s
 					Sur la 1re partie, $(who.rolledLow) à $b km/h et $(who.parcouru) $e km ; sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h.\s
 					Combien de temps $(who.qTime) sur la 1re partie ?
@@ -201,7 +210,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 2
 			instruction: do
-				if trap
+				if trap and swap == 1
+					$(who.split)\s
+					Sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h ; sur la 1re partie, $(who.rolledLow) $(a)h et $(who.parcouru) $e km.\s
+					Quelle était $(who.poss) vitesse sur la 1re partie ?
+				elseif trap
 					$(who.split)\s
 					Sur la 1re partie, $(who.rolledLow) $(a)h et $(who.parcouru) $e km ; sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h.\s
 					Quelle était $(who.poss) vitesse sur la 1re partie ?
@@ -219,7 +232,11 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 5
 			instruction: do
-				if trap
+				if trap and swap == 1
+					$(who.split)\s
+					Sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h ; sur la 1re partie, $(who.rolledLow) $(a)h à $b km/h.\s
+					Quelle distance $(who.qDist) sur la 1re partie ?
+				elseif trap
 					$(who.split)\s
 					Sur la 1re partie, $(who.rolledLow) $(a)h à $b km/h ; sur la 2e partie, $(who.rolledLow) $(c)h à $d km/h.\s
 					Quelle distance $(who.qDist) sur la 1re partie ?

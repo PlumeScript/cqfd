@@ -30,7 +30,8 @@ Licensed under the MIT License — see LICENSE for details.
 // `trap` is a distractor drawn from the scene: a "fonds ancien" with a
 // drawn book count (seeded by the equation, never equal to the total e),
 // allowed only on a single-product question (a*b = e); on the complete
-// equation it marks the configuration invalid.
+// equation it marks the configuration invalid. The fonds ancien and the
+// shelves are mentioned in an alternating order (seeded by the equation).
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -170,13 +171,16 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 
 	// The trap's "fonds ancien" book count (drawn after the literature,
 	// same seeded generator — the same question always tells the same
-	// story; never equal to the total e).
+	// story; never equal to the total e), and `swap`, the alternating
+	// order of the fonds ancien and the shelves.
 	let fonds = 0
+	let swap = 0
 	if trap
 		set fonds = $ random(2, 60)
 		if fonds == e
 			set fonds = $ fonds + 1
 		end
+		set swap = $ random(0, 1)
 	end
 
 	// The speaker: 1st person when name is empty; otherwise the (name,
@@ -217,7 +221,10 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(b) livres par étagère et la 2e $(c) étagères de $(d) livres, soit $(e) livres au total.\s
 					Combien d'étagères compte la 1re catégorie ?
 				elseif b
-					if trap
+					if trap and swap == 1
+						$(who.introFull) a $(fonds) livres dans son fonds ancien ; elle a $(b) livres par étagère et $(e) livres sur ses étagères.\s
+						Combien d'étagères a-t-elle ?
+					elseif trap
 						$(who.introFull) a $(b) livres par étagère et $(e) livres sur ses étagères ; le fonds ancien compte $(fonds) livres.\s
 						Combien d'étagères a-t-elle ?
 					else
@@ -246,7 +253,10 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères et la 2e $(c) étagères de $(d) livres, soit $(e) livres au total.\s
 					Combien de livres par étagère dans la 1re catégorie ?
 				else
-					if trap
+					if trap and swap == 1
+						$(who.introFull) a $(fonds) livres dans son fonds ancien ; elle a $(a) étagères et $(e) livres sur ses étagères.\s
+						Combien de livres par étagère ?
+					elseif trap
 						$(who.introFull) a $(a) étagères et $(e) livres sur ses étagères ; le fonds ancien compte $(fonds) livres.\s
 						Combien de livres par étagère ?
 					else
@@ -309,7 +319,10 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					$(who.Lib) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et la 2e $(c) livres.\s
 					$(who.qTotal)
 				else
-					if trap
+					if trap and swap == 1
+						$(who.Lib) a $(fonds) livres dans son fonds ancien ; elle a $(a) étagères de $(b) livres.\s
+						Combien de livres sur ces $(a) étagères ?
+					elseif trap
 						$(who.Lib) a $(a) étagères de $(b) livres ; le fonds ancien compte $(fonds) livres.\s
 						Combien de livres sur ces $(a) étagères ?
 					else
