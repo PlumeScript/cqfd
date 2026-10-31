@@ -54,6 +54,9 @@ eqn12: macro(style: classic, steps: full, ?a, ?b, ?c, ?d, ?rationnalSolution, ?q
 			else
 				$ s(letter)
 			end
+			if a==1
+				set sa = +
+			end
 			set a = $(sa == "+" and a or -a)
 			set b = $(sb == "+" and b or -b)
 			set c = $(sc == "+" and c or -c)
