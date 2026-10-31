@@ -15,9 +15,7 @@ eq: do
 	end
 	solutionShort: macro(question)
 		@pages.formula
-			$ String(question.steps[1])
-			=
-			$ String(question.steps[2])
+			$ String(Table.at(question.steps, -1))
 		end
 	end
 	solution: macro(question)
