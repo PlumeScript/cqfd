@@ -11,22 +11,22 @@ let renderLatexAST from $import(./utils)
 
 eq: do
 	instruction:macro(question)
-		$ pages.formula(String(question.steps[1]))
+		$ pages.formula(String(question.steps[1]), ?display)
 	end
 	solutionShort: macro(question)
-		@pages.formula
+		@pages.formula(?display)
 			$ String(Table.at(question.steps, -1))
 		end
 	end
 	solution: macro(question)
-		@pages.formula
+		@pages.formula(?display)
 			$ String(question.steps[1])
 			=
 			$ String(question.steps[2])
 		end
 		for i in seq(3, len(question.steps))
 			$pages.newline
-			@pages.formula
+			@pages.formula(?display)
 				=
 				$ String(question.steps[i])
 			end
@@ -36,14 +36,14 @@ end
 
 eqn: do
 	instruction:macro(question)
-		@pages.formula
+		@pages.formula(?display)
 			$ String(question.steps[1].l.pretty())
 			=
 			$ String(question.steps[1].r.pretty())
 		end
 	end
 	solutionShort: macro(question)
-		@pages.box @pages.formula
+		@pages.box @pages.formula(?display)
 			$ String(Table.at(question.steps, -1).l.pretty())
 			=
 			$ String(Table.at(question.steps, -1).r.pretty())
