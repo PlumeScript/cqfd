@@ -197,16 +197,20 @@ end
 
 /*
 Generate a rationnal division with a period between $Param(Number, minPeriod, 1) and $Param(Number, maxPeriod, 1).$newline
-If $code(minPeriod) is set to $formula(0).$newline
+If $code(minPeriod) is set to $formula(0), you can use $Param(Number, minDecimalPart, 0) and $Param(Number, maxDecimalPart, 1).$newline
 Dividende will be between $Param(Number, minA, 2) and $Param(Number, maxA, 100).$newline
 Divisor will be between $Param(Number, minB, 2) and $Param(Number, maxB, 100).$newline
 Caped by compute.$newline
 Flag $code(\0?frac) to print it as a fraction, $code(\0?greaterA) and $code(\0g?reaterB) to force $formula(a) or $formula(b) to be the greater, $code(\0?euclidean) to be shown as an integer division.
 */
-ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, Number minPeriod: 1, Number maxPeriod: 2, period:, minCompute:, maxCompute:, compute:,?frac, ?greaterA, ?greaterB, ?euclidean)
+ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:100, Number minPeriod: 1, Number maxPeriod: 2, period:, minCompute:, maxCompute:, minDecimalPart:, maxDecimalPart:, decimalPart:, compute:,?frac, ?greaterA, ?greaterB, ?euclidean)
 	if period
 		set minPeriod = $period
 		set maxPeriod = $period
+	end
+	if decimalPart
+		set minDecimalPart = $period
+		set maxDecimalPart = $period
 	end
 	if compute
 		set minCompute = $compute
@@ -215,16 +219,30 @@ ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:10
 	if minPeriod > maxPeriod
 		raise `minPeriod` cannot be greater than `maxPeriod`
 	end
+	if greaterA and maxA < minB
+		raise greaterA (`$greaterA`) cannot be lesser than minB (`$minB`)
+	end
+	if greaterB and maxB < minA
+		raise greaterB (`$greaterB`) cannot be lesser than minB (`$minA`)
+	end
 
 	@QuestionFactory
 		parameters: do
 			- $ Range(minA, maxA)
 			- $ Range(minB, maxB)
 			- $ Range(minPeriod, maxPeriod)
+			if minDecimalPart and maxDecimalPart
+				- $ Range(minDecimalPart, maxDecimalPart)
+			else
+				- $ Choice(-1)
+			end
 		end
-		validate: macro(a, b, period)
-			if a < b and greaterA or a > b and greaterB
+		validate: macro(a, b, period, decimalPart)
+			if a < b and greaterA or a > b and greaterB or a==b
 				return
+			end
+			if period == 0 and decimalPart != -1
+				return $ (a/b*10^decimalPart).floor() == (a/b)*10^decimalPart and (a/b*10^(decimalPart-1)).floor() != (a/b)*10^(decimalPart-1)
 			end
 
 			let m = $ b / FactNumberCls.fromNumber(a).gcd(b).value
@@ -255,7 +273,7 @@ ref divQ2: macro(Number minA: 2, Number maxA:100, Number minB: 2, Number maxB:10
 			return $true
 		end
 
-		get: macro(a, b, period)
+		get: macro(a, b, period, decimalPart)
 			
 			let opp = if frac
 				/
