@@ -265,25 +265,30 @@ mulHole: macro(...args)
 end
 
 /*
-Transform a $ParamSet(divQ2) into an equality with hole first.
+Transform a $ParamSet(divQ2) into an equality with hole first.$newline
+$Param(Bool, \0frac, false) to show decimal as frac.
 */
-ref mulHoleFirstRationnal: macro(...params)
+ref mulHoleFirstRationnal: macro(?frac, ...params)
 	@QuestionFactory
 		parameters: do
 			- $divQ2(...params)
 		end
 		get: macro(calc)
-			@Question(calculHole)
-				instruction: $Node(*, ..., $calc.instruction.children[1])
-				solution: @Node(/)
+			let solutionValue = $ calc.instruction.children[2]/calc.instruction.children[1]
+			
+			let solution = if solutionValue.floor()==solutionValue or (calc.period==0 and not frac)
+				$solutionValue
+			else
+				@Node(/)
 					- $calc.instruction.children[2]
 					- $calc.instruction.children[1]
 				end
+			end
+			@Question(calculHole)
+				instruction: $Node(*, ..., $calc.instruction.children[1])
+				solution: $solution
 				completed: @Node(*)
-					- @Node(bold) @Node(/)
-						- $calc.instruction.children[2]
-						- $calc.instruction.children[1]
-					end
+					- $Node(bold, $solution) 
 					- $calc.instruction.children[1]
 				end
 				target: $calc.instruction.children[2]
@@ -294,25 +299,30 @@ ref mulHoleFirstRationnal: macro(...params)
 end
 
 /*
-Transform a $ParamSet(divQ2) into an equality with hole second.
+Transform a $ParamSet(divQ2) into an equality with hole second.$newline
+$Param(Bool, \0frac, false) to show decimal as frac.
 */
-ref mulHoleSecondRationnal: macro(...params)
+ref mulHoleSecondRationnal: macro(?frac, ...params)
 	@QuestionFactory
 		parameters: do
 			- $divQ2(...params)
 		end
 		get: macro(calc)
-			@Question(calculHole)
-				instruction: $Node(*, $calc.instruction.children[2], ...)
-				solution: @Node(/)
+			let solutionValue = $ calc.instruction.children[1]/calc.instruction.children[2]
+			
+			let solution = if solutionValue.floor()==solutionValue or (calc.period==0 and not frac)
+				$solutionValue
+			else
+				@Node(/)
 					- $calc.instruction.children[1]
 					- $calc.instruction.children[2]
 				end
+			end
+			@Question(calculHole)
+				instruction: $Node(*, $calc.instruction.children[2], ...)
+				solution: $solution
 				completed: @Node(*)
-					- @Node(bold) @Node(/)
-						- $calc.instruction.children[1]
-						- $calc.instruction.children[2]
-					end
+					- $Node(bold, $solution)
 					- $calc.instruction.children[2]
 				end
 				target: $calc.instruction.children[1]
