@@ -274,24 +274,24 @@ ref mulHoleFirstRationnal: macro(?frac, ...params)
 			- $divQ2(...params)
 		end
 		get: macro(calc)
-			let solutionValue = $ calc.instruction.children[2]/calc.instruction.children[1]
+			let solutionValue = $ calc.instruction.children[1]/calc.instruction.children[2]
 			
 			let solution = if solutionValue.floor()==solutionValue or (calc.period==0 and not frac)
 				$solutionValue
 			else
 				@Node(/)
-					- $calc.instruction.children[2]
 					- $calc.instruction.children[1]
+					- $calc.instruction.children[2]
 				end
 			end
 			@Question(calculHole)
-				instruction: $Node(*, ..., $calc.instruction.children[1])
+				instruction: $Node(*, ..., $calc.instruction.children[2])
 				solution: $solution
 				completed: @Node(*)
 					- $Node(bold, $solution) 
-					- $calc.instruction.children[1]
+					- $calc.instruction.children[2]
 				end
-				target: $calc.instruction.children[2]
+				target: $calc.instruction.children[1]
 				id: $calc.id-1
 			end
 		end
