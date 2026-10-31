@@ -57,14 +57,15 @@ let centuries = do
 end
 
 lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
-	// integers, plausible sizes (books and shelves are counts)
+	// integers; wide bounds (relaxed 2026-10: the situation accepts the
+	// caller's drawn numbers — variety over realism)
 	if (a and a.floor() != a) or (b and b.floor() != b) or (c and c.floor() != c) or (d and d.floor() != d)
 		return $invalid
 	end
-	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+	if (a and (a < 2 or a > 9999)) or (c and (c < 2 or c > 9999))
 		return $invalid
 	end
-	if (b and (b < 2 or b > 30)) or (d and (d < 2 or d > 30))
+	if (b and (b < 2 or b > 9999)) or (d and (d < 2 or d > 9999))
 		return $invalid
 	end
 	if not e or e < 0

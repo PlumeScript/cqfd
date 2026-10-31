@@ -104,11 +104,13 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return $invalid
 	end
 
-	// integers where expected, plausible sizes
+	// integers where expected; wide bounds for the counts (relaxed
+	// 2026-10: variety over realism). b and d stay tied to the
+	// instruments' string counts (the instrument IS its string count).
 	if (a and a.floor() != a) or (c and c.floor() != c)
 		return $invalid
 	end
-	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+	if (a and (a < 2 or a > 9999)) or (c and (c < 2 or c > 9999))
 		return $invalid
 	end
 	if not e or e < 0

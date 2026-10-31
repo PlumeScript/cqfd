@@ -36,17 +36,17 @@ let invalid = (invalid: $true)
 
 // The products of the first purchase (priced by b): the cheapest first.
 let items1 = do
-	- (name: baguette, plural: baguettes, article: une, max: 2)
-	- (name: éclair au chocolat, plural: éclairs au chocolat, article: un, max: 10)
-	- (name: gâteau, plural: gâteaux, article: un, max: 50)
+	- (name: baguette, plural: baguettes, article: une, max: 5)
+	- (name: éclair au chocolat, plural: éclairs au chocolat, article: un, max: 20)
+	- (name: gâteau, plural: gâteaux, article: un, max: 9999)
 end
 
 // The products of the second purchase (priced by d): `tarte` plays there the
 // role that `gâteau` plays for item1.
 let items2 = do
-	- (name: croissant, plural: croissants, article: un, max: 2)
-	- (name: éclair au chocolat, plural: éclairs au chocolat, article: un, max: 10)
-	- (name: tarte, plural: tartes, article: une, max: 50)
+	- (name: croissant, plural: croissants, article: un, max: 5)
+	- (name: éclair au chocolat, plural: éclairs au chocolat, article: un, max: 20)
+	- (name: tarte, plural: tartes, article: une, max: 9999)
 end
 
 // The first product of `order` whose unit price `price` still fits
@@ -142,14 +142,15 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	let kc = $c
 	let kd = $d
 
-	// integers where expected, plausible sizes
+	// integers where expected; wide bounds (relaxed 2026-10: the situation
+// accepts the caller's drawn numbers — variety over realism)
 	if (a and a.floor() != a) or (c and c.floor() != c)
 		return $invalid
 	end
-	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+	if (a and (a < 2 or a > 9999)) or (c and (c < 2 or c > 9999))
 		return $invalid
 	end
-	if (b and (b <= 0 or b >= 50)) or (d and (d <= 0 or d >= 50))
+	if (b and (b <= 0 or b > 9999)) or (d and (d <= 0 or d > 9999))
 		return $invalid
 	end
 	if not e or e < 0
@@ -646,8 +647,8 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
 			return $invalid
 		end
-		// Plausible sizes (kept from the original).
-		if b < 2 or b > 20 or q < 2 or q > 20 or a < 2 or a > 20
+		// wide bounds (relaxed 2026-10: variety over realism)
+		if b < 2 or b > 9999 or q < 2 or q > 9999 or a < 2 or a > 9999
 			return $invalid
 		end
 		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the

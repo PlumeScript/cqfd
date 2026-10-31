@@ -58,12 +58,13 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return $invalid
 	end
 
-	// Plausible sizes — and every count is >= 2, so the plurals
-	// ("rangées", "sièges") are always the right form.
-	if (a and (a < 2 or a > 40)) or (c and (c < 2 or c > 20))
+	// Wide bounds (relaxed 2026-10: the situation accepts the caller's
+	// drawn numbers — variety over realism); every count is >= 2, so the
+	// plurals ("rangées", "sièges") are always the right form.
+	if (a and (a < 2 or a > 9999)) or (c and (c < 2 or c > 9999))
 		return $invalid
 	end
-	if (b and (b < 2 or b > 6)) or (d and (d < 2 or d > 6))
+	if (b and (b < 2 or b > 9999)) or (d and (d < 2 or d > 9999))
 		return $invalid
 	end
 	if not e or e < 4

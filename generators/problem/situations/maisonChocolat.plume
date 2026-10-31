@@ -106,13 +106,15 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	if (aCount and a and a.floor() != a) or (c and c.floor() != c)
 		return $invalid
 	end
-	if (aCount and a and (a < 2 or a > 20)) or (not aCount and (not a or a <= 0 or a > 1000))
+	// wide bounds (relaxed 2026-10: the situation accepts the caller's drawn
+	// numbers — variety over realism); a as a weight stays < 1 kg
+	if (aCount and a and (a < 2 or a > 9999)) or (not aCount and (not a or a <= 0 or a > 1000))
 		return $invalid
 	end
-	if c and (c < 2 or c > 20)
+	if c and (c < 2 or c > 9999)
 		return $invalid
 	end
-	if (b and (b <= 0 or b >= 100)) or (d and (d <= 0 or d >= 100))
+	if (b and (b <= 0 or b > 1000)) or (d and (d <= 0 or d > 1000))
 		return $invalid
 	end
 	if not e or e <= 0

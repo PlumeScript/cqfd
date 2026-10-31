@@ -75,11 +75,13 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		end
 	end
 
-	// plausible sizes (mare counts >= 2 so "juments" stays plural)
-	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+	// wide bounds (relaxed 2026-10: the situation accepts the caller's
+	// drawn numbers — variety over realism); mare counts >= 2 so
+	// "juments" stays plural
+	if (a and (a < 2 or a > 9999)) or (c and (c < 2 or c > 9999))
 		return $invalid
 	end
-	if (b and (b < 1 or b > 15)) or (d and (d < 1 or d > 15))
+	if (b and (b < 1 or b > 9999)) or (d and (d < 1 or d > 9999))
 		return $invalid
 	end
 	if not e or e < 1

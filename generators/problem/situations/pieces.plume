@@ -108,15 +108,16 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return $invalid
 	end
 
-	// Plausible sizes: a, c coin counts; b, d coin values in euros;
-	// e the total, in euros.
+	// a, c coin counts; b, d coin values in euros; e the total, in euros.
+	// Wide bounds (relaxed 2026-10: the situation accepts the caller's
+	// drawn numbers — variety over realism).
 	if (a and a.floor() != a) or (c and c.floor() != c)
 		return $invalid
 	end
-	if (a and (a < 2 or a > 20)) or (c and (c < 2 or c > 20))
+	if (a and (a < 2 or a > 9999)) or (c and (c < 2 or c > 9999))
 		return $invalid
 	end
-	if (b and (b <= 0 or b > 10)) or (d and (d <= 0 or d > 10))
+	if (b and (b <= 0 or b > 9999)) or (d and (d <= 0 or d > 9999))
 		return $invalid
 	end
 	if not e or e < 0
