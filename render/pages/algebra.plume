@@ -50,17 +50,22 @@ eqn: do
 		end
 	end
 	solution: macro(question)
+		let last
 		@pages.EqnAlign(boxLast: $(not question.steps.finalLabel?))
 			for step in question.steps
-				- do
-					- $ String(step.l.pretty())
-					- =
-					- $ String(step.r.pretty())
-					if step.r2?
-						- ou
+				let current =  $(String(step.l.pretty()))=$(String(step.r.pretty()))
+				if current != last
+					set last = $current
+					- do
 						- $ String(step.l.pretty())
 						- =
-						- $ String(step.r2.pretty())
+						- $ String(step.r.pretty())
+						if step.r2?
+							- ou
+							- $ String(step.l.pretty())
+							- =
+							- $ String(step.r2.pretty())
+						end
 					end
 				end
 			end
