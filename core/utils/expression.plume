@@ -52,6 +52,82 @@ macro flattenprod(x)
 	end
 end
 
+// The value of a pow exponent: a raw number (root() stores it plain) or a
+// number expression (pretty/eval rebuilt it) — the number, or empty when
+// the exponent is not one (a symbol, an add, ...).
+macro powExp(e)
+	if type(e) == "number"
+		return $e
+	end
+	if isExpression(e) and e.kind == "number"
+		return $e.left
+	end
+	return $empty
+end
+
+// Add the exponent e of base label to the (labels, exps) accumulator.
+macro addExp(labels, exps, label, e)
+	let k = $ Table.find(labels, label)
+	if k
+		set exps[k] = $ exps[k] + e
+	else
+		run $ Table.append(labels, label)
+		run $ Table.append(exps, e)
+	end
+end
+
+// Greatest common divisor of two integers (Euclid, absolute values).
+macro gcd(a, b)
+	set a = $ Number.abs(a)
+	set b = $ Number.abs(b)
+	while b != 0
+		let t = $b
+		set b = $ a % b
+		set a = $t
+	end
+	return $a
+end
+
+// A reduced fraction has a finite decimal expansion iff its denominator
+// is of the form 2^a·5^b.
+macro finiteDecimal(d)
+	set d = $ Number.abs(d)
+	while d % 2 == 0
+		set d = $ d / 2
+	end
+	while d % 5 == 0
+		set d = $ d / 5
+	end
+	return $ d == 1
+end
+
+// Collect the factors of one side of a div into (out): a number, a symbol
+// or a symbol pow goes in, and a nested div keeps its own numerator factors
+// here while sending its denominator factors to (other) — (a/b)/c = a/(b·c).
+// Returns false when a factor is not one of those (a sum, a compound pow,
+// ...), true otherwise.
+macro divFlatten(flat, out, other)
+	let ok = $true
+	for i in seq(1, len(flat))
+		let f = $flat[i]
+		if isExpression(f) and f.kind == "div"
+			let lf = $ flattenprod(f.left)
+			let rf = $ flattenprod(f.right)
+			set ok = $ divFlatten(lf, out, other) and ok
+			set ok = $ divFlatten(rf, other, out) and ok
+		elseif isExpression(f) and f.kind == "number"
+			run $ Table.append(out, f)
+		elseif isExpression(f) and f.kind == "symbol"
+			run $ Table.append(out, f)
+		elseif isExpression(f) and f.kind == "pow" and isExpression(f.left) and f.left.kind == "symbol" and powExp(f.right)
+			run $ Table.append(out, f)
+		else
+			set ok = $false
+		end
+	end
+	return $ok
+end
+
 // True when t carries a minus: a negative number, or a product holding an
 // odd number of negative factors — looked through the whole product, so a
 // minus nested in the tree (mul(-1, y*x)) counts too.
@@ -428,8 +504,9 @@ set Expression = macro(kind:, left:, right:, print:)
 		return $ Expression(kind: self.kind, left: left, right: right, print: self.print?)
 	end
 
-	// Apply linear simplifications
-	reduce: macro()
+	// Apply linear simplifications. ?decimal: a pure number fraction with a
+	// finite decimal expansion becomes the number (2/4 ?decimal -> 0.5).
+	reduce: macro(?decimal)
 		// if/else on purpose: the `A and B or C` idiom evaluates `false or empty`
 		// to false (plume quirk) and poisoned the reconstructed leaves with
 		// right: false, breaking meta eq.
@@ -614,6 +691,171 @@ set Expression = macro(kind:, left:, right:, print:)
 				end
 			end
 			return $value.pretty()
+		elseif self.kind == "div"
+			// Fraction reduction: the integer coefficients are simplified by
+			// their gcd and the same symbol base cancels between the
+			// numerator and the denominator (2x/4 -> x/2, x/x² -> 1/x,
+			// (2/3)x/4 -> x/6, x/x -> 1). ?decimal turns a pure number
+			// fraction with a finite decimal expansion into the number
+			// (2/4 ?decimal -> 0.5); 1/3 has none and stays a fraction. A
+			// side that is not a product of numbers, symbols, symbol pows
+			// and nested divs (a sum, a compound pow, ...) keeps its
+			// reduced children, as before.
+			if not isExpression(left) or not isExpression(right)
+				return $ Expression(kind: "div", left: left, right: right, print: self.print?).pretty()
+			end
+			let nf = $Table()
+			let df = $Table()
+			let lf = $ flattenprod(left)
+			let rf = $ flattenprod(right)
+			let ok = $ divFlatten(lf, nf, df) and divFlatten(rf, df, nf)
+			if not ok
+				return $ Expression(kind: "div", left: left, right: right, print: self.print?).pretty()
+			end
+			// Number factors per side.
+			let ln = $1
+			for i in seq(1, len(nf))
+				let f = $nf[i]
+				if isExpression(f) and f.kind == "number"
+					set ln *= $ f.left
+				end
+			end
+			let rn = $1
+			for i in seq(1, len(df))
+				let f = $df[i]
+				if isExpression(f) and f.kind == "number"
+					set rn *= $ f.left
+				end
+			end
+			// No integer simplification possible (division by zero or a
+			// non-integer coefficient): keep the reduced children.
+			if rn == 0 or ln % 1 != 0 or rn % 1 != 0
+				return $ Expression(kind: "div", left: left, right: right, print: self.print?).pretty()
+			end
+			let g = $ gcd(ln, rn)
+			let cn = $ ln / g
+			let cd = $ rn / g
+			if cd < 0
+				set cn = $ -cn
+				set cd = $ -cd
+			end
+			if cn == 0
+				return $makeExpression(0)
+			end
+			// Symbol bases: the net exponent decides the side (> 0
+			// numerator, < 0 denominator, = 0 cancelled), in first
+			// appearance order.
+			let labels = $Table()
+			let exps = $Table()
+			for i in seq(1, len(nf))
+				let f = $nf[i]
+				let e = $empty
+				if isExpression(f) and f.kind == "symbol"
+					set e = $1
+				elseif isExpression(f) and f.kind == "pow" and isExpression(f.left) and f.left.kind == "symbol"
+					set e = $ powExp(f.right)
+				end
+				if e
+					let lb = $ isExpression(f.left) and f.left.left or f.left
+					run $ addExp(labels, exps, lb, e)
+				end
+			end
+			for i in seq(1, len(df))
+				let f = $df[i]
+				let pe = $empty
+				if isExpression(f) and f.kind == "symbol"
+					set pe = $1
+				elseif isExpression(f) and f.kind == "pow" and isExpression(f.left) and f.left.kind == "symbol"
+					set pe = $ powExp(f.right)
+				end
+				if pe
+					let lb = $ isExpression(f.left) and f.left.left or f.left
+					run $ addExp(labels, exps, lb, -pe)
+				end
+			end
+			// One factor per surviving base (a bare symbol when the
+			// exponent is 1, a pow otherwise).
+			let hasSym = $false
+			let numSy = $Table()
+			let denSy = $Table()
+			for i in seq(1, len(labels))
+				let e = $exps[i]
+				let f = $empty
+				if e > 0
+					set hasSym = $true
+					if e == 1
+						set f = $ makeExpression(labels[i])
+					else
+						let b = $ makeExpression(labels[i])
+						let ex = $ makeExpression(e)
+						set f = $Expression(kind: "pow", left: b, right: ex)
+					end
+					run $ Table.append(numSy, f)
+				elseif e < 0
+					set hasSym = $true
+					if -e == 1
+						set f = $ makeExpression(labels[i])
+					else
+						let b = $ makeExpression(labels[i])
+						let ex = $ makeExpression(-e)
+						set f = $Expression(kind: "pow", left: b, right: ex)
+					end
+					run $ Table.append(denSy, f)
+				end
+			end
+			// No symbol survives: a pure number fraction.
+			if not hasSym
+				if cd == 1
+					return $ makeExpression(cn)
+				end
+				// ?decimal: a finite decimal expansion becomes the number;
+				// 1/3 has none and stays a fraction.
+				if decimal and finiteDecimal(cd)
+					return $ makeExpression(cn / cd)
+				end
+				let n = $ makeExpression(cn)
+				let d = $ makeExpression(cd)
+				return $ Expression(kind: "div", left: n, right: d, print: self.print?).pretty()
+			end
+			// Rebuild both sides: the coefficient first, then the symbol
+			// factors.
+			let num = $empty
+			if cn != 1
+				set num = $ makeExpression(cn)
+			end
+			for i in seq(1, len(numSy))
+				let f = $numSy[i]
+				if num
+					set num = $ num * f
+				else
+					set num = $f
+				end
+			end
+			if not num
+				set num = $makeExpression(1)
+			end
+			let den = $empty
+			if cd != 1
+				set den = $ makeExpression(cd)
+			end
+			for i in seq(1, len(denSy))
+				let f = $denSy[i]
+				if den
+					set den = $ den * f
+				else
+					set den = $f
+				end
+			end
+			if not den
+				set den = $makeExpression(1)
+			end
+			if num == 1
+				return $ Expression(kind: "div", left: num, right: den, print: self.print?).pretty()
+			end
+			if den == 1
+				return $num.pretty()
+			end
+			return $ Expression(kind: "div", left: num, right: den, print: self.print?).pretty()
 		else
 			// Carry the print flags (root: the reduced node must keep
 			// rendering \sqrt, not x^{0.5}).
