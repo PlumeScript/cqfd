@@ -246,8 +246,8 @@ ref mulHoleSecond: macro(...params)
 					- $calc.instruction.children[1]
 				end
 				completed: @Node(*)
-					- $Node(bold, $calc.instruction.children[2])
 					- $calc.instruction.children[1]
+					- $Node(bold, $calc.instruction.children[2])
 				end
 				target: $calc.solution
 				id: $calc.solution-2
