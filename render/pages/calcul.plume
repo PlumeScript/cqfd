@@ -10,13 +10,13 @@ let renderLatexAST from $import(./utils)
 
 calcul: do
 	instruction:macro(question)
-		$ pages.formula(renderLatexAST(question.instruction))
+		$ pages.formula(renderLatexAST(question.instruction), ?display)
 	end
 	solutionShort: macro(question)
-		$ pages.formula(renderLatexAST(question.solution))
+		$ pages.formula(renderLatexAST(question.solution), ?display)
 	end
 	ref solution: macro(question)
-		@pages.formula
+		@pages.formula(?display)
 			if not question.solutionHideCalcul?
 				$ renderLatexAST(question.instruction)
 				=
