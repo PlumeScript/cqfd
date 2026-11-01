@@ -166,9 +166,10 @@ ref QuestionFactory: macro(parameters: $Table(), hyperParameters: $Table(), get:
 				if try > maxTries
 					raise Too many draws without a valid exercise (acceptance too low for these parameters).
 				end
-				if try > self.size and not self.validSeen
-					raise No valid exercise was found among the `$self.size` existing parameter combinations.
-				end
+				// Doesn't working due to my mess with cache id
+				// if try > self.size and not self.validSeen
+				// 	raise No valid exercise was found among the `$self.size` existing parameter combinations.
+				// end
 			else
 				set self.validSeen = $true
 				let existing = $ result.id? and self.idhash[result.id]?
