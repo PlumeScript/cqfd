@@ -322,8 +322,8 @@ ref mulHoleSecondRationnal: macro(?frac, ...params)
 				instruction: $Node(*, $calc.instruction.children[2], ...)
 				solution: $solution
 				completed: @Node(*)
-					- $Node(bold, $solution)
 					- $calc.instruction.children[2]
+					- $Node(bold, $solution)
 				end
 				target: $calc.instruction.children[1]
 				id: $calc.instruction.children[1]/$calc.instruction.children[2]
