@@ -52,44 +52,83 @@ macro flattenprod(x)
 	end
 end
 
-// True when t carries a minus: a negative number, or a mul with exactly one
-// negative number factor.
+// True when t carries a minus: a negative number, or a product holding an
+// odd number of negative factors — looked through the whole product, so a
+// minus nested in the tree (mul(-1, y*x)) counts too.
 macro isNegativeTerm(t)
 	if isExpression(t) and t.kind == "number"
 		return $ t.left < 0
 	end
 	if isExpression(t) and t.kind == "mul"
-		let nl = $ isExpression(t.left) and t.left.kind == "number" and t.left.left < 0
-		let nr = $ isExpression(t.right) and t.right.kind == "number" and t.right.left < 0
-		return $ (nl and not nr) or (nr and not nl)
+		let neg = $0
+		let flat = $ flattenprod(t)
+		for i in seq(1, len(flat))
+			if isExpression(flat[i]) and flat[i].kind == "number" and flat[i].left < 0
+				set neg += 1
+			end
+		end
+		return $ neg % 2 == 1
 	end
 	return $false
 end
 
-// The positive twin of a negative term (25, or the mul without its minus).
-// A coefficient of -1 leaves no coefficient: the twin of -x is x, not 1x.
+// The positive twin of a negative term (25, or the product without its
+// minus). A coefficient of -1 leaves no coefficient: the twin of -x is x,
+// not 1x. The minus may sit at any depth of the product.
 macro positivePart(t)
 	if isExpression(t) and t.kind == "number"
 		let n = $ -t.left
 		return $ makeExpression(n)
 	end
 	if isExpression(t) and t.kind == "mul"
-		if isExpression(t.left) and t.left.kind == "number" and t.left.left < 0
-			let n = $ -t.left.left
-			if n == 1
-				return $t.right
+		let flat = $ flattenprod(t)
+		for i in seq(1, len(flat))
+			if isExpression(flat[i]) and flat[i].kind == "number" and flat[i].left < 0
+				let n = $ -flat[i].left
+				let u = $empty
+				for k in seq(1, len(flat))
+					if k != i
+						if u
+							set u *= $flat[k]
+						else
+							set u = $flat[k]
+						end
+					end
+				end
+				if not u
+					return $ makeExpression(n)
+				end
+				if n == 1
+					return $u
+				end
+				return $ makeExpression(n) * u
 			end
-			return $ makeExpression(n) * t.right
-		end
-		if isExpression(t.right) and t.right.kind == "number" and t.right.left < 0
-			let n = $ -t.right.left
-			if n == 1
-				return $t.left
-			end
-			return $ t.left * makeExpression(n)
 		end
 	end
 	return $t
+end
+
+// True when the two factor lists hold the same factors — the order is
+// ignored (multiplication is commutative: xy and yx are the same unit).
+macro sameFactors(a, b)
+	if len(a) != len(b)
+		return $false
+	end
+	let used = $Table()
+	for i in seq(1, len(a))
+		let f = $a[i]
+		let found = $false
+		for j in seq(1, len(b))
+			if not Table.find(used, j) and f == b[j]
+				run $ Table.append(used, j)
+				set found = $true
+			end
+		end
+		if not found
+			return $false
+		end
+	end
+	return $true
 end
 
 // A factor tostring can render bare inside a product: a number, a symbol,
@@ -194,12 +233,13 @@ set Expression = macro(kind:, left:, right:)
 			let leadMinus = $ simple and isExpression(f1) and f1.kind == "number" and f1.left == -1 and not (isExpression(f2) and f2.kind == "number")
 			let prevSy = $false
 			let prevPow = $false
+			let prevLabel = $empty
 			for i in seq(1, len(flat))
 				let f = $flat[i]
 				let isNum = $ isExpression(f) and f.kind == "number"
 				let isSy = $ isExpression(f) and f.kind == "symbol"
 				let isPow = $ isExpression(f) and f.kind == "pow"
-				let tightNow = $ simple and i > 1 and not isNum and not (prevSy and isPow) and not (prevPow and isSy)
+				let tightNow = $ simple and i > 1 and not isNum and not (prevSy and isPow) and not (prevPow and isSy) and not (prevSy and isSy and prevLabel == f.left)
 				if i > 1 and not tightNow
 					\s\\times\s
 				end
@@ -216,6 +256,7 @@ set Expression = macro(kind:, left:, right:)
 				end
 				set prevSy = $isSy
 				set prevPow = $isPow
+				set prevLabel = $ isSy and f.left or empty
 			end
 		elseif kind == "div"
 			\\frac{
@@ -303,6 +344,29 @@ set Expression = macro(kind:, left:, right:)
 			if right == 1
 				return $left
 			end
+			// A -1 factor is a sign, not a factor: it folds into the
+			// neighboring number (-1·2x → -2x, 2·(-1) → -2). No real
+			// computation here (2·2x is untouched — that is reduce's job).
+			if isExpression(left) and left.kind == "number" and left.left == -1 and isExpression(right) and right.kind == "number"
+				return $ makeExpression(-right.left)
+			end
+			if isExpression(left) and left.kind == "number" and left.left == -1 and isExpression(right) and right.kind == "mul" and isExpression(right.left) and right.left.kind == "number"
+				let n = $ -right.left.left
+				if n == 1
+					return $right.right
+				end
+				return $ makeExpression(n) * right.right
+			end
+			if isExpression(right) and right.kind == "number" and right.left == -1 and isExpression(left) and left.kind == "number"
+				return $ makeExpression(-left.left)
+			end
+			if isExpression(right) and right.kind == "number" and right.left == -1 and isExpression(left) and left.kind == "mul" and isExpression(left.left) and left.left.kind == "number"
+				let n = $ -left.left.left
+				if n == 1
+					return $left.right
+				end
+				return $ makeExpression(n) * left.right
+			end
 			// x·3 → 3x (number first); x·(-1) → -x via the tostring above.
 			if isExpression(left) and left.kind == "symbol" and isExpression(right) and right.kind == "number"
 				return $ Expression(kind: "mul", left: right, right: left)
@@ -363,36 +427,56 @@ set Expression = macro(kind:, left:, right:)
 						set flat[i] = $ (2*makeExpression(right)).reduce()
 						set flat[j] = $ makeExpression(0)
 					elseif right.kind == "mul" and left.kind == "mul"
-						let rl = $right.left
-						let rr = $right.right
-						let ll = $left.left
-						let lr = $left.right
-
-						// Align the two terms: the shared factor on the same side.
-						if rl==lr or rr==ll
-							set ll, lr = ($lr, $ll)
+						// Flatten both terms: a coefficient (the product of the
+						// number factors) times its unit factors. The unit is
+						// compared commutatively — the factor order is ignored
+						// (2xy + yx are the same term).
+						let lf = $ flattenprod(left)
+						let rf = $ flattenprod(right)
+						let lc = $1
+						let rc = $1
+						let lu = $Table()
+						let ru = $Table()
+						for k in seq(1, len(lf))
+							if isExpression(lf[k]) and lf[k].kind == "number"
+								set lc *= $lf[k].left
+							else
+								run $ Table.append(lu, lf[k])
+							end
+						end
+						for l in seq(1, len(rf))
+							if isExpression(rf[l]) and rf[l].kind == "number"
+								set rc *= $rf[l].left
+							else
+								run $ Table.append(ru, rf[l])
+							end
 						end
 
-						if rl==ll and rr==lr
-							// Same coefficient and same factor: (rr+lr)·rl, re-reduced.
-							set flat[i] = $ (makeExpression(rr + lr).reduce() * rl).reduce()
-							set flat[j] = $ makeExpression(0)
-						elseif rr==lr
-							// Same factor, different coefficients: try to reduce the
-							// coefficients rl+ll — if it merges to a single term,
-							// factorize (rl+ll)·rr, otherwise leave the terms alone.
-							let sum = $ makeExpression(rl + ll).reduce()
-							if isExpression(sum) and sum.kind != "add" and sum.kind != "sub"
-								set flat[i] = $ (sum * rr).reduce()
+						if sameFactors(lu, ru)
+							// Same unit: the coefficients add — 2xy + xy → 3xy,
+							// 2xy - 2yx → 0.
+							let c = $ lc + rc
+							if c == 0
+								set flat[i] = $ makeExpression(0)
+								set flat[j] = $ makeExpression(0)
+							else
+								let u = $lu[1]
+								for m in seq(2, len(lu))
+									set u *= $lu[m]
+								end
+								if c != 1
+									set u = $ makeExpression(c) * u
+								end
+								set flat[i] = $u.reduce()
 								set flat[j] = $ makeExpression(0)
 							end
-						elseif rl==ll
-							// Same coefficient, different factors: try to reduce the
-							// factors rr+lr — if it merges to a single term,
-							// factorize rl·(rr+lr), otherwise leave the terms alone.
-							let sum = $ makeExpression(rr + lr).reduce()
+						elseif lc == rc and len(lu) == 1 and len(ru) == 1
+							// Same coefficient, two single factors: try to reduce
+							// u+v — if it merges to a single term, factorize
+							// lc·(u+v), otherwise leave the terms alone.
+							let sum = $ makeExpression(lu[1] + ru[1]).reduce()
 							if isExpression(sum) and sum.kind != "add" and sum.kind != "sub"
-								set flat[i] = $ (rl * sum).reduce()
+								set flat[i] = $ (makeExpression(lc) * sum).reduce()
 								set flat[j] = $ makeExpression(0)
 							end
 						end
@@ -462,6 +546,19 @@ set Expression = macro(kind:, left:, right:)
 						// Same base: (x²)·(x³) → x⁵ — the exponents are added.
 						let e = $ (right.right + left.right).reduce()
 						set flat[i] = $ Expression(kind: "pow", left: right.left, right: e).reduce()
+						set flat[j] = $ makeExpression(0)
+					elseif (isExpression(right) and right.kind == "pow" and isExpression(left) and left.kind == "symbol" and right.left == left) or (isExpression(left) and left.kind == "pow" and isExpression(right) and right.kind == "symbol" and left.left == right)
+						// Same base, one bare factor: (x²)·(x) → x³.
+						let base
+						let e
+						if isExpression(right) and right.kind == "pow"
+							set base = $right.left
+							set e = $ (right.right + makeExpression(1)).reduce()
+						else
+							set base = $left.left
+							set e = $ (left.right + makeExpression(1)).reduce()
+						end
+						set flat[i] = $ Expression(kind: "pow", left: base, right: e).reduce()
 						set flat[j] = $ makeExpression(0)
 					elseif right == left
 						set flat[i] = $ (makeExpression(right)^2).reduce()
