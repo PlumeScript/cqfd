@@ -61,33 +61,46 @@ ref eqnX2: macro(source, style: classic, ?negative, ...args)
 			- $variableNames[style]
 		end
 		get: macro(source, sw, name)
-			let a = $source.solution
+			let square = $source.square
+			let q = $ FactNumberCls.fromNumber(square).isRationnal()
+			let solutions = if square>=0
+				if q
+					- $ s(square^0.5)
+					if square != 0
+						- $ s(-(square^0.5))
+					end
+				else
+					- $ s(square).root()
+					- $ s(-1*(s(square).root())).reduce()
+				end
+			else
+				...Table()
+			end
 			@Question(eqn)
 				steps: do
 					- do
 						if sw==0
 							l: $ s(name)^2
-							r: $ s(a^2)
+							r: $ s(square)
 						else
-							l: $ s(a^2)
+							l: $ s(square)
 							r: $ s(name)^2
 						end
 					end
-					if a>=0
+					if len(solutions)>0
 						- do
 							l: $s($name)
-							r: $s($a)
-							if a!=0
-								r2: $s($(-a))
+							r: $solutions[1]
+							if len(solutions)>1
+								r2: $solutions[2]
 							end
 						end
-					end
-					if a<=0
+					else
 						finalLabel: Pas de solution
 					end
 				end
-				id: x=$a
-				solutions: $Table($a)
+				id: x²=$square
+				solutions: $solutions
 			end
 		end
 	end
@@ -176,7 +189,7 @@ ref eqnSub: macro(source, ...args)
 					end
 					...source.steps
 				end
-				solution: $source.solution
+				solutions: $source.solutions
 				id: $source.id-$a
 			end
 		end
@@ -215,7 +228,7 @@ ref eqnMul: macro(source, ...args)
 					end
 					...source.steps
 				end
-				solution: $source.solution
+				solutions: $source.solutions
 				id: $source.id+$a
 			end
 		end
@@ -247,7 +260,7 @@ ref eqnDiv: macro(source, ...args)
 					end
 					...source.steps
 				end
-				solution: $source.solution
+				solutions: $source.solutions
 				id: $source.id-$a
 			end
 		end

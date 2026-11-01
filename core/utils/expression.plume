@@ -162,11 +162,12 @@ macro unitTerm(t)
 end
 
 
-set Expression = macro(kind:, left:, right:)
+set Expression = macro(kind:, left:, right:, print:)
 	type: Expression
 	kind: $kind
 	left: $left
 	right: $right
+	print: $print
 	
 	meta tostring: macro()
 		if kind == "symbol" or kind == "number"
@@ -270,11 +271,21 @@ set Expression = macro(kind:, left:, right:)
 				$ String(right)
 			}
 		elseif kind == "pow"
-			{
+			if self.print?.root?
+				\\sqrt
+				if right != 0.5
+					[\\leftroot{$String($(1/right))}]
+				end
+				{
 				$ paren(left)
-			}^{
-				$ String(right)
-			}
+				}
+			else
+				{
+					$ paren(left)
+				}^{
+					$ String(right)
+				}
+			end
 		else
 			NYI `$kind` render.
 		end
@@ -314,8 +325,8 @@ set Expression = macro(kind:, left:, right:)
 			return $self
 		end
 
-		let left  = $ self.left.pretty()
-		let right = $ self.right and self.right.pretty()
+		let left  = $ makeExpression(self.left).pretty()
+		let right = $ self.right and makeExpression(self.right).pretty()
 		
 		if self.kind == "add"
 			if left == 0
@@ -581,6 +592,15 @@ set Expression = macro(kind:, left:, right:)
 			return $value.pretty()
 		else
 			return $ Expression(kind: self.kind, left: left, right: right).pretty()
+		end
+	end
+
+	root: macro(n: 2)
+		@Expression
+			kind: pow
+			left: $self
+			right: $(1/n)
+			print: (root: $true)
 		end
 	end
 

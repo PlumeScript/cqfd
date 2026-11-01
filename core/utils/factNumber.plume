@@ -24,7 +24,7 @@ macro getNextPrime()
 		end
 	end
 	run $ Table.append(primes, candidate)
-	end
+end
 
 /*
 Extend `primes` with every prime in (primes[-1], upTo].
@@ -172,6 +172,15 @@ ref FactNumberCls: do
 					- $ max(self.vp[i]? or 0, x.vp[i]? or 0)
 				end
 			end
+		end
+
+		isRationnal: macro()
+			for vp in self.vp
+				if vp%2 == 1
+					return $false
+				end
+			end
+			return $true
 		end
 
 		meta mul: macro(x, y)

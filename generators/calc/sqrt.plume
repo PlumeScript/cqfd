@@ -52,6 +52,7 @@ sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 				end
 				solution: $x
 				id: sqrt($(x^2))
+				square: $x
 				compute: $realCompute
 				usualTrap: $(x^2/2)
 			end
@@ -83,6 +84,7 @@ sqrtC: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 				solution: $x
 				id: sqrt(-$(x^2))
 				usualTrap: -$x
+				square: $(-x)
 				compute: 0
 			end
 		end
@@ -115,6 +117,7 @@ sqrtR: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 					top:    $ (x^0.5 * 10^digit).ceil() * 10^(-digit)
 					bottom: $ (x^0.5 * 10^digit).floor() * 10^(-digit)
 				end
+				square: $x
 				id: sqrt($x)
 				compute: 0
 			end
