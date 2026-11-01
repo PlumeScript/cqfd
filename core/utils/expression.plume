@@ -214,10 +214,12 @@ set Expression = macro(kind:, left:, right:)
 			// A factor tightens to its predecessor when the whole chain is
 			// clean (leaves only) and the pair cannot be misread: a bare
 			// number only at the head of a run (2x, xy, 5x², 2(x+1) —
-			// never 23, x2 or (x+1)3) and no bare symbol next to a
-			// symbol-based pow (x² \times x — x²x would read as x³); sums
-			// stay parenthesized; any impure factor (div, compound pow)
-			// keeps \times all along. A leading -1 is the sign of the
+			// never 23, x2 or (x+1)3); a bare symbol never next to the same
+			// symbol (x \times x — xx would read as a name) nor to a pow of
+			// the same base (x² \times x, x \times x² — x²x would read as
+			// x³; xf² and f²x juxtapose); sums stay parenthesized; any impure
+			// factor (div, compound pow) keeps \times all along. A leading
+			// -1 is the sign of the
 			// product (-x, -x², -(x+1)); a non-leading minus number is
 			// grouped: x \times (-3).
 			let flat = $ flattenprod(self)
@@ -234,12 +236,14 @@ set Expression = macro(kind:, left:, right:)
 			let prevSy = $false
 			let prevPow = $false
 			let prevLabel = $empty
+			let prevPowBase = $empty
 			for i in seq(1, len(flat))
 				let f = $flat[i]
 				let isNum = $ isExpression(f) and f.kind == "number"
 				let isSy = $ isExpression(f) and f.kind == "symbol"
 				let isPow = $ isExpression(f) and f.kind == "pow"
-				let tightNow = $ simple and i > 1 and not isNum and not (prevSy and isPow) and not (prevPow and isSy) and not (prevSy and isSy and prevLabel == f.left)
+				let powBase = $ isPow and isExpression(f.left) and f.left.kind == "symbol" and f.left.left or empty
+				let tightNow = $ simple and i > 1 and not isNum and not (prevSy and isPow and prevLabel == powBase) and not (prevPow and isSy and prevPowBase == f.left) and not (prevSy and isSy and prevLabel == f.left)
 				if i > 1 and not tightNow
 					\s\\times\s
 				end
@@ -257,6 +261,7 @@ set Expression = macro(kind:, left:, right:)
 				set prevSy = $isSy
 				set prevPow = $isPow
 				set prevLabel = $ isSy and f.left or empty
+				set prevPowBase = $powBase
 			end
 		elseif kind == "div"
 			\\frac{
