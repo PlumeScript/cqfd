@@ -153,7 +153,7 @@ end
 /*
 Create an exercice in the form $code(a+1=4 si=4)$newline
 $posParam(QuestionFactory, source, 1) maybe any calc exercice.$newline
-$posParam(Bool, \0?alt, false) to use $code(a+1=2 si a=1) instead of $code(1 est solution de l'équation a+1=2)
+$code(\0?alt) to use $code(a+1=2 si a=1) instead of $code(1 est solution de l'équation a+1=2)
 */
 evalCheckSimple: macro(...args)
 	$ evalCheckSimpleTrue(...args) + evalCheckSimpleFalse(...args)

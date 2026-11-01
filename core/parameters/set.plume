@@ -9,7 +9,7 @@ let Parameter from $import(../cls/parameter)
 let derive, FeistelWalker from $import(../utils/walkers)
 
 /*
-Apply $posParam(macro, transform, 1) on another $posParam(Parameter, parameter, 2) output.
+Apply $posParam(macro, transform, 2) on another $posParam(Parameter, parameter, 1) output.
 */
 Map: macro(parameter, transform)
 	@Parameter

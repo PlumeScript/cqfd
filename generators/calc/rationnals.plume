@@ -153,7 +153,7 @@ rationnalHoleEquality: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 1
 end
 
 /*
-Generate two fractions to rewrite with a common denominator. Use $ParamSet(FactNumber).$newline
+Generate two fractions to rewrite with a common denominator. Use $ParamSet(FactNumber4).$newline
 Support $code(\0?integer), $code(\0?coprime) and $code(\0?multiple).
 */
 reduceCommonDenominator: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?multiple, ?coprime, ?integer)
@@ -318,7 +318,7 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 end
 
 /*
-Generate a multiplication between two fractions $ParamSet(FactNumber2Coprimes), capped by the simplification factor between $Param(Number, minK, 2) and $Param(Number, maxK, 10)..$newline
+Generate a multiplication between two fractions $ParamSet(FactNumber2Coprimes), capped by the simplification factor between $Param(Number, minK, empty) and $Param(Number, maxK, empty) when set.$newline
 Use flag $code(\0?integer) to generate a multiplication between a integer and a fraction.$newline
 Use flag $code(\0?percentage) to rewrite one fraction as $formula(a%).$newline
 Use flag $code(\0?noSimplification) to prevent simplification.

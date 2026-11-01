@@ -19,8 +19,8 @@ Generate a $formula(abcd...) reduction exercice.
 	- $Param(Number, factors, 2) to set number of factors.
 	- $Param(Number, variables, 1) to set number of differents variables.
 	- $Param(Number, orphans, 1) to set number of differents non-variables factors.
-	- $Param(Number, minPower, 1), $Param(Number, maxPower, 1) to min/max exposant (variables only).
-	- $Param(Bool, \0?negativeExposant, false) allow negative exposant (variables only)
+	- $Param(Number, minPower, 1), $Param(Number, maxPower, 1) to min/max exposant.
+	- $Param(Bool, \0?negativeExposant, false) allow negative exposant
 	- $Param(Bool, \0?negativeFactor, false) allow negative factors (orphans only)
 end
 */
@@ -140,7 +140,7 @@ Generate a $formula(ax+by+cz+...) reduction exercice.
 	- $Param(Number, terms, 2) to set number of terms.
 	- $Param(Number, variables, 1) to set number of differents variables.
 	- $Param(Number, orphans, 1) to set number of differents non-variables factors.
-	- $Param(QuestionFactory, termTemplate, \$variablesNames[style]) used to generate variables. Intended to be use with reduceMul
+	- $Param(QuestionFactory, termTemplate, \$variableNames[style]) used to generate variables. Intended to be use with reduceMul
 	- $Param(Bool, \0?negativeTerm, false) allow negative terms
 end
 */
@@ -271,10 +271,9 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 	end
 end
 
-// let eqn12 from $import(./eqn12)
 /*
 Generate an exercice like $code(Voici une égalité. Faîtes $formula(+5) à chaque membre et réduisez).$newline
-Use $ParamSet(eqn12).
+Use $ParamSet(eqn12) (WIP\: the source parameter is currently disabled).
 */
 reduceBoth: macro(...args)
 	@QuestionFactory

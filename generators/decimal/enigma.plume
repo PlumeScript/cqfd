@@ -17,7 +17,7 @@ let PermFromRank from $import(../../core/utils/walkers)
 let figuresParam = $Range(1, 9)
 
 /*
-Generate a number with missing digits (a hole) to find.
+Generate a number with between $Param(Number, minHole, 0) and $Param(Number, maxHole, maxFigures-2) missing digits to find.
 */
 enigmaSimple: macro(Number minIndex:-3, Number maxIndex:3, Number minFigures: 2, Number maxFigures: 3, figures:, Number minHole: 0, maxHole:, hole:)
 	if figures

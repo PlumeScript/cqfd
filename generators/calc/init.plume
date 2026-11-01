@@ -22,7 +22,7 @@ end
 ]end
 
 /*
-The situations' contexts, grouped by file, one key per situation. $code(all) is the flat mix of every context.
+The situations' contexts, grouped by file, one key per situation. $code(all) is the flat mix of the contexts of each group.
 */
 situations: for file in os.Path("./situations").getChildren()
 	let all

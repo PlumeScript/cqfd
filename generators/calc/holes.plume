@@ -172,7 +172,7 @@ ref addN2HoleSecondNoSolution: macro(Number minIndex:-3, Number maxIndex:0, Numb
 end
 
 /*
-Wrapper for $ParamSet(addN2HoleSecondNoSolution) and $ParamSet(addN2HoleSecondNoSolution).
+Wrapper for $ParamSet(addN2HoleFirstNoSolution) and $ParamSet(addN2HoleSecondNoSolution).
 */
 addN2HoleNoSolution: macro(...args)
 	$ (addN2HoleFirstNoSolution(...args) + addN2HoleSecondNoSolution(...args)).tree()
@@ -333,7 +333,7 @@ ref mulHoleSecondRationnal: macro(?frac, ...params)
 end
 
 /*
-Wrapper for $ParamSet(mulHoleFirstRationnal) and $ParamSet(mulHoleFirstSecond).
+Wrapper for $ParamSet(mulHoleFirstRationnal) and $ParamSet(mulHoleSecondRationnal).
 */
 mulHoleRationnal: macro(...args)
 	$ (mulHoleFirstRationnal(...args) + mulHoleSecondRationnal(...args)).tree()

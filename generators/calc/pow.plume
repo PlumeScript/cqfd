@@ -97,8 +97,7 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 end
 
 /*
-Convert a $ParamSet(powN2) to a power with a negative base.$newline
-Support $code(\0?fullSign).
+Convert a $ParamSet(powN2) to a power with a negative base.
 */
 powZ2: macro(?fullSign, ...args)
 	// fullSign\: no double sign in power rendering, kept for API uniformity

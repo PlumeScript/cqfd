@@ -49,7 +49,7 @@ end
 
 /*
 $formula(x²=a)-class equation.$newline
-Source maye be $ParamSet(sqrtN), $ParamSet(sqrtC) or $paramSet(sqrtR)
+Source may be $ParamSet(sqrtN) or $ParamSet(sqrtC)
 */
 ref eqnX2: macro(source, style: classic, ?negative, ...args)
 	@QuestionFactory
@@ -107,7 +107,7 @@ ref eqnX2: macro(source, style: classic, ?negative, ...args)
 end
 
 /*
-$formula(X+a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
+$formula(X+a=b)-class equation, with $formula(a) added to each member of the source (once or twice), were X is $posParam(QuestionFactory, source, 1).
 */
 ref eqnAdd: macro(...args)
 	let sourceA = $ args[1]?
@@ -204,7 +204,7 @@ eqnAddSub: macro(...args)
 end
 
 /*
-$formula(X*a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
+$formula(X/a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
 */
 ref eqnMul: macro(source, ...args)
 	@QuestionFactory
@@ -236,7 +236,7 @@ ref eqnMul: macro(source, ...args)
 end
 
 /*
-$formula(X/a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
+$formula(X*a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
 */
 ref eqnDiv: macro(source, ...args)
 	@QuestionFactory
@@ -268,7 +268,7 @@ ref eqnDiv: macro(source, ...args)
 end
 
 /*
-Wrapper for $ParamSet(eqnAdd) and $ParamSet(eqnSub)
+Wrapper for $ParamSet(eqnMul) and $ParamSet(eqnDiv)
 */
 eqnMulDiv: macro(...args)
 	$ eqnMul(...args) * eqnDiv(...args)

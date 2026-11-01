@@ -196,8 +196,8 @@ divZ2: macro(?frac, ?fullSign, ...params)
 end
 
 /*
-Generate a rationnal division with a period between $Param(Number, minPeriod, 1) and $Param(Number, maxPeriod, 1).$newline
-If $code(minPeriod) is set to $formula(0), you can use $Param(Number, minDecimalPart, 0) and $Param(Number, maxDecimalPart, 1).$newline
+Generate a rationnal division with a period between $Param(Number, minPeriod, 1) and $Param(Number, maxPeriod, 2).$newline
+If $code(minPeriod) is set to $formula(0), you can use $Param(Number, minDecimalPart, empty) and $Param(Number, maxDecimalPart, empty).$newline
 Dividende will be between $Param(Number, minA, 2) and $Param(Number, maxA, 100).$newline
 Divisor will be between $Param(Number, minB, 2) and $Param(Number, maxB, 100).$newline
 Caped by compute.$newline

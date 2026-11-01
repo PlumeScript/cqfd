@@ -85,7 +85,7 @@ hole: macro(calc, names:, ?trap)
 end
 
 /*
-Generate a problem from an addSub exercices
+Generate a problem from an addSub or mul exercices
 */
 addSub1: macro(calc, names:, ?trap)
 	@QuestionFactory

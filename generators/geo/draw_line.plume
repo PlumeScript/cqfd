@@ -268,7 +268,7 @@ end
 
 /*
 Generate three dots to place on a line, without drawing it.
-Support $code(\0?line), $code(\0?halfLine), $code(\0?segment) and $code(\0?notin).
+Support $code(\0?line), $code(\0?halfLine) and $code(\0?segment).
 */
 draw3DotLine: macro(?line, ?halfLine, ?segment, ?notin)
 	if not line and not halfLine and not segment
