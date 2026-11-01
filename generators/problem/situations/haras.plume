@@ -6,7 +6,8 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 // Haras (stud) situations: the births at a unicorn stud, a word problem
-// drawn from the equation a*b + c*d = e with one missing letter:
+// drawn from the equation a*b + c*d = e with one missing letter (`lin`),
+// or from a division a = bq + r / a = bd (`div`):
 //
 //   sign "+" : a*b + c*d = e    two meadows (prés) of mares — a, c the
 //                               number of mares, b, d the births per mare,
@@ -22,6 +23,17 @@ Licensed under the MIT License — see LICENSE for details.
 //                               are named in an alternating order (seeded):
 //                               the 1er pré first or last.
 //   sign "-" : invalid          no loss happens at the stud
+//
+// `div` — a = bq + r (euclidean: a mares reparted in b meadows; alt = 1
+// asks the quotient q, alt = 0 the remainder r) or a = bd (decimal: d the
+// quotient, exact or rounded to a tenth when ?aprx; ?alt picks the hay
+// story — a kilos of hay over the b mares of the 1er pré, "la ration de
+// paille par jument" — over the cost story — a euros of food for the b
+// mares of the 1er pré, "le coût par jument"). The ?trap adds a quantified
+// distractor that makes the statement read like the other variant (a food
+// cost in the euclidean one, a cost in the hay variant, a hay quantity in
+// the cost variant) — derived from the equation (hay at 2 €/kg) — the
+// student must read the question posed.
 //
 // The caller passes every letter (the missing one as its computed solution)
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
@@ -233,5 +245,199 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 
 	// Fallback: every (sign, u, trap) combination is handled or rejected
 	// above — keep the explicit exit.
+	return $invalid
+end
+
+// Display an exact decimal value the french way (the `div` quotient — a
+// hay ration per mare, a cost per mare): 3 → "3", 2.5 → "2,5",
+// 0.875 → "0,875". The quotient is never rounded: a cent-rounding would
+// show 7/8 as "0,88" instead of the exact "0,875".
+macro dec(x)
+	$(String(x).replace(".", ","))
+end
+
+// a = bq + r (euclidean division: a mares, b meadows, q the mares per
+// meadow, r the remainder) or a = bd (decimal division: d the quotient —
+// exact, or rounded to a tenth when ?aprx). The caller passes every value,
+// the missing ones empty: d truthy tells the decimal story, d empty the
+// euclidean one.
+//
+// The decimal story has two variants of what is divided, chosen by ?alt
+// (only when ?aprx is missing, which keeps the cost story for a rounded
+// quotient):
+//   hay  : a the kilos of hay, b the mares of the 1er pré —
+//          "quelle est la ration de paille par jument ?"
+//   cost : a the euros of food, b the mares of the 1er pré —
+//          "quel est le coût par jument ?"
+// ?trap adds a quantified distractor that makes the statement read like
+// the other variant (a food cost in the euclidean one, a cost in the hay
+// variant, a hay quantity in the cost variant) — derived from the equation
+// (hay at 2 €/kg: a kg of hay is 2 €, a mare's food is 20 €, 40 kg of
+// hay per mare) — the same values always tell the same story. ?aprx marks
+// the quotient rounded to a tenth (recurring decimal): the answer is then
+// "environ …".
+// Returns a (instruction:, answer:) table, or the `invalid` table.
+
+div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — the forms div needs have no person agreement
+	// ("achète", "lui coûte"), so only the name is used. `intro` is the
+	// same key `lin` uses.
+	let who = if name and name[1]
+		do
+			intro: Dans le haras de $(name[1]),
+			buy: $name[1] achète
+			cost: Cela lui coûte
+		end
+	else
+		do
+			intro: Dans mon haras,
+			buy: j'achète
+			cost: Cela me coûte
+		end
+	end
+
+	// a and b are the two values the statement always shows: without
+	// them there is no problem.
+	if not a or not b
+		return $invalid
+	end
+
+	if d
+		// d is a hay ration or a cost per mare: 0 or less is not a
+		// division problem (it would also slip past the equation check
+		// below, which aprx disables).
+		if d <= 0
+			return $invalid
+		end
+		// The statement shows a and b: the quotient d must satisfy a = bd
+		// (checked to the cent, like lin). With aprx the caller passes a
+		// quotient rounded to a tenth (recurring decimal) — no check.
+		if not aprx and (b * d * 100).round() != (a * 100).round()
+			return $invalid
+		end
+		// b is a mare count: an integer where expected.
+		if b.floor() != b
+			return $invalid
+		end
+		// wide bounds: the caller's divQ2 draws a, b in [2,100] (a the
+		// kilos of hay or the euros of food, b the mares of the 1er pré)
+		// — variety over realism (relaxed 2026-10)
+		if a < 2 or a > 100 or b < 2 or b > 100
+			return $invalid
+		end
+		// The hay variant is the exact-quotient story: ?alt selects it,
+		// ?aprx keeps the cost story. (Not a same-named local: in a do
+		// block `let alt = $alt and …` shadows the parameter with itself.)
+		let w = $ alt and not aprx
+		return do
+			instruction: do
+				if w
+					$(who.intro)\s
+					$(who.buy) $(dec(a)) kg de paille pour les $b juments du 1er pré, à répartir équitablement
+					if trap
+						.\s$(who.cost) $(dec(2 * a)) €
+					end
+					.\s
+					Quelle est la ration de paille par jument ?
+				else
+					$(who.intro)\s
+					$(who.buy) $(dec(a)) € de nourriture pour les $b juments du 1er pré
+					if trap
+						, soit $(dec(40 * b)) kg de paille à répartir équitablement
+					end
+					.\s
+					Quel est le coût par jument ?
+				end
+			end
+			answer: do
+				if w
+					C'est\s
+					if aprx
+						environ\s
+					end
+					$(dec(d)) kg de paille par jument.
+				else
+					Le coût par jument est
+					if aprx
+						\sd'environ $(dec(d)) €.
+					else
+						\sde $(dec(d)) €.
+					end
+				end
+			end
+		end
+	else
+		// q and r are the answer(s): without them the problem has none
+		// (the caller always passes them — q = a div b, r = a mod b).
+		if not q or not r
+			return $invalid
+		end
+		// Counts are integers where expected.
+		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
+			return $invalid
+		end
+		// Mare counts and meadow counts: a stud is a small group of mares
+		// over a few meadows — a in [2,20] mares (a herd, not a single
+		// mare, not a breeding farm), b in [2,10] meadows (one meadow is
+		// no repartition, more than 10 is not a stud).
+		if a < 2 or a > 20 or b < 2 or b > 10
+			return $invalid
+		end
+		// At least 2 mares per meadow: q = 1 makes the question an answer
+		// readable off the statement (no division to do).
+		if q < 2
+			return $invalid
+		end
+		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
+		// repartition is not maximal and the question admits another answer.
+		if a != b * q + r or r < 0 or r >= b
+			return $invalid
+		end
+		return do
+			instruction: do
+				$(who.intro)\s
+				les $a juments seront réparties équitablement en $b prés
+				if trap
+					.\s$(who.cost) $(dec(20 * a)) € de nourriture.\s
+				else
+					.\s
+				end
+				if alt
+					Combien y a-t-il de juments par pré ?
+				else
+					Combien de juments ne pourront pas être mises dans un pré ?
+				end
+			end
+			answer: do
+				if alt
+					Il y aura $q juments par pré
+					if r > 0
+						\s(mais il en restera\s
+						if r == 1
+							1 non répartie).
+						else
+							$r non réparties).
+						end
+					else
+						.
+					end
+				else
+					if r > 0
+						Il y aura\s
+						if r == 1
+							1 jument non répartie.
+						else
+							$r juments non réparties.
+						end
+					else
+						Toutes les juments seront réparties.
+					end
+				end
+			end
+		end
+	end
+
+	// Fallback: both branches return above — keep the explicit exit.
 	return $invalid
 end
