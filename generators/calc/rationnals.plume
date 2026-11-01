@@ -445,8 +445,8 @@ divRationnal: macro(...args)
 					...calc.steps
 				end
 				usualTrap: @prettyFrac
-					- $ calc.info.a.value*calc.info.b.value
-					- $ calc.info.c.value*calc.info.d.value
+					- $ calc.infos.a.value*calc.infos.b.value
+					- $ calc.infos.c.value*calc.infos.d.value
 				end
 			end
 		end
