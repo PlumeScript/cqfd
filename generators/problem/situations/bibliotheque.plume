@@ -19,9 +19,11 @@ Licensed under the MIT License — see LICENSE for details.
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
 // When b (resp. d) is missing, a (resp. c) is a bare count of books in its
 // category, not a shelf count. The two-term statements say up front that
-// the library is organized in exactly two book categories ("est organisée
-// en 2 catégories de livres : la 1re … et la 2e …"), so the total is the
-// sum of the two named categories only. `name` is a (Prénom, "m"/"f") pair
+// the library is organized in exactly two NAMED book categories ("est
+// organisée en 2 catégories : histoire et fictions" — a pair drawn from
+// `catPairs`, seeded by the equation: the same question always tells the
+// same story), so the total is the sum of the two named categories only.
+// `name` is a (Prénom, "m"/"f") pair
 // or empty: the story is told in the 1st person
 // ("Je suis docteur en littérature roumaine du XIVe siècle…") or in the
 // gendered 3rd person ("Léa est docteure en littérature…", "La
@@ -54,6 +56,20 @@ let centuries = do
 	- XIIe
 	- XIIIe
 	- XIVe
+end
+
+// The two book categories (named in the statement — "est organisée en 2
+// catégories : histoire et fictions"); `d1`/`d2` the "livres de …" phrase
+// of each category (elision included — "livres d'histoires", "livres de
+// fictions"), so a bare count reads "75 livres d'histoires" and a shelved
+// one "57 étagères de 5 livres de fictions".
+let catPairs = do
+	- (n1: histoire, d1: d'histoires, n2: fictions, d2: de fictions)
+	- (n1: sciences, d1: de sciences, n2: poésie, d2: de poésie)
+	- (n1: théâtre, d1: de théâtre, n2: contes, d2: de contes)
+	- (n1: philosophie, d1: de philosophie, n2: bande dessinée, d2: de bande dessinée)
+	- (n1: récits, d1: de récits, n2: essais, d2: d'essais)
+	- (n1: aventures, d1: d'aventures, n2: biographies, d2: de biographies)
 end
 
 lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
@@ -169,6 +185,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	let random = $Random($(seed))
 	let country = $ random.choice(countries)
 	let century = $ random.choice(centuries)
+	let cat = $ random.choice(catPairs)
 
 	// The trap's "fonds ancien" book count (drawn after the literature,
 	// same seeded generator — the same question always tells the same
@@ -212,15 +229,15 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	end
 
 	// The two-group statements say up front that the library is organized
-	// in exactly two book categories ("est organisée en 2 catégories de
-	// livres : la 1re … et la 2e …"), so the total is the sum of the two
+	// in exactly two NAMED book categories ("est organisée en 2 catégories
+	// : $(cat.n1) et $(cat.n2)"), so the total is the sum of the two
 	// named categories only.
 	if u == 1
 		return do
 			instruction: do
 				if b and c
-					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(b) livres par étagère et la 2e $(c) étagères de $(d) livres, soit $(e) livres au total.\s
-					Combien d'étagères compte la 1re catégorie ?
+					$(who.introFull) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). La catégorie $(cat.n1) a $(b) livres par étagère et la catégorie $(cat.n2) $(c) étagères de $(d) livres, soit $(e) livres au total.\s
+					Combien d'étagères compte la catégorie $(cat.n1) ?
 				elseif b
 					if trap and swap == 1
 						$(who.introFull) a $(fonds) livres dans son fonds ancien ; elle a $(b) livres par étagère et $(e) livres sur ses étagères.\s
@@ -233,17 +250,17 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 						Combien d'étagères a-t-elle ?
 					end
 				else
-					$(who.introFull) est organisée en 2 catégories de livres : la 2e catégorie a $(c) livres et les 2 catégories ensemble $(e) livres au total.\s
-					Combien de livres y a-t-il dans la 1re catégorie ?
+					$(who.introFull) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). Il y a $(c) livres $(cat.d2) et les 2 catégories ensemble $(e) livres au total.\s
+					Combien de livres y a-t-il dans la catégorie $(cat.n1) ?
 				end
 			end
 			answer: do
 				if b and c
-					La 1re catégorie a $(a) étagères.
+					La catégorie $(cat.n1) a $(a) étagères.
 				elseif b
 					$(who.hasLib) $(a) étagères.
 				else
-					Il y a $(a) livres dans la 1re catégorie.
+					Il y a $(a) livres $(cat.d1).
 				end
 			end
 		end
@@ -251,8 +268,8 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return do
 			instruction: do
 				if c
-					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères et la 2e $(c) étagères de $(d) livres, soit $(e) livres au total.\s
-					Combien de livres par étagère dans la 1re catégorie ?
+					$(who.introFull) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). La catégorie $(cat.n1) a $(a) étagères et la catégorie $(cat.n2) $(c) étagères de $(d) livres, soit $(e) livres au total.\s
+					Combien de livres par étagère dans la catégorie $(cat.n1) ?
 				else
 					if trap and swap == 1
 						$(who.introFull) a $(fonds) livres dans son fonds ancien ; elle a $(a) étagères et $(e) livres sur ses étagères.\s
@@ -268,7 +285,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 			answer: do
 				if c
-					Il y a $(b) livres par étagère dans la 1re catégorie.
+					Il y a $(b) livres par étagère dans la catégorie $(cat.n1).
 				else
 					Il y a $(b) livres par étagère.
 				end
@@ -278,18 +295,18 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return do
 			instruction: do
 				if b
-					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères de $(b) livres et la 2e $(d) livres par étagère, soit $(e) livres au total.\s
-					Combien d'étagères compte la 2e catégorie ?
+					$(who.introFull) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). La catégorie $(cat.n1) a $(a) étagères de $(b) livres et la catégorie $(cat.n2) $(d) livres par étagère, soit $(e) livres au total.\s
+					Combien d'étagères compte la catégorie $(cat.n2) ?
 				else
-					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et les 2 catégories ensemble $(e) livres au total.\s
-					Combien de livres y a-t-il dans la 2e catégorie ?
+					$(who.introFull) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). Il y a $(a) livres $(cat.d1) et les 2 catégories ensemble $(e) livres au total.\s
+					Combien de livres y a-t-il dans la catégorie $(cat.n2) ?
 				end
 			end
 			answer: do
 				if b
-					La 2e catégorie a $(c) étagères.
+					La catégorie $(cat.n2) a $(c) étagères.
 				else
-					Il y a $(c) livres dans la 2e catégorie.
+					Il y a $(c) livres $(cat.d2).
 				end
 			end
 		end
@@ -297,27 +314,27 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		return do
 			instruction: do
 				if b
-					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères de $(b) livres et la 2e $(c) étagères, soit $(e) livres au total.\s
-					Combien de livres par étagère dans la 2e catégorie ?
+					$(who.introFull) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). La catégorie $(cat.n1) a $(a) étagères de $(b) livres et la catégorie $(cat.n2) $(c) étagères, soit $(e) livres au total.\s
+					Combien de livres par étagère dans la catégorie $(cat.n2) ?
 				else
-					$(who.introFull) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et la 2e $(c) étagères, soit $(e) livres au total.\s
-					Combien de livres par étagère dans la 2e catégorie ?
+					$(who.introFull) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). Il y a $(a) livres $(cat.d1) et $(c) étagères $(cat.d2), soit $(e) livres au total.\s
+					Combien de livres par étagère dans la catégorie $(cat.n2) ?
 				end
 			end
-			answer: Il y a $(d) livres par étagère dans la 2e catégorie.
+			answer: Il y a $(d) livres par étagère dans la catégorie $(cat.n2).
 		end
 	else
 		return do
 			instruction: do
 				$(who.introA).\s
 				if c and b and d
-					$(who.Lib) est organisée en 2 catégories de livres : la 1re catégorie a $(a) étagères de $(b) livres et la 2e $(c) étagères de $(d) livres.\s
+					$(who.Lib) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). La catégorie $(cat.n1) a $(a) étagères de $(b) livres et la catégorie $(cat.n2) $(c) étagères de $(d) livres.\s
 					$(who.qTotal)
 				elseif c and d
-					$(who.Lib) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et la 2e $(c) étagères de $(d) livres.\s
+					$(who.Lib) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). Il y a $(a) livres $(cat.d1) et $(c) étagères de $(d) livres $(cat.d2).\s
 					$(who.qTotal)
 				elseif c
-					$(who.Lib) est organisée en 2 catégories de livres : la 1re catégorie a $(a) livres et la 2e $(c) livres.\s
+					$(who.Lib) est organisée en 2 catégories : $(cat.n1) et $(cat.n2). Il y a $(a) livres $(cat.d1) et $(c) livres $(cat.d2).\s
 					$(who.qTotal)
 				else
 					if trap and swap == 1
@@ -358,12 +375,12 @@ macro dec(x)
 	$(String(x).replace(".", ","))
 end
 
-// a = bq + r (euclidean division: a books of the 1re category, b shelves,
-// q the books per shelf, r the remainder) or a = bd (decimal division:
-// d the quotient — exact, or rounded to a tenth when ?aprx), told in the
-// library of a literature doctor (country and century, like lin). The
-// caller passes every value, the missing ones empty: d truthy tells the
-// decimal story, d empty the euclidean one.
+// a = bq + r (euclidean division: a books of a named category (like lin),
+// b shelves, q the books per shelf, r the remainder) or a = bd (decimal
+// division: d the quotient — exact, or rounded to a tenth when ?aprx),
+// told in the library of a literature doctor (country and century, like
+// lin). The caller passes every value, the missing ones empty: d truthy
+// tells the decimal story, d empty the euclidean one.
 //
 // The decimal story has two variants, chosen by ?alt (only when ?aprx is
 // missing, which keeps the price story for a rounded quotient):
@@ -393,6 +410,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 	let random = $Random($(seed))
 	let country = $ random.choice(countries)
 	let century = $ random.choice(centuries)
+	let cat = $ random.choice(catPairs)
 
 	// The speaker: 1st person when name is empty; otherwise the (name,
 	// gender) pair — the library is the topic ("Ma bibliothèque : …" /
@@ -444,7 +462,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			instruction: do
 				if w
 					// B2 (weight): the b books weigh a kg.
-					$(who.lib) : $(who.poss) $b livres de la 1re catégorie pèsent $(dec(a)) kg
+					$(who.lib) : $(who.poss) $b livres $(cat.d1) pèsent $(dec(a)) kg
 					if trap
 						\set coûtent $(dec(a + b)) €
 					end
@@ -452,7 +470,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 					Quel est le poids d'un livre ?
 				else
 					// B1 (price): a euros paid for b books.
-					$(who.lib) : $(who.paid) $(dec(a)) € pour $b livres de la 1re catégorie
+					$(who.lib) : $(who.paid) $(dec(a)) € pour $b livres $(cat.d1)
 					if trap
 						\s; elles pèsent $(dec(a + b)) kg
 					end
@@ -496,9 +514,11 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
 			return $invalid
 		end
-		// Small personal library: a few dozen books, a few shelves, at
-		// least two books per shelf (q ≥ 2) — kept concrete.
-		if a < 2 or a > 30 or b < 2 or b > 10 or q < 2
+		// Small personal library: a >= 10 books (a repartition of 4 books
+		// over 2 shelves is a trivial split), a <= 30 (a few dozen), a
+		// few shelves, at least two books per shelf (q ≥ 2) — kept
+		// concrete.
+		if a < 10 or a > 30 or b < 2 or b > 10 or q < 2
 			return $invalid
 		end
 		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
@@ -508,7 +528,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		end
 		return do
 			instruction: do
-				$(who.lib) : $(who.has) $a livres de la 1re catégorie à répartir équitablement sur $b étagères ;\s
+				$(who.lib) : $(who.has) $a livres $(cat.d1) à répartir équitablement sur $b étagères ;\s
 				if alt
 					combien y a-t-il de livres par étagère ?
 				else

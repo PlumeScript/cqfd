@@ -43,10 +43,10 @@ Licensed under the MIT License — see LICENSE for details.
 // euclidean story has no second variant to mimic: ?trap is invalid
 // there.
 //
-// The non-trap statements scope the total: "Tout mon/son argent est en
-// pièces : …" — every euro of the total is a coin of the type(s) listed,
-// so the total is the value of those coins alone (no banknote or other
-// coin type would fit the statement).
+// The non-trap statements are plain possession statements ("Joe a 9
+// pièces de 5,80 € et 60 pièces de 1,10 €…"): the total is the value of
+// the coins listed (the "soit X € au total" clause or the sum asked for),
+// no framing needed — "tout son argent est en pièces" was useless weight.
 //
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
@@ -196,20 +196,17 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			q: $ (name[2] == "f" and "a-t-elle" or "a-t-il")
 			poss: ses
 			tirelire: sa tirelire
-			// agrees with argent (masculine), never with the person
-			toutArgent: son argent
 		end
 	else
 		do
 			have: J'ai
-			// after a colon (lowercase j)
+			// mid-sentence (lowercase j)
 			haveLow: j'ai
 			has: j'ai
 			capPron: J'ai
 			q: ai-je
 			poss: mes
 			tirelire: ma tirelire
-			toutArgent: mon argent
 		end
 	end
 
@@ -239,7 +236,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					$who.capPron $euros($e) € en pièces de $euros($b) €.\s
 					Combien $who.q de pièces de $euros($b) € ?
 				else
-					Tout $who.toutArgent est en pièces : $who.haveLow des pièces de $euros($b) €, soit $euros($e) € au total.\s
+					$who.have des pièces de $euros($b) €, soit $euros($e) € au total.\s
 					Combien $who.q de pièces ?
 				end
 			end
@@ -261,7 +258,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					$(cap(who.poss)) $a pièces font $euros($e) €.\s
 					Combien vaut chacune de $who.poss $a pièces ?
 				else
-					Tout $who.toutArgent est en pièces : $who.haveLow $a pièces, soit $euros($e) € au total.\s
+					$who.have $a pièces, soit $euros($e) € au total.\s
 					Combien vaut une pièce ?
 				end
 			end
@@ -281,7 +278,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 					$who.have $a pièces de $euros($b) €, et $who.tirelire contient $c2 pièces de $euros($d2) €.\s
 					Combien d'argent $who.q en pièces de $euros($b) € ?
 				else
-					Tout $who.toutArgent est en pièces : $who.haveLow $a pièces de $euros($b) €.\s
+					$who.have $a pièces de $euros($b) €.\s
 					Combien d'argent $who.q ?
 				end
 			end
@@ -296,7 +293,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	else
 		if u == 1
 			instruction: do
-				Tout $who.toutArgent est en pièces : $who.haveLow des pièces de $euros($b) € et $c pièces de $euros($d) €, soit $euros($e) € au total.\s
+				$who.have des pièces de $euros($b) € et $c pièces de $euros($d) €, soit $euros($e) € au total.\s
 				Combien $who.q de pièces de $euros($b) € ?
 			end
 			answer: do
@@ -304,7 +301,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 2
 			instruction: do
-				Tout $who.toutArgent est en pièces : $who.haveLow $a pièces et $c pièces de $euros($d) €, soit $euros($e) € au total.\s
+				$who.have $a pièces et $c pièces de $euros($d) €, soit $euros($e) € au total.\s
 				Combien vaut chacune de $who.poss $a pièces ?
 			end
 			answer: do
@@ -312,7 +309,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 3
 			instruction: do
-				Tout $who.toutArgent est en pièces : $who.haveLow $a pièces de $euros($b) € et des pièces de $euros($d) €, soit $euros($e) € au total.\s
+				$who.have $a pièces de $euros($b) € et des pièces de $euros($d) €, soit $euros($e) € au total.\s
 				Combien $who.q de pièces de $euros($d) € ?
 			end
 			answer: do
@@ -320,7 +317,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 4
 			instruction: do
-				Tout $who.toutArgent est en pièces : $who.haveLow $a pièces de $euros($b) € et $c pièces, soit $euros($e) € au total.\s
+				$who.have $a pièces de $euros($b) € et $c pièces, soit $euros($e) € au total.\s
 				Combien vaut chacune de $who.poss $c pièces ?
 			end
 			answer: do
@@ -328,7 +325,7 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 			end
 		elseif u == 5
 			instruction: do
-				Tout $who.toutArgent est en pièces : $who.haveLow $a pièces de $euros($b) € et $c pièces de $euros($d) €.\s
+				$who.have $a pièces de $euros($b) € et $c pièces de $euros($d) €.\s
 				Combien d'argent $who.q ?
 			end
 			answer: do
@@ -512,10 +509,11 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
 			return $invalid
 		end
-		// a = coins, b = pockets: a handful of coins (2..20) and 2..4
+		// a = coins, b = pockets: a >= 10 (a repartition of 4 coins over
+		// 2 pockets is a trivial split), a <= 20 (a handful), and 2..4
 		// pockets (a person carries at most 4 pockets — a tirelire would
 		// be a single container).
-		if a < 2 or a > 20 or b < 2 or b > 4
+		if a < 10 or a > 20 or b < 2 or b > 4
 			return $invalid
 		end
 		// q >= 2: at least 2 coins per pocket — with q < 2 the repartition

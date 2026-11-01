@@ -378,10 +378,10 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			return $invalid
 		end
 		// Mare counts and meadow counts: a stud is a small group of mares
-		// over a few meadows — a in [2,20] mares (a herd, not a single
-		// mare, not a breeding farm), b in [2,10] meadows (one meadow is
-		// no repartition, more than 10 is not a stud).
-		if a < 2 or a > 20 or b < 2 or b > 10
+		// over a few meadows — a in [10,20] mares (a herd, not a trivial
+		// 4-over-2 split, not a breeding farm), b in [2,10] meadows (one
+		// meadow is no repartition, more than 10 is not a stud).
+		if a < 10 or a > 20 or b < 2 or b > 10
 			return $invalid
 		end
 		// At least 2 mares per meadow: q = 1 makes the question an answer

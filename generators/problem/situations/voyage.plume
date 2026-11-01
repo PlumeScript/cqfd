@@ -38,8 +38,9 @@ Licensed under the MIT License — see LICENSE for details.
 // a/10 litres, B2: (a/6).ceil()/10 hours — derived from a, never equal
 // to a term of a = bd): the statement reads like the other variant, the
 // student must read the question posed. d empty tells the euclidean
-// story — a pauses de repos reparties sur b jours (nothing is cut), ?alt
-// picks the question (q the pauses per day, r the unallocated ones);
+// story — a pauses de repos à répartir équitablement sur b jours
+// (nothing is cut), ?alt picks the question (q the pauses per day, r the
+// unallocated ones);
 // ?trap is not posed there.
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
@@ -421,8 +422,9 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			end
 		end
 	else
-		// The euclidean story: a pauses de repos reparties sur b jours —
-		// a repartition nothing is cut in (countable over countable).
+		// The euclidean story: a pauses de repos à répartir équitablement
+		// sur b jours — a repartition nothing is cut in (countable over
+		// countable).
 		// The trap dresses the decimal story only (the other variant as
 		// distractor): on the euclidean story there is no other variant.
 		if trap
@@ -438,11 +440,12 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			return $invalid
 		end
 		// plausibility ranges (a road trip: pauses and days, not 9999):
-		// b >= 2 (a repartition needs at least two days), b <= 10 (a
-		// journey of at most ten days), a <= 30 (at most a few dozen
-		// pauses), q >= 2 (at least two pauses per day — q <= 15 follows
-		// from a <= 30 and b >= 2).
-		if a < 2 or a > 30 or b < 2 or b > 10 or q < 2
+		// a >= 10 (a repartition of 4 pauses over 2 days is a trivial
+		// split), a <= 30 (at most a few dozen pauses), b >= 2 (a
+		// repartition needs at least two days), b <= 10 (a journey of at
+		// most ten days), q >= 2 (at least two pauses per day — q <= 15
+		// follows from a <= 30 and b >= 2).
+		if a < 10 or a > 30 or b < 2 or b > 10 or q < 2
 			return $invalid
 		end
 		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
@@ -452,7 +455,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		end
 		return do
 			instruction: do
-				$(who.took) $a pauses de repos sur les $b jours de $(who.journey) trajet.\s
+				$(who.took) $a pauses de repos à répartir équitablement sur les $b jours de $(who.journey) trajet.\s
 				if alt
 					Combien y a-t-il de pauses par jour ?
 				else

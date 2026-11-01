@@ -341,10 +341,11 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
 			return $invalid
 		end
-		// Plausible ranges: a = the economy seats in [2, 60], b = the
+		// Plausible ranges: a = the economy seats in [10, 60] (a
+		// repartition of 4 seats over 2 rows is a trivial split), b = the
 		// rows in [2, 20], q the seats per row >= 2 (a one-seat-per-row
 		// repartition is not a repartition).
-		if a < 2 or a > 60 or b < 2 or b > 20 or q < 2
+		if a < 10 or a > 60 or b < 2 or b > 20 or q < 2
 			return $invalid
 		end
 		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b

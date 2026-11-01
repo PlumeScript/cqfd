@@ -318,11 +318,13 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
 			return $invalid
 		end
-		// The scene's bounds: a few dozen squares cut, a handful of
-		// outfits (b ≥ 2 keeps "tenues" plural), at least 2 squares per
-		// outfit (q ≥ 2 — the question is not worth asking when the
-		// answer is 1); q ≤ 20 follows from a ≤ 40 and b ≥ 2.
-		if a < 2 or a > 40 or b < 2 or b > 10 or q < 2
+		// The scene's bounds: a >= 10 squares cut (a repartition of 4
+		// squares over 2 outfits is a trivial split), a <= 40 (a few
+		// dozen), a handful of outfits (b ≥ 2 keeps "tenues" plural), at
+		// least 2 squares per outfit (q ≥ 2 — the question is not worth
+		// asking when the answer is 1); q ≤ 20 follows from a ≤ 40 and
+		// b ≥ 2.
+		if a < 10 or a > 40 or b < 2 or b > 10 or q < 2
 			return $invalid
 		end
 		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the

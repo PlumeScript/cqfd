@@ -522,9 +522,10 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
 			return $invalid
 		end
-		// plausibility: a house of 2..60 white bricks spread over 2..10
-		// sections (a bigger house is not a house, it is a factory).
-		if a < 2 or a > 60 or b < 2 or b > 10
+		// plausibility: a house of 10..60 white bricks spread over 2..10
+		// sections (a bigger house is not a house, it is a factory; a
+		// repartition of 4 bricks over 2 sections is a trivial split).
+		if a < 10 or a > 60 or b < 2 or b > 10
 			return $invalid
 		end
 		// q >= 2: one brick per section would not be a repartition.

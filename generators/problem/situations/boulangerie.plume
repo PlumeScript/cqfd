@@ -539,7 +539,8 @@ end
 //
 // The decimal story has two variants, chosen by ?alt (only when ?aprx is
 // missing, which keeps the price story for a rounded quotient):
-//   price  : a the euros paid, b the kilos — "quel est le prix au kilo ?"
+//   price  : a the euros paid, b the kilos — "quel est le prix d'un kilo
+//            de viennoiseries ?"
 //   weight : a the kilos, b the bags — "quel est le poids d'un sachet ?"
 // ?trap adds a quantified distractor that makes the statement read like
 // the other variant (a bag count in the price story, a cost in the weight
@@ -614,7 +615,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 						\s\(non, ce n'est vraiment pas cher)
 					end
 					.\s
-					Quel est le prix au kilo ?
+					Quel est le prix d'un kilo de viennoiseries ?
 				end
 			end
 			answer: do
@@ -628,7 +629,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 					// The quotient is displayed exact: euros() would round
 					// it to the cent (7/8 would show "0,88 €" instead of
 					// the exact "0,875 €").
-					Le prix au kilo est
+					Le prix d'un kilo de viennoiseries est
 					if aprx
 						\sd'environ $(kg(d)) €.
 					else
@@ -647,8 +648,10 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
 			return $invalid
 		end
-		// wide bounds (relaxed 2026-10: variety over realism)
-		if b < 2 or b > 9999 or q < 2 or q > 9999 or a < 2 or a > 9999
+		// a >= 10: 4 croissants over 2 sachets is not a repartition worth
+		// posing (the user sees a trivial split); wide bounds otherwise
+		// (relaxed 2026-10: variety over realism)
+		if b < 2 or b > 9999 or q < 2 or q > 9999 or a < 10 or a > 9999
 			return $invalid
 		end
 		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
