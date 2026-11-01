@@ -49,7 +49,7 @@ macro inject(calc, letter, pos, filters)
 	let value = $spot.value
 	set spot.parent.children[spot.pos] = $Node(var, $letter)
 
-	return ($calc, $value)
+	return ($calc, $value, $(1 + pos%len(flat)))
 end
 
 /*
@@ -60,13 +60,14 @@ eval: macro(source, style: classic, filters:)
 	@QuestionFactory
 		parameters: do
 			- $source
+			
 		end
 		hyperParameters: do
-			- $variableNames[style]
 			- $ Range(1, 1000)
+			- $variableNames[style]
 		end
-		get: macro(source, letter, injectionSpot)
-			let calc, value = $ inject(source.instruction, letter, injectionSpot, filters)
+		get: macro(source, injectionSpot, letter)
+			let calc, value, spot = $ inject(source.instruction, letter, injectionSpot, filters)
 			@Question(eval)
 				instruction: do
 					value: $value
@@ -75,7 +76,7 @@ eval: macro(source, style: classic, filters:)
 				end
 				solutionCalc: $source.instruction
 				solution: $source.solution
-				id: $source.id
+				id: $source.id-$spot
 			end
 		end
 	end
@@ -85,13 +86,14 @@ ref evalCheckSimpleTrue: macro(source, style: classic, filters:, ?alt)
 	@QuestionFactory
 		parameters: do
 			- $source
+			
 		end
 		hyperParameters: do
-			- $variableNames[style]
 			- $ Range(1, 1000)
+			- $variableNames[style]
 		end
-		get: macro(source, letter, injectionSpot)
-			let calc, value = $ inject(source.instruction, letter, injectionSpot, filters)
+		get: macro(source, injectionSpot, letter)
+			let calc, value, spot = $ inject(source.instruction, letter, injectionSpot, filters)
 
 			@Question(evalCheck)
 				instruction: do
@@ -103,7 +105,7 @@ ref evalCheckSimpleTrue: macro(source, style: classic, filters:, ?alt)
 				solutionCalcLeft: $source.instruction
 				validResultLeft: $source.solution
 				solution: $true
-				id: $source.id-true
+				id: $source.id-$spot-true
 				alt: $alt
 			end
 		end
@@ -114,14 +116,15 @@ ref evalCheckSimpleFalse: macro(source, style: classic, filters:, ?alt)
 	@QuestionFactory
 		parameters: do
 			- $source
+			
 		end
 		hyperParameters: do
-			- $variableNames[style]
 			- $ Range(1, 1000)
+			- $variableNames[style]
 			- $ Choice(-3, -2, -1, 1, 2, 3)
 		end
-		get: macro(source, letter, injectionSpot, delta)
-			let calc, value = $ inject(source.instruction, letter, injectionSpot, filters)
+		get: macro(source, injectionSpot, letter, delta)
+			let calc, value, spot = $ inject(source.instruction, letter, injectionSpot, filters)
 
 			let right = if source.usualTrap?
 				$source.usualTrap
@@ -139,7 +142,7 @@ ref evalCheckSimpleFalse: macro(source, style: classic, filters:, ?alt)
 				solutionCalcLeft: $source.instruction
 				validResultLeft: $source.solution
 				solution: $false
-				id: $source.id-false
+				id: $source.id-$spot-false
 				alt: $alt
 			end
 		end
