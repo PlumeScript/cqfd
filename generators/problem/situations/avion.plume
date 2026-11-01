@@ -6,8 +6,8 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 // Avion situations: a word problem drawn from a linear equation with
-// one missing letter, dressed as the seats of an airplane with two
-// classes:
+// one missing letter (`lin`), or from a division a = bq+r / a = bd
+// (`div`), dressed as the seats of an airplane with two classes:
 //
 //   sign "+" : a*b + c*d = e    a rows, b seats per row (economy class);
 //                                c rows, d seats per row (business class);
@@ -209,4 +209,188 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 		end
 		answer: Il a $e sièges au total.
 	end
+end
+
+// a = bq + r (euclidean division: a economy-class seats, b the rows,
+// q the seats per row, r the leftover) or a = bd (decimal division: d
+// the quotient — exact, or rounded to a tenth when ?aprx). The caller
+// passes every value, the missing ones empty: d truthy tells the
+// decimal story, d empty the euclidean one.
+//
+// The decimal story has two variants, chosen by ?alt (only when ?aprx
+// is missing, which keeps the price story for a rounded quotient):
+//   price   : a the euros paid for b economy seats — "quel est le prix
+//             d'une place ?" (1st person when name is empty)
+//   baggage : a the kilos of baggage among b passengers — "quel est le
+//             quota de bagages par passager ?" (told by the plane)
+// ?trap adds the OTHER variant's information — a baggage weight in the
+// price story, a baggage cost in the baggage story — a deterministic
+// derivative of a and b (a + b — greater than both, so it can never
+// coincide with a term of the equation) — so the statement reads trait
+// for trait like the other variant; the question posed decides. The
+// euclidean story never carries a trap (there is no other variant to
+// cross-dress it with — invalid). ?aprx marks the quotient rounded to
+// a tenth (recurring decimal): the answer is then "environ …".
+// Returns a (instruction:, answer:) table, or the `invalid` table.
+
+// Display an exact decimal value the french way (the quotient, €/place
+// or kg/passager): 3 → "3", 2.5 → "2,5", 1.125 → "1,125".
+macro exact(x)
+	$(String(x).replace(".", ","))
+end
+
+div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — the price story only ("a payé"); the baggage
+	// story is impersonal, told by the plane.
+	let who = if name and name[1]
+		do
+			paid: $name[1] a payé
+		end
+	else
+		do
+			paid: J'ai payé
+		end
+	end
+
+	// a and b are the two values the statement always shows: without
+	// them there is no problem.
+	if not a or not b
+		return $invalid
+	end
+
+	if d
+		// d is a price or a baggage quota per unit: 0 or less is not a
+		// division problem (it would also slip past the equation check
+		// below, which aprx disables).
+		if d <= 0
+			return $invalid
+		end
+		// The statement shows a and b: the quotient d must satisfy
+		// a = bd (checked to the cent, like lin). With aprx the caller
+		// passes a quotient rounded to a tenth (recurring decimal) —
+		// no check.
+		if not aprx and (b * d * 100).round() != (a * 100).round()
+			return $invalid
+		end
+		// a is a quantity (euros, kilos), b a count (seats,
+		// passengers): integers where expected.
+		if a.floor() != a or b.floor() != b
+			return $invalid
+		end
+		// Plausible ranges: the quantity a in [2, 60], the unit count
+		// b in [2, 20] (a small group / a cabin section — the caller
+		// draws wider, the surplus is simply skipped).
+		if a < 2 or a > 60 or b < 2 or b > 20
+			return $invalid
+		end
+		// The baggage variant is the exact-quotient story: ?alt selects
+		// it, ?aprx keeps the price story. (Not a same-named local: in
+		// a do block `let alt = $alt and …` shadows the parameter with
+		// itself.)
+		let w = $ alt and not aprx
+		return do
+			instruction: do
+				if w
+					$(plane(name)) transporte $a kg de bagages, répartis équitablement entre $b passagers
+					if trap
+						\s; le transport des bagages coûte $(a + b) € au total
+					end
+					.\s
+					Quel est le quota de bagages par passager ?
+				else
+					$(who.paid) $a € pour $b places en classe économique
+					if trap
+						\s; l'avion transporte $(a + b) kg de bagages
+					end
+					.\s
+					Quel est le prix d'une place ?
+				end
+			end
+			answer: do
+				if w
+					Le quota de bagages par passager est
+					if aprx
+						\sd'environ $(exact(d)) kg.
+					else
+						\sde $(exact(d)) kg.
+					end
+				else
+					Le prix d'une place est
+					if aprx
+						\sd'environ $(exact(d)) €.
+					else
+						\sde $(exact(d)) €.
+					end
+				end
+			end
+		end
+	else
+		// q and r are the answer(s): without them the problem has none
+		// (the caller always passes them — q = a div b, r = a mod b).
+		if not q or not r
+			return $invalid
+		end
+		// The euclidean story never carries a trap: the trap's purpose
+		// is to cross-dress the two decimal variants, and there is no
+		// other variant to dress the seats story with.
+		if trap
+			return $invalid
+		end
+		// Counts are integers where expected (seats, rows).
+		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
+			return $invalid
+		end
+		// Plausible ranges: a = the economy seats in [2, 60], b = the
+		// rows in [2, 20], q the seats per row >= 2 (a one-seat-per-row
+		// repartition is not a repartition).
+		if a < 2 or a > 60 or b < 2 or b > 20 or q < 2
+			return $invalid
+		end
+		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b
+		// the repartition is not maximal and the question admits
+		// another answer.
+		if a != b * q + r or r < 0 or r >= b
+			return $invalid
+		end
+		return do
+			instruction: do
+				$(plane(name)) a $a sièges en classe économique, à répartir équitablement en $b rangées.\s
+				if alt
+					Combien y a-t-il de sièges par rangée ?
+				else
+					Combien de sièges ne pourront pas être placés dans une rangée ?
+				end
+			end
+			answer: do
+				if alt
+					Il y aura $q sièges par rangée
+					if r > 0
+						\s(mais il en restera\s
+						if r == 1
+							1 non placé).
+						else
+							$r non placés).
+						end
+					else
+						.
+					end
+				else
+					if r > 0
+						Il y aura\s
+						if r == 1
+							1 siège non placé.
+						else
+							$r sièges non placés.
+						end
+					else
+						Tous les sièges seront placés.
+					end
+				end
+			end
+		end
+	end
+
+	// Fallback: both branches return above — keep the explicit exit.
+	return $invalid
 end
