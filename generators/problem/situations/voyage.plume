@@ -316,6 +316,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			journey: son
 			parcouru: $name[1] a parcouru
 			consumed: $ (name[2] == "f" and "elle a consommé" or "il a consommé")
+			qPris: $ (name[2] == "f" and "y a-t-elle pris" or "y a-t-il pris")
 			poss: sa
 		end
 	else
@@ -324,6 +325,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			journey: mon
 			parcouru: J'ai parcouru
 			consumed: j'ai consommé
+			qPris: ai-je pris
 			poss: ma
 		end
 	end
@@ -457,7 +459,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			instruction: do
 				$(who.took) $a pauses de repos à répartir équitablement sur les $b jours de $(who.journey) trajet.\s
 				if alt
-					Combien y a-t-il de pauses par jour ?
+					Combien $(who.qPris) de pauses par jour ?
 				else
 					Combien de pauses ne pourront pas être mises dans une journée ?
 				end

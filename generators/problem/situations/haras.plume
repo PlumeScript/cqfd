@@ -38,9 +38,10 @@ Licensed under the MIT License — see LICENSE for details.
 // The caller passes every letter (the missing one as its computed solution)
 // and `u` points at the letter the question asks for (1..5 = a,b,c,d,e).
 // `name` is a (name, gender) pair — (Léa, "f") — or empty: the scene is
-// told in the 1st person ("Dans mon haras, …") or in the 3rd person
-// ("Dans le haras de Léa, …"). The trap has no place in the full sum and
-// is ignored there.
+// told in the 1st person or in the 3rd person — "Dans mon/le haras de
+// Léa, …" (lin and the euclidean div) / "Léa a un haras. Pour ses
+// X juments, elle achète…" (the decimal div). The trap has no place in
+// the full sum and is ignored there.
 // Returns a (instruction:, answer:) table, or the `invalid` table when the
 // configuration is unsupported or the equation doesn't hold.
 
@@ -280,19 +281,25 @@ end
 
 div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 	// The speaker: 1st person when name is empty; otherwise the (name,
-	// gender) pair — the forms div needs have no person agreement
-	// ("achète", "lui coûte"), so only the name is used. `intro` is the
-	// same key `lin` uses.
+	// gender) pair — `intro` (the euclidean topic, the same key `lin`
+	// uses) and `owns`/`pron`/`poss` (the decimal story: "X a un haras.
+	// Pour ses b juments, elle/il…" — agreed with the person).
 	let who = if name and name[1]
 		do
 			intro: Dans le haras de $(name[1]),
-			buy: $name[1] achète
+			owns: $(name[1]) a un haras.
+			buy: $ (name[2] == "f" and "elle achète" or "il achète")
+			pron: $ (name[2] == "f" and "elle" or "il")
+			poss: ses
 			cost: Cela lui coûte
 		end
 	else
 		do
 			intro: Dans mon haras,
+			owns: J'ai un haras.
 			buy: j'achète
+			pron: je
+			poss: mes
 			cost: Cela me coûte
 		end
 	end
@@ -333,16 +340,16 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		return do
 			instruction: do
 				if w
-					$(who.intro)\s
-					$(who.buy) $(dec(a)) kg de paille pour les $b juments du 1er pré, à répartir équitablement
+					$(who.owns)\s
+					Pour $(who.poss) $b juments, $(who.buy) $(dec(a)) kg de paille, à répartir équitablement
 					if trap
 						.\s$(who.cost) $(dec(2 * a)) €
 					end
 					.\s
 					Quelle est la ration de paille par jument ?
 				else
-					$(who.intro)\s
-					$(who.buy) $(dec(a)) € de nourriture pour les $b juments du 1er pré
+					$(who.owns)\s
+					Pour $(who.poss) $b juments, $(who.pron) dépense $(dec(a)) € en nourriture
 					if trap
 						, soit $(dec(40 * b)) kg de paille à répartir équitablement
 					end

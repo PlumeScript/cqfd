@@ -340,7 +340,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		end
 		return do
 			instruction: do
-				$(who.pCut) $a carrés pour les répartir équitablement en $b tenues ;\s
+				$(who.pCut) $a carrés de tissu pour les répartir équitablement en $b tenues ;\s
 				if alt
 					combien y a-t-il de carrés par tenue ?
 				else

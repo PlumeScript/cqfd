@@ -413,22 +413,24 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 	let cat = $ random.choice(catPairs)
 
 	// The speaker: 1st person when name is empty; otherwise the (name,
-	// gender) pair — the library is the topic ("Ma bibliothèque : …" /
-	// "La bibliothèque de Léa, docteure en littérature… : …"), docteur/
-	// docteure and the possessive (mes/ses) agreed with the person.
+	// gender) pair — the speaker opens the story ("Léa, docteure en
+	// littérature…, achète des livres pour sa bibliothèque." / "Je suis
+	// docteur en littérature…. J'achète des livres pour ma
+	// bibliothèque."), then the capitalized pronouns (Il/Elle, J'ai)
+	// and the possessive (Mes/Ses) agree with the person.
 	let who = if name and name[1]
 		do
-			lib: La bibliothèque de $(name[1]), $(name[2] == "f" and "docteure" or "docteur") en littérature $country du $century siècle
-			paid: $(name[1]) a payé
-			has: $(name[1]) a
-			poss: ses
+			intro: $(name[1]), $(name[2] == "f" and "docteure" or "docteur") en littérature $country du $century siècle, achète des livres pour sa bibliothèque.
+			paid: $(name[2] == "f" and "Elle" or "Il") a payé
+			has: $(name[2] == "f" and "Elle" or "Il") a
+			poss: Ses
 		end
 	else
 		do
-			lib: Ma bibliothèque
-			paid: j'ai payé
-			has: j'ai
-			poss: mes
+			intro: Je suis docteur en littérature $country du $century siècle. J'achète des livres pour ma bibliothèque.
+			paid: J'ai payé
+			has: J'ai
+			poss: Mes
 		end
 	end
 
@@ -462,7 +464,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 			instruction: do
 				if w
 					// B2 (weight): the b books weigh a kg.
-					$(who.lib) : $(who.poss) $b livres $(cat.d1) pèsent $(dec(a)) kg
+					$(who.intro) $(who.poss) $b livres $(cat.d1) pèsent $(dec(a)) kg
 					if trap
 						\set coûtent $(dec(a + b)) €
 					end
@@ -470,7 +472,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 					Quel est le poids d'un livre ?
 				else
 					// B1 (price): a euros paid for b books.
-					$(who.lib) : $(who.paid) $(dec(a)) € pour $b livres $(cat.d1)
+					$(who.intro) $(who.paid) $(dec(a)) € pour $b livres $(cat.d1)
 					if trap
 						\s; elles pèsent $(dec(a + b)) kg
 					end
@@ -528,7 +530,7 @@ div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
 		end
 		return do
 			instruction: do
-				$(who.lib) : $(who.has) $a livres $(cat.d1) à répartir équitablement sur $b étagères ;\s
+				$(who.intro) $(who.has) $a livres $(cat.d1) à répartir équitablement sur $b étagères ;\s
 				if alt
 					combien y a-t-il de livres par étagère ?
 				else
