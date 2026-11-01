@@ -604,6 +604,10 @@ set Expression = macro(kind:, left:, right:, print:)
 		end
 	end
 
+	isNumber: macro
+		return $ self.reduce().kind == "number"
+	end
+
 	meta addr: macro(x)
 		@Expression
 			kind: add

@@ -62,7 +62,9 @@ ref eqnX2: macro(source, style: classic, ?negative, ...args)
 		end
 		get: macro(source, sw, name)
 			let square = $source.square
-			let q = $ FactNumberCls.fromNumber(square).isRationnal()
+			let dsquare = $ (square * 10^(max(0, Math.log(square - square.floor()) / Math.log(10)))).floor()
+
+			let q = $ FactNumberCls.fromNumber(dsquare).isRationnal()
 			let solutions = if square>=0
 				if q
 					- $ s(square^0.5)
@@ -206,15 +208,19 @@ end
 /*
 $formula(X/a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
 */
-ref eqnMul: macro(source, ...args)
+ref eqnMul: macro(source, ?integer, ...args)
 	@QuestionFactory
 		parameters: do
 			- $source
-			- $Range(1, 10)
+			- $Range(2, 10)
 		end
+		validate: macro(source, a)
+			return $ source.steps[1].l.reduce() != 0 and source.steps[1].r.reduce() != 0
+		end
+
 		get: macro(source, a)
-			let left  = $ (source.steps[1].l / s(a)).reduce()
-			let right = $ (source.steps[1].r / s(a)).reduce()
+			let left  = $ (source.steps[1].l/a).reduce()
+			let right = $ (source.steps[1].r/a).reduce()
 
 			@Question(eqn)
 				steps: do
