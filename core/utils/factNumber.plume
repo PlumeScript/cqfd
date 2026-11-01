@@ -174,9 +174,9 @@ ref FactNumberCls: do
 			end
 		end
 
-		isRationnal: macro()
+		isRootRationnal: macro(n)
 			for vp in self.vp
-				if vp%2 == 1
+				if vp%n == 1
 					return $false
 				end
 			end

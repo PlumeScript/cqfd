@@ -16,266 +16,152 @@ let s from $import(../../core/utils/expression)
 let variableNames from $import(./utils)
 
 /*
-$formula(x=a)-class equation
+$Param(String, solution, integer) maybe
+@InfosList
+	- $code(integer)
+end
+
+$Param(String, opps, (+)) maybe
+@InfosList
+	- $code(+)
+	- $code(-)
+	- $code(/)
+	- $code(%) like $code(/) but force right member to be an integer.
+	- $code(*)
+	- $code(^2q)\: must be first. Rationnal square root.
+	- $code(^2i)\: must be first. Irrationnal square root.
+	- $code(^2c)\: must be first. Complex square root.
+end
+
+Missing: +x, -x
 */
-ref eqnX: macro(style: classic, ...args)
+ref eqn: macro(opps:, style: classic, solution: integer)
+	if not opps
+		set opps = $Table(+)
+	end
+
+	for i, opp in enumerate(opps)
+		if i != 1 and (opp == "^2q" or opp == "^2i" or opp == "^2c")
+			raise `opp` must be first.
+		end
+
+		if opp != "+" and opp != "-" and opp != "*" and opp != "/"and opp != "%" and opp != "^2i" and opp != "^2q" and opp != "^2c"
+			raise Unknown opp `$opp`.
+		end
+	end
+
 	@QuestionFactory
 		parameters: do
 			- $Range(-10, 10)
-			- $ Range(0, 1)
-		end
-		hyperParameters: do
-			- $variableNames[style]
-		end
-		get: macro(a, sw, name)
-			@Question(eqn)
-				steps: do
-					- do
-						if sw==0
-							l: $s($name)
-							r: $s($a)
-						else
-							l: $s($a)
-							r: $s($name)
-						end
-					end
-				end
-				id: x=$a
-				solutions: $Table($a)
-			end
-		end
-	end
-end
-
-/*
-$formula(x²=a)-class equation.$newline
-Source may be $ParamSet(sqrtN) or $ParamSet(sqrtC)
-*/
-ref eqnX2: macro(source, style: classic, ?negative, ...args)
-	@QuestionFactory
-		parameters: do
-			- $source
-			- $Choice(0, 1)
-		end
-		hyperParameters: do
-			- $variableNames[style]
-		end
-		get: macro(source, sw, name)
-			let square = $source.square
-			let dsquare = $ (square * 10^(max(0, Math.log(square - square.floor()) / Math.log(10)))).floor()
-
-			let q = $ FactNumberCls.fromNumber(dsquare).isRationnal()
-			let solutions = if square>=0
-				if q
-					- $ s(square^0.5)
-					if square != 0
-						- $ s(-(square^0.5))
-					end
-				else
-					- $ s(square).root()
-					- $ s(-1*(s(square).root())).reduce()
-				end
+			if solution == "rationnal"
+				- $Choice(2, 10)
 			else
-				...Table()
+				- $Choice(0)
 			end
+			for i in seq(len(opps))
+				- $Range(2, 10)
+			end
+		end
+		hyperParameters: do
+			- $variableNames[style]
+		end
+		get: macro(a, b, ...values)
+			let x = if solution == "integer"
+				$a
+			elseif solution == "rationnal"
+				$ s(a)/b
+			end
+
+			let name = $Table.at($values, -1)
+			let left  = $ s(name)
+
+			for i in seq(len(opps))
+				if opps[i] == "%"
+					set x *= $values[i]
+				elseif opps[i] == "^2i"
+					set left = $ left^2
+					set x = $ x^2 + values[i]
+					while solution == "integer" and (x^0.5).floor() == x^0.5
+						set x += 1
+					end
+				elseif opps[i] == "^2c"
+					set left = $ left^2
+					set x = $ -x.abs()
+				end
+			end
+
+			
+			let right = $ s(x)
+
+			let members = (l:$left, r:$right)
+			for i in seq(len(opps))
+				for k, member in items(members)
+					if opps[i] == "+"
+						set members[k] += $values[i]
+					elseif opps[i] == "-"
+						set members[k] -= $values[i]
+					elseif opps[i] == "*"
+						set members[k] *= $values[i]
+					elseif opps[i] == "/" or opps[i] == "%"
+						set members[k] /= $values[i]
+					elseif opps[i] == "^2q"
+						set members[k] *= $members[k]
+					end
+					set members[k] = $members[k].reduce()
+				end
+			end
+			
+			let solveSteps = $Table()
 			@Question(eqn)
 				steps: do
 					- do
-						if sw==0
-							l: $ s(name)^2
-							r: $ s(square)
-						else
-							l: $ s(square)
-							r: $ s(name)^2
-						end
+						l: $members.l
+						r: $members.r
 					end
-					if len(solutions)>0
-						- do
-							l: $s($name)
-							r: $solutions[1]
-							if len(solutions)>1
-								r2: $solutions[2]
+					for i in seq(len(opps), 1, -1)
+						for k, member in items(members)
+							if opps[i] == "+"
+								set members[k] -= $values[i]
+								run $ Table.append(solveSteps, ("-", values[i]))
+							elseif opps[i] == "-"
+								set members[k] += $values[i]
+								run $ Table.append(solveSteps, ("+", values[i]))
+							elseif opps[i] == "*"
+								set members[k] /= $values[i]
+								run $ Table.append(solveSteps, ("\\div", values[i]))
+							elseif opps[i] == "/" or opps[i] == "%"
+								set members[k] *= $values[i]
+								run $ Table.append(solveSteps, ("\\times", values[i]))
 							end
 						end
-					else
-						finalLabel: Pas de solution
+
+						if opps[i] == "^2q" or opps[i] == "^2i"
+							- do
+								l:  $ s(name)
+								r:  $ (members.r.root()).reduce()
+								r2: $ (-1*members.r.root()).reduce()
+							end
+						elseif opps[i] == "^2c"
+							finalLabel: Pas de solutions.
+						else
+							- do
+								l: $members.l
+								r: $members.r
+							end
+							for k, member in items(members)
+								set members[k] = $members[k].reduce()
+							end
+
+							- do
+								l: $members.l
+								r: $members.r
+							end
+						end
 					end
 				end
-				id: x²=$square
-				solutions: $solutions
+				id: $a-$b-$repr($opps)-$repr($values)
+				solveSteps: $solveSteps
 			end
 		end
 	end
-end
-
-/*
-$formula(X+a=b)-class equation, with $formula(a) added to each member of the source (once or twice), were X is $posParam(QuestionFactory, source, 1).
-*/
-ref eqnAdd: macro(...args)
-	let sourceA = $ args[1]?
-	if sourceA
-		run $ Table.remove(args)
-	else
-		set sourceA = $ eqnX(...args)
-	end
-	let sourceB = $ args[1]?
-	if sourceB
-		run $ Table.remove(args)
-	else
-		set sourceB = $ Range(1, 10)
-	end
-
-	@QuestionFactory
-		parameters: do
-			- $sourceA
-			- $Range(1, 10)
-			- $ Choice(0, 1)
-			- $ Choice(0, 1)
-		end
-		get: macro(source, a, s1, s2)
-			let left  = if s1==0
-				$ (source.steps[1].l + s(a))
-			else
-				$ (s(a) + source.steps[1].l + s(a))
-			end
-			let right  = if s2==0
-				$ (source.steps[1].r + s(a))
-			else
-				$ (s(a) + source.steps[1].r + s(a))
-			end
-
-			set left  = $ left.reduce()
-			set right = $ right.reduce()
-
-			@Question(eqn)
-				steps: do
-					- do
-						l: $ left
-						r: $ right
-					end
-					- do
-						l: $ left - s(a)
-						r: $ right - s(a)
-					end
-					...source.steps
-				end
-				solutions: $source.solutions
-				id: $source.id+$a
-			end
-		end
-	end
-end
-
-/*
-$formula(X-a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
-*/
-ref eqnSub: macro(source, ...args)
-	@QuestionFactory
-		parameters: do
-			- $source
-			- $Range(1, 10)
-		end
-		get: macro(source, a)
-			let left  = $ (source.steps[1].l - s(a)).reduce()
-			let right = $ (source.steps[1].r - s(a)).reduce()
-
-			@Question(eqn)
-				steps: do
-					- do
-						l: $ left
-						r: $ right
-					end
-					- do
-						l: $ left + s(a)
-						r: $ right + s(a)
-					end
-					...source.steps
-				end
-				solutions: $source.solutions
-				id: $source.id-$a
-			end
-		end
-	end
-end
-
-/*
-Wrapper for $ParamSet(eqnAdd) and $ParamSet(eqnSub)
-*/
-eqnAddSub: macro(...args)
-	$ eqnAdd(...args) * eqnSub(...args)
-end
-
-/*
-$formula(X/a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
-*/
-ref eqnMul: macro(source, ?integer, ...args)
-	@QuestionFactory
-		parameters: do
-			- $source
-			- $Range(2, 10)
-		end
-		validate: macro(source, a)
-			return $ source.steps[1].l.reduce() != 0 and source.steps[1].r.reduce() != 0
-		end
-
-		get: macro(source, a)
-			let left  = $ (source.steps[1].l/a).reduce()
-			let right = $ (source.steps[1].r/a).reduce()
-
-			@Question(eqn)
-				steps: do
-					- do
-						l: $ left
-						r: $ right
-					end
-					- do
-						l: $ left * s(a)
-						r: $ right * s(a)
-					end
-					...source.steps
-				end
-				solutions: $source.solutions
-				id: $source.id+$a
-			end
-		end
-	end
-end
-
-/*
-$formula(X*a=b)-class equation, were X is $posParam(QuestionFactory, source, 1).
-*/
-ref eqnDiv: macro(source, ...args)
-	@QuestionFactory
-		parameters: do
-			- $source
-			- $Range(2, 10)
-		end
-		get: macro(source, a)
-			let left  = $ (source.steps[1].l * s(a)).reduce()
-			let right = $ (source.steps[1].r * s(a)).reduce()
-
-			@Question(eqn)
-				steps: do
-					- do
-						l: $ left
-						r: $ right
-					end
-					- do
-						l: $ left / s(a)
-						r: $ right / s(a)
-					end
-					...source.steps
-				end
-				solutions: $source.solutions
-				id: $source.id-$a
-			end
-		end
-	end
-end
-
-/*
-Wrapper for $ParamSet(eqnMul) and $ParamSet(eqnDiv)
-*/
-eqnMulDiv: macro(...args)
-	$ eqnMul(...args) * eqnDiv(...args)
 end

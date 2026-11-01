@@ -788,7 +788,7 @@ set Expression = macro(kind:, left:, right:, print:)
 					else
 						let b = $ makeExpression(labels[i])
 						let ex = $ makeExpression(e)
-						set f = $Expression(kind: "pow", left: b, right: ex)
+						set f = $ Expression(kind: "pow", left: b, right: ex)
 					end
 					run $ Table.append(numSy, f)
 				elseif e < 0
@@ -798,7 +798,7 @@ set Expression = macro(kind:, left:, right:, print:)
 					else
 						let b = $ makeExpression(labels[i])
 						let ex = $ makeExpression(-e)
-						set f = $Expression(kind: "pow", left: b, right: ex)
+						set f = $ Expression(kind: "pow", left: b, right: ex)
 					end
 					run $ Table.append(denSy, f)
 				end
