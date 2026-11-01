@@ -132,12 +132,13 @@ macro sameFactors(a, b)
 end
 
 // A factor tostring can render bare inside a product: a number, a symbol,
-// a symbol-based pow, or a sum (paren() keeps it grouped).
+// a pow on a symbol or a number base (the braces keep it readable), or a
+// sum (paren() keeps it grouped).
 macro isLeafFactor(f)
 	if isExpression(f) and (f.kind == "number" or f.kind == "symbol" or f.kind == "add" or f.kind == "sub")
 		return $true
 	end
-	if isExpression(f) and f.kind == "pow" and isExpression(f.left) and f.left.kind == "symbol"
+	if isExpression(f) and f.kind == "pow" and isExpression(f.left) and (f.left.kind == "symbol" or f.left.kind == "number")
 		return $true
 	end
 	return $false
@@ -271,10 +272,15 @@ set Expression = macro(kind:, left:, right:, print:)
 				$ String(right)
 			}
 		elseif kind == "pow"
+			// right may be a raw number (root()) or a number expression
+			// (pretty/eval rebuilt it): compare its value, and take the
+			// index from the value, not from a node (1 / <expr> would
+			// dispatch a div).
+			let e = $ isExpression(right) and right.kind == "number" and right.left or right
 			if self.print?.root?
 				\\sqrt
-				if right != 0.5
-					[\\leftroot{$String($(1/right))}]
+				if e != 0.5
+					[\\leftroot{$String($(1/e))}]
 				end
 				{
 				$ paren(left)
@@ -302,10 +308,22 @@ set Expression = macro(kind:, left:, right:, print:)
 		elseif self.kind == "number"
 			return $self.left
 		else
-			let left  = $ makeExpression(self.left.eval(...values))
-			let right = $ makeExpression(self.right.eval(...values))
+			// A child may be raw (root() stores a plain number on right):
+			// only expressions carry an eval.
+			let left
+			let right
+			if isExpression(self.left)
+				set left = $ makeExpression(self.left.eval(...values))
+			else
+				set left = $ makeExpression(self.left)
+			end
+			if isExpression(self.right)
+				set right = $ makeExpression(self.right.eval(...values))
+			else
+				set right = $ makeExpression(self.right)
+			end
 
-			let result = $ Expression(kind: self.kind, left: left, right: right)
+			let result = $ Expression(kind: self.kind, left: left, right: right, print: self.print?)
 			if left.kind == "number" and right.kind == "number"
 				set result = $result.reduce()
 				if result.kind == "number"
@@ -383,8 +401,10 @@ set Expression = macro(kind:, left:, right:, print:)
 				end
 				return $ makeExpression(n) * left.right
 			end
-			// x·3 → 3x (number first); x·(-1) → -x via the tostring above.
-			if isExpression(left) and left.kind == "symbol" and isExpression(right) and right.kind == "number"
+			// A bare factor in front of a number flips, so that the number
+			// leads: x·3 → 3x, x²·3 → 3x², √5·2 → 2√5, (x+1)·3 → 3(x+1).
+			// x·(-1) → -x (the flip, then the tostring lead-minus).
+			if isLeafFactor(left) and not (isExpression(left) and left.kind == "number") and isExpression(right) and right.kind == "number"
 				return $ Expression(kind: "mul", left: right, right: left)
 			end
 		end
@@ -403,7 +423,9 @@ set Expression = macro(kind:, left:, right:, print:)
 			end
 		end
 		
-		return $ Expression(kind: self.kind, left: left, right: right)
+		// Carry the print flags (root: the rebuilt node must keep rendering
+		// \sqrt, not x^{0.5}).
+		return $ Expression(kind: self.kind, left: left, right: right, print: self.print?)
 	end
 
 	// Apply linear simplifications
@@ -560,7 +582,9 @@ set Expression = macro(kind:, left:, right:, print:)
 						end
 					elseif right.kind == "pow" and left.kind == "pow" and right.left == left.left
 						// Same base: (x²)·(x³) → x⁵ — the exponents are added.
-						let e = $ (right.right + left.right).reduce()
+						// makeExpression: root() stores raw exponents, and a
+						// raw sum has no reduce to call on.
+						let e = $ makeExpression(right.right + left.right).reduce()
 						set flat[i] = $ Expression(kind: "pow", left: right.left, right: e).reduce()
 						set flat[j] = $ makeExpression(0)
 					elseif (isExpression(right) and right.kind == "pow" and isExpression(left) and left.kind == "symbol" and right.left == left) or (isExpression(left) and left.kind == "pow" and isExpression(right) and right.kind == "symbol" and left.left == right)
@@ -591,7 +615,18 @@ set Expression = macro(kind:, left:, right:, print:)
 			end
 			return $value.pretty()
 		else
-			return $ Expression(kind: self.kind, left: left, right: right).pretty()
+			// Carry the print flags (root: the reduced node must keep
+			// rendering \sqrt, not x^{0.5}).
+			return $ Expression(kind: self.kind, left: left, right: right, print: self.print?).pretty()
+		end
+	end
+
+	root: macro(n: 2)
+		@Expression
+			kind: pow
+			left: $self
+			right: $(1/n)
+			print: (root: $true)
 		end
 	end
 
