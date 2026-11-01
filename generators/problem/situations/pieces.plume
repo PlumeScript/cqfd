@@ -6,7 +6,8 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 // Pieces situations: a word problem drawn from a linear equation with
-// one missing letter, dressed as coins in the pocket (and a piggy bank):
+// one missing letter (`lin`), or from a division a = bq+r / a = bd
+// (`div`), dressed as coins in the pocket (and a piggy bank):
 //
 //   sign "+" : a*b + c*d = e    a, c coin counts; b, d coin values (€)
 //   sign ""  : a*b = e          a bare product: one coin type, c and d
@@ -29,6 +30,18 @@ Licensed under the MIT License — see LICENSE for details.
 // (seeded by the equation).
 // On the full equation there is no second term to mention: the
 // configuration is marked invalid.
+//
+// `div` dresses a division: the euclidean one (a coins shared fairly in
+// b pockets — how many per pocket, or how many left over) and the
+// decimal one, with two variants (a euros paid in b coins of the same
+// value → the value of one coin; the b coins weigh a grams → the weight
+// of one coin). The trap adds the other decimal variant's datum — a
+// total weight in the value story, a total amount in the weight story,
+// deterministic and never a term of the equation — so the statement
+// reads like the other variant and the student must read the question
+// posed (the two datums are presented in an alternating order). The
+// euclidean story has no second variant to mimic: ?trap is invalid
+// there.
 //
 // The non-trap statements scope the total: "Tout mon/son argent est en
 // pièces : …" — every euro of the total is a coin of the type(s) listed,
@@ -70,6 +83,14 @@ macro euros(x)
 	else
 		$(Number.format(r, "%.0f", locale: "fr"))
 	end
+end
+
+// Display an exact decimal value the french way (the decimal quotient of
+// the div answers, a weight in grams in the statement): 3 → "3",
+// 2.5 → "2,5", 0.875 → "0,875". Unlike euros(), it never rounds (7/8
+// stays "0,875" — euros() would show "0,88").
+macro exact(x)
+	$(String(x).replace(".", ","))
 end
 
 // Value of a term: qty*price, 0 when the quantity or the price is missing.
@@ -318,5 +339,233 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 
 	// Fallback: every (sign, u) combination is handled or rejected above —
 	// keep the explicit exit.
+	return $invalid
+end
+
+// a = bq + r (euclidean division: a coins shared fairly in b pockets, q
+// the coins per pocket, r the coins left over) or a = bd (decimal
+// division: d the quotient — exact, or rounded to a tenth when ?aprx).
+// The caller passes every value, the missing ones empty: d truthy tells
+// the decimal story, d empty the euclidean one.
+//
+// The decimal story has two variants, chosen by ?alt (only when ?aprx is
+// missing, which keeps the value story for a rounded quotient):
+//   value  : a the euros paid, b the coins — "quelle est la valeur
+//            d'une pièce ?"
+//   weight : a the grams, b the coins — "quel est le poids d'une pièce ?"
+// ?trap adds the other variant's datum (a total weight in the value
+// story, a total amount in the weight story — deterministic, never a
+// term of the equation a, b, d) so the statement reads like the other
+// variant: the student must read the question posed. The two datums are
+// presented in an alternating order (seeded by the equation).
+// Returns a (instruction:, answer:) table, or the `invalid` table.
+
+div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — the forms div needs have no person agreement
+	// ("a payé", "elles pèsent"), only "veut" is gendered.
+	let who = if name and name[1]
+		do
+			have: $name[1] a
+			pay: $name[1] a payé
+			// after a semicolon (same as pay: the name stays capitalized)
+			payLow: $name[1] a payé
+			want: $ (name[2] == "f" and "Elle veut" or "Il veut")
+			poss: Ses
+		end
+	else
+		do
+			have: J'ai
+			pay: J'ai payé
+			// after a semicolon (lowercase j)
+			payLow: j'ai payé
+			want: Je veux
+			poss: Mes
+		end
+	end
+
+	// a and b are the two values the statement always shows: without
+	// them there is no problem.
+	if not a or not b
+		return $invalid
+	end
+
+	if d
+		// d is a coin value (value variant) or a weight per coin (weight
+		// variant): 0 or less is not a division problem (it would also
+		// slip past the equation check below, which aprx disables).
+		if d <= 0
+			return $invalid
+		end
+		// The statement shows a and b: the quotient d must satisfy a = bd
+		// (checked to the cent, like lin). With aprx the caller passes a
+		// quotient rounded to a tenth (recurring decimal) — no check.
+		if not aprx and (b * d * 100).round() != (a * 100).round()
+			return $invalid
+		end
+		// a = euros (value variant) or grams (weight variant): wide;
+		// b = coin count (a handful): narrow.
+		if a < 2 or a > 9999 or b < 2 or b > 20
+			return $invalid
+		end
+		// b is a coin count in both variants: an integer ("4,5 pièces"
+		// would be ill-formed).
+		if b.floor() != b
+			return $invalid
+		end
+		// The weight variant is the exact-quotient story: ?alt selects it,
+		// ?aprx keeps the value story. (Not a same-named local: in a macro
+		// body `let alt = $alt and …` shadows the parameter with itself.)
+		let w = $ alt and not aprx
+		// The trap's datum (the other variant's quantity) and the order of
+		// the two datums (alternated — the student never learns the
+		// relevant one is the first), seeded by the equation: the same
+		// problem always tells the same story.
+		let swap = 0
+		let wgt = 0
+		let mont = 0
+		if trap
+			let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000 + (d * 100).round()
+			let random = $Random($(seed))
+			set swap = $ random(0, 1)
+			if w
+				// weight variant: the distractor amount, 0,1 € per gram
+				// (a plausible order — a real coin is worth about 0,1 €
+				// per gram): M = 0,1·a. It must never equal a term of the
+				// equation: M = d when b = 10, M = b when a = 10·b
+				// (M = a never, a > 0).
+				if b == 10 or a == 10 * b
+					return $invalid
+				end
+				set mont = $ 0.1 * a
+			else
+				// value variant: the distractor weight, 8 g per coin
+				// (a 2 € coin weighs 8,5 g): W = 8·b. It must never equal
+				// a term of the equation: W = a when a = 8·b, W = d when
+				// a = 8·b² (W = b never, b > 0).
+				if a == 8 * b or a == 8 * b * b
+					return $invalid
+				end
+				set wgt = $ 8 * b
+			end
+		end
+		return if w
+			instruction: do
+				if trap
+					if swap == 1
+						$(who.poss) $b pièces pèsent $(exact(a)) g et valent $(euros(mont)) € au total.\s
+						Quel est le poids d'une pièce ?
+					else
+						$(who.pay) $(euros(mont)) € en $b pièces de même valeur ; elles pèsent $(exact(a)) g.\s
+						Quel est le poids d'une pièce ?
+					end
+				else
+					$(who.poss) $b pièces pèsent $(exact(a)) g.\s
+					Quel est le poids d'une pièce ?
+				end
+			end
+			answer: do
+				Une pièce pèse\s
+				if aprx
+					environ\s
+				end
+				$(exact(d)) g.
+			end
+		else
+			instruction: do
+				if trap
+					if swap == 1
+						$(who.poss) $b pièces pèsent $wgt g ; $(who.payLow) $(euros(a)) € en pièces de même valeur.\s
+						Quelle est la valeur d'une pièce ?
+					else
+						$(who.pay) $(euros(a)) € en $b pièces de même valeur ; elles pèsent $wgt g.\s
+						Quelle est la valeur d'une pièce ?
+					end
+				else
+					$(who.pay) $(euros(a)) € en $b pièces de même valeur.\s
+					Quelle est la valeur d'une pièce ?
+				end
+			end
+			answer: do
+				La valeur d'une pièce est
+				if aprx
+					\sd'environ $(exact(d)) €.
+				else
+					\sde $(exact(d)) €.
+				end
+			end
+		end
+	else
+		// euclidean: the trap only exists in the decimal branch — it
+		// gives the other variant's information to make the statement
+		// read like it; the euclidean story has no second variant to
+		// mimic.
+		if trap
+			return $invalid
+		end
+		// q and r are the answer(s): without them the problem has none
+		// (the caller always passes them — q = a div b, r = a mod b).
+		if not q or not r
+			return $invalid
+		end
+		// Counts are integers where expected.
+		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
+			return $invalid
+		end
+		// a = coins, b = pockets: a handful of coins (2..20) and 2..4
+		// pockets (a person carries at most 4 pockets — a tirelire would
+		// be a single container).
+		if a < 2 or a > 20 or b < 2 or b > 4
+			return $invalid
+		end
+		// q >= 2: at least 2 coins per pocket — with q < 2 the repartition
+		// is degenerate and the "per pocket" question is meaningless.
+		if q < 2
+			return $invalid
+		end
+		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
+		// repartition is not maximal and the question admits another answer.
+		if a != b * q + r or r < 0 or r >= b
+			return $invalid
+		end
+		return do
+			instruction: do
+				$(who.have) $a pièces. $(who.want) les répartir équitablement en $b poches ;\s
+				if alt
+					combien y aura-t-il de pièces par poche ?
+				else
+					combien de pièces ne pourront pas être mises dans une poche ?
+				end
+			end
+			answer: do
+				if alt
+					Il y aura $q pièces par poche
+					if r > 0
+						\s(mais il en restera\s
+						if r == 1
+							1 non répartie).
+						else
+							$r non réparties).
+						end
+					else
+						.
+					end
+				else
+					if r > 0
+						Il y aura\s
+						if r == 1
+							1 pièce non répartie.
+						else
+							$r pièces non réparties.
+						end
+					else
+						Toutes les pièces seront réparties.
+					end
+				end
+			end
+		end
+	end
+
+	// Fallback: both branches return above — keep the explicit exit.
 	return $invalid
 end
