@@ -6,25 +6,35 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 // Tissu (fabric) situation: a word problem drawn from the linear equation
-// with one missing letter — the scene is a cut in a roll:
+// with one missing letter (`lin`), or from a division a = bq+r / a = bd
+// (`div`) — the scene is a cut in a roll and a repartition of the squares:
 //
-//   a - c*d = e
+//   lin — a - c*d = e
 //
 //   a = fabric at the start (m²)
 //   c = number of squares cut
 //   d = area of one square (m²)
 //   e = fabric left (m²)
 //
-// The scene is a subtraction, so only sign "-" is supported; sign "+" and
-// "" (and the "*" hole label) are invalid. The trap is not supported either:
-// there is no simple product in the scene to confuse with. The caller passes
-// every letter (the missing one as its computed solution) and `u` points at
-// the letter the question asks for (1..5 = a,b,c,d,e; only 1, 3, 5 are valid
-// here). `name` is a (name, gender) pair — (Léa, f) — or empty: the question
-// is told in the 1st person ("j'ai coupé…") or in the gendered 3rd person
-// ("Léa a coupé… a-t-elle…"). Returns a (instruction:, answer:) table, or
-// the `invalid` table when the configuration is unsupported or the equation
-// doesn't hold.
+//   div — a = bq+r: a squares cut, repartitioned in b outfits (q the
+//         squares per outfit, r the leftover — ?alt 1 asks q, 0 asks r);
+//         a = bd: the decimal quotient d, two variants drawn from (a, b) —
+//         area (a the m² cut, b the squares: "quelle est la superficie d'un
+//         carré ?") or price (a the euros paid, b the squares: "quel est le
+//         prix d'un carré ?") — ?trap gives the statement the other
+//         variant's info, ?aprx the "environ" answer.
+//
+// `lin`: the scene is a subtraction, so only sign "-" is supported; sign
+// "+" and "" (and the "*" hole label) are invalid. The trap is not
+// supported either: there is no simple product in the scene to confuse
+// with. The caller passes every letter (the missing one as its computed
+// solution) and `u` points at the letter the question asks for (1..5 =
+// a,b,c,d,e; only 1, 3, 5 are valid here). `name` is a (name, gender)
+// pair — (Léa, f) — or empty: the question is told in the 1st person
+// ("j'ai coupé…") or in the gendered 3rd person ("Léa a coupé…
+// a-t-elle…"). Returns a (instruction:, answer:) table, or the `invalid`
+// table when the configuration is unsupported or the equation doesn't
+// hold.
 
 let invalid = (invalid: $true)
 
@@ -44,6 +54,14 @@ macro m2(x)
 	else
 		$(Number.format(x, "%.0f", locale: "fr"))
 	end
+end
+
+// Display an exact decimal value the french way (the division quotient d,
+// e.g. an area or a price per square): 3 → "3", 2.5 → "2,5", 1.125 →
+// "1,125" — never rounded (m2() would show 0.875 as "0,88"; the answer is
+// the exact a/b, as the caller computed it).
+macro exact(x)
+	$(String(x).replace(".", ","))
 end
 
 lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
@@ -144,5 +162,218 @@ lin: macro(a, b, sign, c, d, e, u, name:, ?trap)
 	end
 
 	// Fallback: every u is handled or rejected above — keep the explicit exit.
+	return $invalid
+end
+
+// a = bq + r (euclidean division: a squares cut, repartitioned in b
+// outfits — q the squares per outfit, r the leftover) or a = bd (decimal
+// division: d the quotient — the area or the price of one square, exact,
+// or rounded to a tenth when ?aprx). The caller passes every value, the
+// missing ones empty: d truthy tells the decimal story, d empty the
+// euclidean one.
+//
+// The decimal story has two variants, drawn deterministically from (a, b)
+// (a seed — the same values always tell the same story, as lin's trap):
+//   area  : a the m² of fabric cut, b the squares —
+//           "quelle est la superficie d'un carré ?"
+//   price : a the euros paid, b the squares —
+//           "quel est le prix d'un carré ?"
+// ?trap gives the statement the other variant's quantified info (a fabric
+// price in the area story, a cut area in the price story) — derived from
+// a and b, never equal to a term of the equation: the statement then
+// reads like the other variant, and the student must read the question
+// posed. The euclidean story has no trap. ?aprx marks the quotient rounded
+// to a tenth (recurring decimal): the answer is then "environ …".
+// Returns a (instruction:, answer:) table, or the `invalid` table.
+
+div: macro(a, b, q, r, d, name:, ?trap, ?aprx, ?alt)
+	// The speaker: 1st person when name is empty; otherwise the (name,
+	// gender) pair — "a coupé" / "a payé" take no object, so the forms
+	// are gender-neutral (only the name is used).
+	let who = if name and name[1]
+		do
+			pCut: $name[1] a coupé
+			pay: $name[1] a payé
+		end
+	else
+		do
+			pCut: J'ai coupé
+			pay: J'ai payé
+		end
+	end
+
+	// The trap's quantified distractor (set in the decimal branch only,
+	// like lin's swap): s the implied area of one square (price story),
+	// p the price per m² (area story).
+	let s = 0
+	let p = 0
+
+	// a and b are the two values the statement always shows: without
+	// them there is no problem.
+	if not a or not b
+		return $invalid
+	end
+
+	if d
+		// d is an area or a price per square: 0 or less is not a division
+		// problem (it would also slip past the equation check below, which
+		// aprx disables).
+		if d <= 0
+			return $invalid
+		end
+		// a is displayed by m2() (two decimals): it must be cent-exact,
+		// else the statement's a/b would differ from d. (Round-trip: the
+		// float 7.35 carries a hair, so compare the re-rounded value, not
+		// the raw product.)
+		if (a * 100).round() / 100 != a
+			return $invalid
+		end
+		// The scene's bounds: a few dozen m² or euros (a roll, a purchase),
+		// a handful of squares — b counts squares, a whole number.
+		if a < 2 or a > 40 or b.floor() != b or b < 2 or b > 10
+			return $invalid
+		end
+		// The statement shows a and b: the quotient d must satisfy a = bd
+		// (checked to the cent, like lin). With aprx the caller passes a
+		// quotient rounded to a tenth (recurring decimal) — no check.
+		if not aprx and (b * d * 100).round() != (a * 100).round()
+			return $invalid
+		end
+		// The variant (area or price) is drawn from a seed on (a, b):
+		// deterministic — the same values always tell the same story (as
+		// lin's trap). 1 → price, 0 → area.
+		let seed = $ (a * 100).round() * 1000000000 + (b * 100).round() * 1000000
+		let random = $Random($(seed))
+		let w = $ random(0, 1)
+		if trap
+			// The trap gives the other variant's info, derived from a and
+			// b, never equal to a term of the equation (a, b, d — b is a
+			// count and s is never 1, so b*s is never b): the draws skip
+			// the forbidden values. (w is the drawn 0/1: 0 is truthy in
+			// plume, test == 1.)
+			if w == 1
+				// price story + the area cut: b*s m², s the (implied)
+				// area of one square — 0,5 m² first (as lin's d), raised
+				// while the total matches a or d.
+				set s = 0.5
+				while b * s == a or b * s == d
+					set s = $ s + 1
+				end
+			else
+				// area story + the price per m² (a fabric price, derived
+				// from a's whole part — a.floor() keeps it a whole price
+				// when a is a decimal — 2–13 €), raised while it matches
+				// b or d.
+				set p = $ (a.floor() % 9) + 2
+				while p == b or p == d
+					set p = $ p + 1
+				end
+			end
+		end
+		return do
+			instruction: do
+				// w is the drawn 0/1: 0 is truthy in plume, test == 1.
+				if w == 1
+					$(who.pay) $(m2(a)) € pour $b carrés
+					if trap
+						\scoupés dans $(m2(b * s)) m² de tissu
+					else
+						\sde tissu
+					end
+					. Quel est le prix d'un carré ?
+				else
+					$(who.pCut) $(m2(a)) m² de tissu en $b carrés égaux.
+					if trap
+						\sLe tissu coûte $(p) € par m².
+					end
+					\sQuelle est la superficie d'un carré ?
+				end
+			end
+			answer: do
+				if w == 1
+					Le prix d'un carré est
+					if aprx
+						\sd'environ $(exact(d)) €.
+					else
+						\sde $(exact(d)) €.
+					end
+				else
+					La superficie d'un carré est
+					if aprx
+						\sd'environ $(exact(d)) m².
+					else
+						\sde $(exact(d)) m².
+					end
+				end
+			end
+		end
+	else
+		// q and r are the answer(s): without them the problem has none
+		// (the caller always passes them — q = a div b, r = a mod b).
+		if not q or not r
+			return $invalid
+		end
+		// Counts are integers where expected (squares, outfits, per
+		// outfit, leftover).
+		if a.floor() != a or b.floor() != b or q.floor() != q or r.floor() != r
+			return $invalid
+		end
+		// The scene's bounds: a few dozen squares cut, a handful of
+		// outfits (b ≥ 2 keeps "tenues" plural), at least 2 squares per
+		// outfit (q ≥ 2 — the question is not worth asking when the
+		// answer is 1); q ≤ 20 follows from a ≤ 40 and b ≥ 2.
+		if a < 2 or a > 40 or b < 2 or b > 10 or q < 2
+			return $invalid
+		end
+		// Euclidean division: a = bq + r with 0 <= r < b — with r >= b the
+		// repartition is not maximal and the question admits another answer.
+		if a != b * q + r or r < 0 or r >= b
+			return $invalid
+		end
+		// The trap dresses the decimal variants only (area/price): the
+		// distractor is defined for them, there is none for the integer
+		// story (as on lin — the scene has no product to confuse with).
+		if trap
+			return $invalid
+		end
+		return do
+			instruction: do
+				$(who.pCut) $a carrés pour les répartir équitablement en $b tenues ;\s
+				if alt
+					combien y a-t-il de carrés par tenue ?
+				else
+					combien de carrés ne pourront pas être mis dans une tenue ?
+				end
+			end
+			answer: do
+				if alt
+					Il y aura $q carrés par tenue
+					if r > 0
+						\s(mais il en restera\s
+						if r == 1
+							1 non réparti).
+						else
+							$r non répartis).
+						end
+					else
+						.
+					end
+				else
+					if r > 0
+						Il y aura\s
+						if r == 1
+							1 carré non réparti.
+						else
+							$r carrés non répartis.
+						end
+					else
+						Tous les carrés seront répartis.
+					end
+				end
+			end
+		end
+	end
+
+	// Fallback: both branches return above — keep the explicit exit.
 	return $invalid
 end
