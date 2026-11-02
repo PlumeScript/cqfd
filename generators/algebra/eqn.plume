@@ -41,7 +41,7 @@ An unknown operation, or a $code(^2) operation that is not first, raises an erro
 
 Todo\: irrationnal distractor & solutions
 */
-ref eqn: macro(opps:, style: classic, solution: integer)
+ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution)
 	if not opps
 		set opps = $Table(+)
 	end
@@ -190,9 +190,11 @@ ref eqn: macro(opps:, style: classic, solution: integer)
 						elseif opps[i] == "^2c"
 							finalLabel: Pas de solutions.
 						else
-							- do
-								l: $members.l
-								r: $members.r
+							if not lightSolution
+								- do
+									l: $members.l
+									r: $members.r
+								end
 							end
 							for k, member in items(members)
 								set members[k] = $members[k].reduce()
