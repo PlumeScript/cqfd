@@ -298,22 +298,109 @@ macro isLeafFactor(f)
 	return $false
 end
 
-// Table(c: <number expr>, u: <factor expr>) when t is a bare factor (c = 1) or
-// a number×factor mul (either order); empty otherwise.
-macro unitTerm(t)
+// Recursively unfold x into acc (see decomposeTerm), for the side held in
+// side ("num" or "den"): a number multiplies cnum / cden (integers only),
+// a symbol / symbol pow joins unit on the num side (a symbol in a denominator
+// makes the term non-decomposable), a mul unfolds on the same side, a div
+// splits (its numerator goes up, its denominator down). False otherwise.
+macro collectTermSide(x, acc, side)
+	if isExpression(x) and x.kind == "mul"
+		let ok = $ collectTermSide(x.left, acc, side)
+		if not ok
+			return $false
+		end
+		return $ collectTermSide(x.right, acc, side)
+	end
+	if isExpression(x) and x.kind == "div"
+		if side == "num"
+			let ok = $ collectTermSide(x.left, acc, "num")
+			if not ok
+				return $false
+			end
+			return $ collectTermSide(x.right, acc, "den")
+		end
+		let ok = $ collectTermSide(x.left, acc, "den")
+		if not ok
+			return $false
+		end
+		return $ collectTermSide(x.right, acc, "num")
+	end
+	if isExpression(x) and x.kind == "number"
+		if x.left % 1 != 0
+			return $false
+		end
+		if side == "num"
+			set acc.cnum = $ acc.cnum * x.left
+		else
+			set acc.cden = $ acc.cden * x.left
+		end
+		return $true
+	end
+	if isExpression(x) and (x.kind == "symbol" or (x.kind == "pow" and isExpression(x.left) and x.left.kind == "symbol" and powExp(x.right)))
+		if side == "den"
+			return $false
+		end
+		run $ Table.append(acc.unit, x)
+		return $true
+	end
+	return $false
+end
+
+// Decompose a term into the table (cnum:, cden:, unit:): the term written as
+// (cnum/cden) × (the factors in unit, in order) — cnum/cden the rational
+// coefficient (integers, from the number factors, a div's numerator into
+// cnum and its denominator into cden), unit the symbol / symbol-pow
+// factors. Empty when the term is not such a product (a sum, a symbol in a
+// denominator, a compound pow, a non-integer coefficient) — the term
+// then only merges with itself (caught earlier by right == left).
+macro decomposeTerm(t)
 	if not isExpression(t)
 		return $empty
 	end
-	if t.kind == "mul"
-		if isExpression(t.left) and t.left.kind == "number" and isExpression(t.right) and t.right.kind != "number"
-			return (c:$t.left, u: $t.right)
-		end
-		if isExpression(t.right) and t.right.kind == "number" and isExpression(t.left) and t.left.kind != "number"
-			return (c: $t.right, u: $t.left)
-		end
-		return (c: $makeExpression(1), u: $t)
+	let acc = (cnum: 1, cden: 1, unit: $Table())
+	if not collectTermSide(t, acc, "num")
+		return $empty
 	end
-	return (c: $makeExpression(1), u: $t)
+	return $acc
+end
+
+// Rebuild the merged term (cnum/cden) × (the unit factors): a bare number
+// when there is no unit, a bare unit when the coefficient is 1, a
+// number × unit product over 1, or the fraction over cden otherwise.
+macro rebuildTerm(cnum, cden, unit)
+	let up
+	if len(unit) == 0
+		set up = $empty
+	else
+		set up = $unit[1]
+		for k in seq(2, len(unit))
+			set up = $ up * unit[k]
+		end
+	end
+	if cden == 1
+		if up
+			if cnum == 1
+				return $up
+			elseif cnum == -1
+				return $ makeExpression(-1) * up
+			end
+			return $ makeExpression(cnum) * up
+		end
+		return $ makeExpression(cnum)
+	end
+	let num
+	if up
+		if cnum == 1
+			set num = $up
+		elseif cnum == -1
+			set num = $ makeExpression(-1) * up
+		else
+			set num = $ makeExpression(cnum) * up
+		end
+	else
+		set num = $ makeExpression(cnum)
+	end
+	return $ Expression(kind: "div", left: num, right: makeExpression(cden))
 end
 
 
@@ -804,13 +891,31 @@ set Expression = macro(kind:, left:, right:, print:)
 							end
 						end
 					else
-						// A bare factor and a number×(same factor): merge the
-						// coefficients — x + 2x → 3x, x - x → 0, x² - x² → 0.
-						let a = $ unitTerm(left)
-						let b = $ unitTerm(right)
-						if type(a) == "table" and type(b) == "table" and a.c? and b.c? and a.u == b.u
-							set flat[i] = $ makeExpression(a.c.left + b.c.left) * a.u
-							set flat[j] = $ makeExpression(0)
+						// Coefficient × unit merge (general): decompose each term into
+						// (rational coefficient, unit factors) and merge when the factors
+						// are the same (commutative) — x + 2x → 3x, x - x → 0,
+						// x² - x² → 0, x/10 - x → -9x/10, 6 - 12/5 → 18/5. A sign-
+						// hoisted fraction is a product with a negative coefficient, so it
+						// decomposes like any other term.
+						let pl = $ decomposeTerm(left)
+						let pr = $ decomposeTerm(right)
+						if pl and pr and sameFactors(pl.unit, pr.unit)
+							let cnum = $ pl.cnum * pr.cden + pr.cnum * pl.cden
+							let cden = $ pl.cden * pr.cden
+							if cnum == 0
+								set flat[i] = $ makeExpression(0)
+								set flat[j] = $ makeExpression(0)
+							else
+								let g = $ gcd(cnum, cden)
+								set cnum = $ cnum / g
+								set cden = $ cden / g
+								if cden < 0
+									set cnum = $ -cnum
+									set cden = $ -cden
+								end
+								set flat[i] = $ rebuildTerm(cnum, cden, pl.unit).reduce()
+								set flat[j] = $ makeExpression(0)
+							end
 						end
 					end
 				end
