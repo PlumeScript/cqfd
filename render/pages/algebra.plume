@@ -44,7 +44,7 @@ eqn: do
 	end
 	solutionShort: macro(question)
 		if question.steps.finalLabel?
-			$question.steps.finalLabel
+			@pages.Align(?center) $question.steps.finalLabel
 		else
 			@pages.box
 				@pages.formula(?inlineDisplay)
@@ -84,7 +84,7 @@ eqn: do
 				end
 			end
 		end
-		$question.steps.finalLabel?
+		@pages.Align(?center) $question.steps.finalLabel?
 	end
 end
 
