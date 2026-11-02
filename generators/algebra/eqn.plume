@@ -16,23 +16,28 @@ let s from $import(../../core/utils/expression)
 let variableNames from $import(./utils)
 
 /*
-$Param(String, solution, integer) maybe
+Generate an equation to solve, disguised by applying, in order, the $code(opps) operations to both sides of $formula(x = a).$newline
+The displayed question is the reduced result (e.g. $formula(9(e + 8) = 63)) and the answer steps the operations back in reverse order.$newline
+$Param(String, solution, integer) the value of the solution.
 @InfosList
-	- $code(integer)
-	- $code(rationnal)
+	- $code(integer)\: $formula(a) is drawn between $formula(-10) and $formula(10).
+	- $code(rationnal)\: the solution is the fraction $formula(a/b) with $formula(a) between $formula(-10) and $formula(10) and $formula(b) between $formula(2) and $formula(10).
 end
 
-$Param(String, opps, (+)) maybe
+$Param(String[], opps, Table(+)) the operations applied, in order, to both sides; each operation is drawn a value between $formula(2) and $formula(10).
 @InfosList
-	- $code(+), $code(+x)
-	- $code(-), $code(-x)
-	- $code(/)
-	- $code(%) like $code(/) but force right member to be an integer.
-	- $code(*)
-	- $code(^2q)\: must be first. Rationnal square root.
-	- $code(^2i)\: must be first. Irrationnal square root.
-	- $code(^2c)\: must be first. Complex square root.
+	- $code(+) and $code(-) add or remove a number from both sides.
+	- $code(+x) and $code(-x) add or remove a multiple of the left expression from both sides, so that the variable appears on both sides (e.g. $formula(6i = 9 + 5i)).
+	- $code(*) multiply both sides by a number.
+	- $code(/) divide both sides by a number (the right side is then generally a fraction).
+	- $code(%) like $code(/), but the solution is scaled by the value first, so the right side is not divided by it (an integer right side for $code(integer) solutions).
+	- $code(^2q)\: must be first. Square equation with two rational solutions\: $formula(x^2 = a^2) gives $formula(x = a) or $formula(x = -a).
+	- $code(^2i)\: must be first. Square equation with two irrational solutions\: $formula(x^2 = a^2 + k) with $formula(k) between $formula(2) and $formula(10) (and not a perfect square for $code(integer) solutions).
+	- $code(^2c)\: must be first. Square equation with a negative right side\: no real solution, the answer is $code(Pas de solutions.). Requires $code(integer) solutions.
 end
+
+The question also carries $code(solveSteps)\: the inverse operations applied to the left side only, in solving order — consumed by $ParamSet(reduceBoth).$newline
+An unknown operation, or a $code(^2) operation that is not first, raises an error.
 
 Todo\: irrationnal distractor & solutions
 */
