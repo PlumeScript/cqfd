@@ -1149,11 +1149,15 @@ set Expression = macro(kind:, left:, right:, print:)
 			// (2/3)x/4 -> x/6, x/x -> 1). ?decimal turns a pure number
 			// fraction with a finite decimal expansion into the number
 			// (2/4 ?decimal -> 0.5); 1/3 has none and stays a fraction. A
-			// sum over a plain denominator distributes term by term
-			// ((3x + 4)/3 -> x + 4/3); a side that is not a product of
-			// numbers, symbols, symbol pows and nested divs (a sum in the
-			// denominator, a compound pow, ...) keeps its plain factors
-			// simplified and the rest whole (3(x + 4)/3 -> x + 4).
+			// sum over a plain denominator distributes term by term — but
+			// only when some term really simplifies against the
+			// denominator ((5x + y)/5 -> x + y/5, (3x + 4)/3 ->
+			// x + 4/3); when no term does, the fraction stays whole
+			// ((x + y)/5 stays \frac{x+y}{5}). A side that is not a
+			// product of numbers, symbols, symbol pows and nested divs (a
+			// sum in the denominator, a compound pow, ...) keeps its
+			// plain factors simplified and the rest whole (3(x + 4)/3
+			// -> x + 4).
 			if not isExpression(left) or not isExpression(right)
 				return $ Expression(kind: "div", left: left, right: right, print: self.print?).pretty()
 			end
@@ -1161,21 +1165,40 @@ set Expression = macro(kind:, left:, right:, print:)
 			let df = $Table()
 			let lf = $ flattenprod(left)
 			let rf = $ flattenprod(right)
-			// A sum over a plain denominator distributes term by term
-			// ((3x + 4)/3 -> x + 4/3): each term keeps its own unit, so the
-			// add branch never pulls the terms back over a common
-			// denominator (their numerator would not merge into a single
-			// term and the common denominator bails — no ping-pong).
+			// A sum over a plain denominator distributes term by term —
+			// but only when it simplifies: a term that cancels a factor
+			// of the denominator is worth splitting (5x + y over 5 ->
+			// x + y/5, 3x + 4 over 3 -> x + 4/3); when no term does,
+			// splitting would only spread the denominator, so the
+			// fraction stays whole ((x + y)/5 -> \frac{x+y}{5}). A
+			// term really simplifies iff t/d reduces to something other
+			// than t/d itself, cosmetic sign hoisting aside (piece and
+			// its reduction both go through pretty: 5x/5 -> x, x/xy ->
+			// 1/y, 10/5 -> 2 are real gains; x/5, 2/5 and -2/5 reduce
+			// to themselves up to the sign, so (-1)/2 -> -(1/2) is not
+			// a gain). Each term keeps its own unit, so the add branch
+			// never pulls the terms back over a common denominator
+			// (their numerator would not merge into a single term and
+			// the common denominator bails — no ping-pong).
 			if isExpression(left) and (left.kind == "add" or left.kind == "sub")
 				let tmp = $Table()
 				let tmp2 = $Table()
 				if divFlatten(rf, tmp, tmp2)
 					let terms = $ flattensum(left)
-					let res = $ Expression(kind: "div", left: terms[1], right: right, print: self.print?).reduce()
-					for i in seq(2, len(terms))
-						set res += $ Expression(kind: "div", left: terms[i], right: right, print: self.print?).reduce()
+					let gain = $false
+					for i in seq(1, len(terms))
+						let piece = $ Expression(kind: "div", left: terms[i], right: right, print: self.print?)
+						if piece.reduce() != piece.pretty()
+							set gain = $true
+						end
 					end
-					return $ res.reduce()
+					if gain
+						let res = $ Expression(kind: "div", left: terms[1], right: right, print: self.print?).reduce()
+						for i in seq(2, len(terms))
+							set res += $ Expression(kind: "div", left: terms[i], right: right, print: self.print?).reduce()
+						end
+						return $ res.reduce()
+					end
 				end
 			end
 			let impureN = $Table()
