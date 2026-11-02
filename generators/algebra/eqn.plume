@@ -19,12 +19,13 @@ let variableNames from $import(./utils)
 $Param(String, solution, integer) maybe
 @InfosList
 	- $code(integer)
+	- $code(rationnal)
 end
 
 $Param(String, opps, (+)) maybe
 @InfosList
-	- $code(+)
-	- $code(-)
+	- $code(+), $code(+x)
+	- $code(-), $code(-x)
 	- $code(/)
 	- $code(%) like $code(/) but force right member to be an integer.
 	- $code(*)
@@ -33,7 +34,7 @@ $Param(String, opps, (+)) maybe
 	- $code(^2c)\: must be first. Complex square root.
 end
 
-Missing: +x, -x
+Todo\: irrationnal distractor & solutions
 */
 ref eqn: macro(opps:, style: classic, solution: integer)
 	if not opps
@@ -45,7 +46,7 @@ ref eqn: macro(opps:, style: classic, solution: integer)
 			raise `opp` must be first.
 		end
 
-		if opp != "+" and opp != "-" and opp != "*" and opp != "/"and opp != "%" and opp != "^2i" and opp != "^2q" and opp != "^2c"
+		if opp != "+" and opp != "+x" and opp != "-" and opp != "-x" and opp != "*" and opp != "/"and opp != "%" and opp != "^2i" and opp != "^2q" and opp != "^2c"
 			raise Unknown opp `$opp`.
 		end
 	end
@@ -69,20 +70,38 @@ ref eqn: macro(opps:, style: classic, solution: integer)
 			let x = if solution == "integer"
 				$a
 			elseif solution == "rationnal"
+				if a%b == 0
+					set b += 1
+				end
 				$ s(a)/b
 			end
 
 			let name = $Table.at($values, -1)
 			let left  = $ s(name)
+			let namefactor = 1
 
 			for i in seq(len(opps))
 				if opps[i] == "%"
-					set x *= $values[i]
+					set x *= $ values[i]
+					set namefactor /=  $values[i]
+				elseif opps[i] == "*"
+					set namefactor *=  $values[i]
 				elseif opps[i] == "^2i"
 					set left = $ left^2
 					set x = $ x^2 + values[i]
 					while solution == "integer" and (x^0.5).floor() == x^0.5
 						set x += 1
+					end
+				elseif opps[i] == "^2q"
+					set left = $ left^2
+					set x = $ x^2
+				elseif opps[i] == "-x"
+					if values[i] - namefactor == 0
+						set values[i] += $namefactor
+					end
+				elseif opps[i] == "+x"
+					if values[i] + namefactor == 0
+						set values[i] -= $namefactor
 					end
 				elseif opps[i] == "^2c"
 					set left = $ left^2
@@ -90,7 +109,6 @@ ref eqn: macro(opps:, style: classic, solution: integer)
 				end
 			end
 
-			
 			let right = $ s(x)
 
 			let members = (l:$left, r:$right)
@@ -98,40 +116,63 @@ ref eqn: macro(opps:, style: classic, solution: integer)
 				for k, member in items(members)
 					if opps[i] == "+"
 						set members[k] += $values[i]
+					elseif opps[i] == "+x"
+						set members[k] += $ values[i] * left
 					elseif opps[i] == "-"
 						set members[k] -= $values[i]
+					elseif opps[i] == "-x"
+						set members[k] -= $ values[i] * left
 					elseif opps[i] == "*"
 						set members[k] *= $values[i]
 					elseif opps[i] == "/" or opps[i] == "%"
 						set members[k] /= $values[i]
-					elseif opps[i] == "^2q"
-						set members[k] *= $members[k]
 					end
-					set members[k] = $members[k].reduce()
 				end
 			end
-			
+
+			for k, member in items(members)
+				set members[k] = $members[k].reduce()
+			end
+
 			let solveSteps = $Table()
 			@Question(eqn)
 				steps: do
 					- do
-						l: $members.l
-						r: $members.r
+						l: $members.l.reduce()
+						r: $members.r.reduce()
 					end
 					for i in seq(len(opps), 1, -1)
 						for k, member in items(members)
 							if opps[i] == "+"
 								set members[k] -= $values[i]
-								run $ Table.append(solveSteps, ("-", values[i]))
+								if k == "l"
+									run $ Table.append(solveSteps, ("-", values[i]))
+								end
+							elseif opps[i] == "+x"
+								set members[k] -= $ values[i] * left
+								if k == "l"
+									run $ Table.append(solveSteps, ("-", values[i] * left))
+								end
 							elseif opps[i] == "-"
 								set members[k] += $values[i]
-								run $ Table.append(solveSteps, ("+", values[i]))
+								if k == "l"
+									run $ Table.append(solveSteps, ("+", values[i]))
+								end
+							elseif opps[i] == "-x"
+								set members[k] += $ values[i] * left
+								if k == "l"
+									run $ Table.append(solveSteps, ("+", values[i] * left))
+								end
 							elseif opps[i] == "*"
 								set members[k] /= $values[i]
-								run $ Table.append(solveSteps, ("\\div", values[i]))
+								if k == "l"
+									run $ Table.append(solveSteps, ("\\div", values[i]))
+								end
 							elseif opps[i] == "/" or opps[i] == "%"
 								set members[k] *= $values[i]
-								run $ Table.append(solveSteps, ("\\times", values[i]))
+								if k == "l"
+									run $ Table.append(solveSteps, ("\\times", values[i]))
+								end
 							end
 						end
 
@@ -151,7 +192,6 @@ ref eqn: macro(opps:, style: classic, solution: integer)
 							for k, member in items(members)
 								set members[k] = $members[k].reduce()
 							end
-
 							- do
 								l: $members.l
 								r: $members.r

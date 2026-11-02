@@ -275,13 +275,15 @@ end
 Generate an exercice like $code(Voici une égalité. Faîtes $formula(+5) à chaque membre et réduisez).$newline
 Use $ParamSet(eqn) 
 */
-reduceBoth: macro(source)
+reduceBoth: macro(source, step)
 	@QuestionFactory
 		parameters: do
 			- $source
-			- $Choice(1, 3)
 		end
-		get: macro(source, step)
+		validate: macro(source)
+			return $ len(source.solveSteps) > 0
+		end
+		get: macro(source)
 			set step = $ 1 + (step-1) % len(source.solveSteps)
 			@Question(reduceBoth)
 				instruction: do
@@ -292,8 +294,8 @@ reduceBoth: macro(source)
 					- $source.steps[1]
 					if source.solveSteps[step][1] == "+"
 						- do
-							l: $ (source.steps[1].l + source.solveSteps[step][2]).pretty()
-							r: $ (source.steps[1].r + source.solveSteps[step][2]).pretty()
+							l: $ (source.steps[1].l + source.solveSteps[step][2])
+							r: $ (source.steps[1].r + source.solveSteps[step][2])
 						end
 						- do
 							l: $ (source.steps[1].l + source.solveSteps[step][2]).reduce()
@@ -301,8 +303,8 @@ reduceBoth: macro(source)
 						end
 					elseif source.solveSteps[step][1] == "-"
 						- do
-							l: $ (source.steps[1].l - source.solveSteps[step][2]).pretty()
-							r: $ (source.steps[1].r - source.solveSteps[step][2]).pretty()
+							l: $ (source.steps[1].l - source.solveSteps[step][2])
+							r: $ (source.steps[1].r - source.solveSteps[step][2])
 						end
 						- do
 							l: $ (source.steps[1].l - source.solveSteps[step][2]).reduce()
@@ -310,8 +312,8 @@ reduceBoth: macro(source)
 						end
 					elseif source.solveSteps[step][1] == "\\times"
 						- do
-							l: $ (source.steps[1].l * source.solveSteps[step][2]).pretty()
-							r: $ (source.steps[1].r * source.solveSteps[step][2]).pretty()
+							l: $ (source.steps[1].l * source.solveSteps[step][2])
+							r: $ (source.steps[1].r * source.solveSteps[step][2])
 						end
 						- do
 							l: $ (source.steps[1].l * source.solveSteps[step][2]).reduce()
@@ -319,8 +321,8 @@ reduceBoth: macro(source)
 						end
 					elseif source.solveSteps[step][1] == "\\div"
 						- do
-							l: $ (source.steps[1].l / source.solveSteps[step][2]).pretty()
-							r: $ (source.steps[1].r / source.solveSteps[step][2]).pretty()
+							l: $ (source.steps[1].l / source.solveSteps[step][2])
+							r: $ (source.steps[1].r / source.solveSteps[step][2])
 						end
 						- do
 							l: $ (source.steps[1].l / source.solveSteps[step][2]).reduce()

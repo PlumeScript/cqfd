@@ -37,34 +37,48 @@ end
 eqn: do
 	instruction:macro(question)
 		@pages.formula(?display)
-			$ String(question.steps[1].l.pretty())
+			$ String(question.steps[1].l)
 			=
-			$ String(question.steps[1].r.pretty())
+			$ String(question.steps[1].r)
 		end
 	end
 	solutionShort: macro(question)
-		@pages.box @pages.formula(?display)
-			$ String(Table.at(question.steps, -1).l.pretty())
-			=
-			$ String(Table.at(question.steps, -1).r.pretty())
+		if question.steps.finalLabel?
+			$question.steps.finalLabel
+		else
+			@pages.box
+				@pages.formula(?inlineDisplay)
+					$ String(Table.at(question.steps, -1).l.pretty())
+					=
+					$ String(Table.at(question.steps, -1).r.pretty())
+				end
+				if Table.at(question.steps, -1).r2?
+					\sou\s
+					@pages.formula(?inlineDisplay)
+						$ String(Table.at(question.steps, -1).l)
+						=
+						$ String(Table.at(question.steps, -1).r2)
+					end
+				end
+			end
 		end
 	end
 	solution: macro(question)
 		let last
 		@pages.EqnAlign(boxLast: $(not question.steps.finalLabel?), ?display)
 			for step in question.steps
-				let current =  $(String(step.l.pretty()))=$(String(step.r.pretty()))
+				let current =  $(String(step.l))=$(String(step.r))
 				if current != last
 					set last = $current
 					- do
-						- $ String(step.l.pretty())
+						- $ String(step.l)
 						- =
-						- $ String(step.r.pretty())
+						- $ String(step.r)
 						if step.r2?
 							- ou
-							- $ String(step.l.pretty())
+							- $ String(step.l)
 							- =
-							- $ String(step.r2.pretty())
+							- $ String(step.r2)
 						end
 					end
 				end
@@ -172,26 +186,30 @@ reduceBoth: do
 		if opp=="*" and value<0
 			set value = ($value)
 		end
-		Faîtes $pages.hspace(1)$pages.box($pages.underline($pages.formula($opp$value))) à chaque membre de
+		Faîtes $pages.hspace(1)$pages.box($pages.underline($pages.formula($opp$value, ?inlineDisplay))) à chaque membre de
 		$pages.hspace(2)
-		@pages.box @pages.formula
-			$question.instruction.eqn.l.pretty()
+		@pages.box @pages.formula(?inlineDisplay)
+			$question.instruction.eqn.l
 			=
-			$question.instruction.eqn.r.pretty()
+			$question.instruction.eqn.r
 		end
 		, puis réduisez.
 		
 	end
 	solutionShort: macro(question)
-		a
+		@pages.box @pages.formula(?inlineDisplay)
+			$ String(Table.at(question.steps, -1).l)
+			=
+			$ String(Table.at(question.steps, -1).r)
+		end
 	end
 	solution: macro(question)
 		@pages.EqnAlign
 			for step in question.steps
 				- do
-					- $ String(step.l.pretty())
+					- $ String(step.l)
 					- =
-					- $ String(step.r.pretty())
+					- $ String(step.r)
 				end
 			end
 		end
