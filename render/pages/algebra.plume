@@ -71,14 +71,16 @@ eqn: do
 				if current != last
 					set last = $current
 					- do
-						- $ String(step.l)
-						- =
-						- $ String(step.r)
-						if step.r2?
-							- ou
-							- $ String(step.l)
-							- =
-							- $ String(step.r2)
+						- do
+							$ String(step.l)
+							=
+							$ String(step.r)
+							if step.r2?
+								\\text{\sou\s}
+								$ String(step.l)
+								=
+								$ String(step.r2)
+							end
 						end
 					end
 				end
