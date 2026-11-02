@@ -141,6 +141,7 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution)
 
 			let solveSteps = $Table()
 			@Question(eqn)
+				lightSolution: $lightSolution
 				steps: do
 					- do
 						l: $members.l.reduce()

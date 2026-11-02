@@ -66,9 +66,9 @@ eqn: do
 	solution: macro(question)
 		let last
 		@pages.EqnAlign(boxLast: $(not question.steps.finalLabel?), ?display)
-			for step in question.steps
+			for i, step in enumerate(question.steps)
 				let current =  $(String(step.l))=$(String(step.r))
-				if current != last
+				if current != last and (i>1 or not question.lightSolution?)
 					set last = $current
 					- do
 						- do
