@@ -82,7 +82,7 @@ ref renderLatexAST: macro(node, ?mayPar)
 			end
 		elseif node.label == "*"
 			for i in seq(len(node.children))
-				if i > 1
+				if i > 1 and node.children[i].label? != "text" and node.children[i].label? != "var"
 					\\times
 				end
 				if node.fullSign?
