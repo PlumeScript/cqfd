@@ -34,6 +34,18 @@ macro paren(x)
 	end
 end
 
+// Parenthesize a pow base that is not a single character: a sum, a div or a
+// product would attach the exponent to its last factor only ((1/2)^2 would
+// render \frac{1}{2}^{2}). A symbol, a number and a symbol pow stay bare
+// (x^2, 2^3 — the braces stack the exponents).
+macro parenBase(x)
+	if isExpression(x) and (x.kind == "add" or x.kind == "sub" or x.kind == "div" or x.kind == "mul" or x.kind == "pow")
+		($String($x))
+	else
+		$String($x)
+	end
+end
+
 macro flattensum(x)
 	if isExpression(x) and x.kind == "add"
 		return (...flattensum($x.left), ...flattensum($x.right))
@@ -88,6 +100,41 @@ macro gcd(a, b)
 	return $a
 end
 
+// The integer square root of a non-negative perfect square n, or empty when
+// n is not one (binary search on the square).
+macro sqrtInt(n)
+	if n < 0 or n % 1 != 0
+		return $empty
+	end
+	let lo = $0
+	let hi = $n
+	while hi - lo > 1
+		let mid = $ Number.floor((lo + hi) / 2)
+		if mid * mid <= n
+			set lo = $mid
+		else
+			set hi = $mid
+		end
+	end
+	if lo * lo == n
+		return $lo
+	end
+	if hi * hi == n
+		return $hi
+	end
+	return $empty
+end
+
+// n raised to a positive integer e (repeated multiplication).
+macro intPow(n, e)
+	let r = $1
+	while e > 0
+		set r = $ r * n
+		set e = $ e - 1
+	end
+	return $r
+end
+
 // A reduced fraction has a finite decimal expansion iff its denominator
 // is of the form 2^a·5^b.
 macro finiteDecimal(d)
@@ -128,9 +175,34 @@ macro divFlatten(flat, out, other)
 	return $ok
 end
 
-// True when t carries a minus: a negative number, or a product holding an
-// odd number of negative factors — looked through the whole product, so a
-// minus nested in the tree (mul(-1, y*x)) counts too.
+// Like divFlatten, but a factor that cannot be decomposed (a sum, a compound
+// pow, ...) is collected in (impure) instead of failing the walk — the plain
+// factors are still collected, so they can be simplified on their own
+// (3(x + 4)/3: the 3 cancels, x + 4 is kept whole).
+macro divFlatten2(flat, out, other, impure)
+	for i in seq(1, len(flat))
+		let f = $flat[i]
+		if isExpression(f) and f.kind == "div"
+			let lf = $ flattenprod(f.left)
+			let rf = $ flattenprod(f.right)
+			run $ divFlatten2(lf, out, other, impure)
+			run $ divFlatten2(rf, other, out, impure)
+		elseif isExpression(f) and f.kind == "number"
+			run $ Table.append(out, f)
+		elseif isExpression(f) and f.kind == "symbol"
+			run $ Table.append(out, f)
+		elseif isExpression(f) and f.kind == "pow" and isExpression(f.left) and f.left.kind == "symbol" and powExp(f.right)
+			run $ Table.append(out, f)
+		else
+			run $ Table.append(impure, f)
+		end
+	end
+end
+
+// True when t carries a minus: a negative number, a product holding an odd
+// number of negative factors (looked through the whole product, so a minus
+// nested in the tree (mul(-1, y*x)) counts too), or a div whose numerator
+// carries one.
 macro isNegativeTerm(t)
 	if isExpression(t) and t.kind == "number"
 		return $ t.left < 0
@@ -144,6 +216,9 @@ macro isNegativeTerm(t)
 			end
 		end
 		return $ neg % 2 == 1
+	end
+	if isExpression(t) and t.kind == "div"
+		return $ isNegativeTerm(t.left)
 	end
 	return $false
 end
@@ -180,6 +255,9 @@ macro positivePart(t)
 				return $ makeExpression(n) * u
 			end
 		end
+	end
+	if isExpression(t) and t.kind == "div" and isNegativeTerm(t.left)
+		return $ Expression(kind: "div", left: positivePart(t.left), right: t.right, print: t.print?)
 	end
 	return $t
 end
@@ -363,7 +441,7 @@ set Expression = macro(kind:, left:, right:, print:)
 				}
 			else
 				{
-					$ paren(left)
+					$ parenBase(left)
 				}^{
 					$ String(right)
 				}
@@ -530,6 +608,21 @@ set Expression = macro(kind:, left:, right:, print:)
 			for i in seq(1, len(flat))
 				set flat[i] = $ flat[i].reduce()
 			end
+			// A reduced term can be a sum itself ((3x + 4)/3 -> x + 4/3): its
+			// terms join the merges and the common denominator.
+			let flat2 = $Table()
+			for i in seq(1, len(flat))
+				let t = $flat[i]
+				if isExpression(t) and (t.kind == "add" or t.kind == "sub")
+					let ts = $ flattensum(t)
+					for j in seq(1, len(ts))
+						run $ Table.append(flat2, ts[j])
+					end
+				else
+					run $ Table.append(flat2, t)
+				end
+			end
+			set flat = $flat2
 			for i in seq(1, len(flat)-1)
 				for j in seq(i+1, len(flat))
 					let left  = $flat[i]
@@ -538,6 +631,78 @@ set Expression = macro(kind:, left:, right:, print:)
 					if right.kind == "number" and left.kind == "number"
 						set flat[i] = $ makeExpression(right.left + left.left)
 						set flat[j] = $ makeExpression(0)
+					elseif right.kind == "number" and isExpression(left) and left.kind == "div" and isExpression(left.left) and left.left.kind == "number" and isExpression(left.right) and left.right.kind == "number"
+						// A number and a pure number fraction merge over the
+						// fraction's denominator (2 + 1/2 -> 5/2, 4/3 + 1 -> 7/3).
+						let a = $left.left.left
+						let b = $left.right.left
+						let n = $right.left
+						let c = $ a + n * b
+						if c == 0
+							set flat[i] = $ makeExpression(0)
+							set flat[j] = $ makeExpression(0)
+						else
+							let g = $ gcd(c, b)
+							let cn = $ c / g
+							let cd = $ b / g
+							if cd < 0
+								set cn = $ -cn
+								set cd = $ -cd
+							end
+							if cd == 1
+								set flat[i] = $ makeExpression(cn)
+							else
+								set flat[i] = $ Expression(kind: "div", left: makeExpression(cn), right: makeExpression(cd))
+							end
+							set flat[j] = $ makeExpression(0)
+						end
+					elseif left.kind == "number" and isExpression(right) and right.kind == "div" and isExpression(right.left) and right.left.kind == "number" and isExpression(right.right) and right.right.kind == "number"
+						// Same merge, the number leads (1 + 1/2 -> 3/2).
+						let a = $right.left.left
+						let b = $right.right.left
+						let n = $left.left
+						let c = $ a + n * b
+						if c == 0
+							set flat[i] = $ makeExpression(0)
+							set flat[j] = $ makeExpression(0)
+						else
+							let g = $ gcd(c, b)
+							let cn = $ c / g
+							let cd = $ b / g
+							if cd < 0
+								set cn = $ -cn
+								set cd = $ -cd
+							end
+							if cd == 1
+								set flat[i] = $ makeExpression(cn)
+							else
+								set flat[i] = $ Expression(kind: "div", left: makeExpression(cn), right: makeExpression(cd))
+							end
+							set flat[j] = $ makeExpression(0)
+						end
+					elseif left.kind == "div" and right.kind == "div" and isExpression(left.left) and left.left.kind == "number" and isExpression(right.left) and right.left.kind == "number" and isExpression(left.right) and left.right.kind == "number" and isExpression(right.right) and right.right.kind == "number" and left.right == right.right
+						// Same denominator, number numerators: the numerators
+						// add (1/2 + 3/2 -> 2, -4/3 + 1/3 -> -1).
+						let b = $left.right.left
+						let c = $ left.left.left + right.left.left
+						if c == 0
+							set flat[i] = $ makeExpression(0)
+							set flat[j] = $ makeExpression(0)
+						else
+							let g = $ gcd(c, b)
+							let cn = $ c / g
+							let cd = $ b / g
+							if cd < 0
+								set cn = $ -cn
+								set cd = $ -cd
+							end
+							if cd == 1
+								set flat[i] = $ makeExpression(cn)
+							else
+								set flat[i] = $ Expression(kind: "div", left: makeExpression(cn), right: makeExpression(cd))
+							end
+							set flat[j] = $ makeExpression(0)
+						end
 					elseif right == left
 						set flat[i] = $ (2*makeExpression(right)).reduce()
 						set flat[j] = $ makeExpression(0)
@@ -608,6 +773,74 @@ set Expression = macro(kind:, left:, right:, print:)
 				end
 			end
 
+			// A div term: rewrite the sum over the common denominator
+			// (3/2 + 2 -> 7/2, x/2 + x/4 -> 3x/4). Each term t contributes
+			// a/b (its numerator/denominator, or the term itself over 1), and
+			// the numerator collects a·(the other denominators) — no div
+			// survives into N, so it reduces without coming back here. The
+			// fraction is then reduced by the div branch (gcd + symbol
+			// cancellation).
+			let hasDiv = $false
+			for i in seq(1, len(flat))
+				if isExpression(flat[i]) and flat[i].kind == "div"
+					set hasDiv = $true
+				end
+			end
+			if hasDiv
+				let aps = $Table()
+				let bs = $Table()
+				for i in seq(1, len(flat))
+					let t = $flat[i]
+					if t != 0
+						let a
+						let b
+						if isExpression(t) and t.kind == "div"
+							set a = $t.left
+							set b = $t.right
+						else
+							set a = $t
+							set b = $makeExpression(1)
+						end
+						run $ Table.append(aps, a)
+						run $ Table.append(bs, b)
+					end
+				end
+				let D = $bs[1]
+				for i in seq(2, len(bs))
+					set D = $ D * bs[i]
+				end
+				let N = $empty
+				for i in seq(1, len(aps))
+					let piece = $aps[i]
+					for j in seq(1, len(bs))
+						if j != i
+							set piece = $ piece * bs[j]
+						end
+					end
+					if N
+						set N = $ N + piece
+					else
+						set N = $piece
+					end
+				end
+				let nr = $ N.reduce()
+				let dr = $ D.reduce()
+				// The numerator must come out as a single term: a sum would
+				// be distributed back by the div branch, ping-ponging forever
+				// (x/2 + x/y -> (xy + 2x)/(2y) -> x/2 + x/y). A single
+				// numerator is reduced by the div branch and never comes back
+				// as a sum. Terms of different units stay a sum (x + 1/2,
+				// x/2 + x/y).
+				let pass = $true
+				if isExpression(nr) and (nr.kind == "add" or nr.kind == "sub")
+					set pass = $false
+				end
+				if pass
+					let fr = $ Expression(kind: "div", left: nr, right: dr, print: self.print?)
+					return $ fr.reduce()
+				end
+			end
+
 			// Rebuild with explicit signs: a negative term is subtracted.
 			let value = $flat[1]
 			for i in seq(2, len(flat))
@@ -622,12 +855,19 @@ set Expression = macro(kind:, left:, right:, print:)
 			return $value.pretty()
 		elseif self.kind == "mul"
 			let flat = $ flattenprod(self)
-			// Reduce the compound factors (sums, divs): (0·x + 2)·2 must be
-			// seen as 2·2, not as an unreduced sum. Numbers, symbols and pows
-			// stay raw on purpose — the same-base pow merge (n⁻¹·n → n⁰ → 1)
-			// needs the pow nodes, and reducing pow(n, 1) would unwrap it to n.
+			// Reduce the compound factors (sums): (0·x + 2)·2 must be seen as
+			// 2·2, not as an unreduced sum. Numbers, symbols and pows stay raw
+			// on purpose — the same-base pow merge (n⁻¹·n → n⁰ → 1) needs the
+			// pow nodes, and reducing pow(n, 1) would unwrap it to n. Divs stay
+			// raw too: the extraction below works on their own numerator and
+			// denominator ((x + 1)/2 · 7 -> (x + 1)·7/2 — reducing the div
+			// first would distribute its sum and lose the fraction).
 			for i in seq(1, len(flat))
-				if not (isExpression(flat[i]) and (flat[i].kind == "number" or flat[i].kind == "symbol" or flat[i].kind == "pow"))
+				if isExpression(flat[i]) and flat[i].kind == "pow" and isExpression(flat[i].left) and flat[i].left.kind == "number"
+					// A number power evaluates to a number (5² -> 25); it
+					// cannot interfere with the symbol-base merges below.
+					set flat[i] = $ flat[i].reduce()
+				elseif not (isExpression(flat[i]) and (flat[i].kind == "number" or flat[i].kind == "symbol" or flat[i].kind == "pow" or flat[i].kind == "div"))
 					set flat[i] = $ flat[i].reduce()
 				end
 			end
@@ -644,6 +884,45 @@ set Expression = macro(kind:, left:, right:, print:)
 				if flat[i] == 0
 					return $makeExpression(0)
 				end
+			end
+			// A div factor turns the product into a fraction: its numerator
+			// joins the product, its denominator collects below, and the
+			// fraction is reduced by the div branch — (x/7)·7 -> x,
+			// 2·(y/4) -> y/2, (x/2)·(x/2) -> x²/4. A reduced div holds no
+			// div factor, so the two products reduce without coming back
+			// into this branch.
+			let hasDiv = $false
+			let plain = $Table()
+			let den = $Table()
+			for i in seq(1, len(flat))
+				let f = $flat[i]
+				if isExpression(f) and f.kind == "div"
+					set hasDiv = $true
+					let dl = $ flattenprod(f.left)
+					let dr = $ flattenprod(f.right)
+					for k in seq(1, len(dl))
+						run $ Table.append(plain, dl[k])
+					end
+					for k in seq(1, len(dr))
+						run $ Table.append(den, dr[k])
+					end
+				else
+					run $ Table.append(plain, f)
+				end
+			end
+			if hasDiv
+				let num = $plain[1]
+				for i in seq(2, len(plain))
+					set num = $ num * plain[i]
+				end
+				let denp = $den[1]
+				for i in seq(2, len(den))
+					set denp = $ denp * den[i]
+				end
+				let nr = $ num.reduce()
+				let dnr = $ denp.reduce()
+				let fr = $ Expression(kind: "div", left: nr, right: dnr, print: self.print?)
+				return $ fr.reduce()
 			end
 			for i in seq(1, len(flat)-1)
 				for j in seq(i+1, len(flat))
@@ -684,10 +963,34 @@ set Expression = macro(kind:, left:, right:, print:)
 				end
 			end
 
-			let value = $flat[1]
-			for i in seq(2, len(flat))
-				if flat[i] != 0
-					set value *= $flat[i]
+			// The number factors lead the product (25fj, not fj25): the
+			// faithful tostring keeps the tree order, so the coefficient is
+			// moved up front here (pretty only does the two-factor flip).
+			let numf = $empty
+			let value = $empty
+			for i in seq(1, len(flat))
+				let f = $flat[i]
+				if f != 0
+					if isExpression(f) and f.kind == "number"
+						if numf
+							set numf = $ numf * f
+						else
+							set numf = $f
+						end
+					else
+						if value
+							set value = $ value * f
+						else
+							set value = $f
+						end
+					end
+				end
+			end
+			if numf
+				if value
+					set value = $ numf * value
+				else
+					set value = $numf
 				end
 			end
 			return $value.pretty()
@@ -698,9 +1001,11 @@ set Expression = macro(kind:, left:, right:, print:)
 			// (2/3)x/4 -> x/6, x/x -> 1). ?decimal turns a pure number
 			// fraction with a finite decimal expansion into the number
 			// (2/4 ?decimal -> 0.5); 1/3 has none and stays a fraction. A
-			// side that is not a product of numbers, symbols, symbol pows
-			// and nested divs (a sum, a compound pow, ...) keeps its
-			// reduced children, as before.
+			// sum over a plain denominator distributes term by term
+			// ((3x + 4)/3 -> x + 4/3); a side that is not a product of
+			// numbers, symbols, symbol pows and nested divs (a sum in the
+			// denominator, a compound pow, ...) keeps its plain factors
+			// simplified and the rest whole (3(x + 4)/3 -> x + 4).
 			if not isExpression(left) or not isExpression(right)
 				return $ Expression(kind: "div", left: left, right: right, print: self.print?).pretty()
 			end
@@ -708,10 +1013,27 @@ set Expression = macro(kind:, left:, right:, print:)
 			let df = $Table()
 			let lf = $ flattenprod(left)
 			let rf = $ flattenprod(right)
-			let ok = $ divFlatten(lf, nf, df) and divFlatten(rf, df, nf)
-			if not ok
-				return $ Expression(kind: "div", left: left, right: right, print: self.print?).pretty()
+			// A sum over a plain denominator distributes term by term
+			// ((3x + 4)/3 -> x + 4/3): each term keeps its own unit, so the
+			// add branch never pulls the terms back over a common
+			// denominator (their numerator would not merge into a single
+			// term and the common denominator bails — no ping-pong).
+			if isExpression(left) and (left.kind == "add" or left.kind == "sub")
+				let tmp = $Table()
+				let tmp2 = $Table()
+				if divFlatten(rf, tmp, tmp2)
+					let terms = $ flattensum(left)
+					let res = $ Expression(kind: "div", left: terms[1], right: right, print: self.print?).reduce()
+					for i in seq(2, len(terms))
+						set res += $ Expression(kind: "div", left: terms[i], right: right, print: self.print?).reduce()
+					end
+					return $ res.reduce()
+				end
 			end
+			let impureN = $Table()
+			let impureD = $Table()
+			run $ divFlatten2(lf, nf, df, impureN)
+			run $ divFlatten2(rf, df, nf, impureD)
 			// Number factors per side.
 			let ln = $1
 			for i in seq(1, len(nf))
@@ -803,8 +1125,9 @@ set Expression = macro(kind:, left:, right:, print:)
 					run $ Table.append(denSy, f)
 				end
 			end
-			// No symbol survives: a pure number fraction.
-			if not hasSym
+			// No symbol survives and no impure factor: a pure number
+			// fraction.
+			if not hasSym and len(impureN) == 0 and len(impureD) == 0
 				if cd == 1
 					return $ makeExpression(cn)
 				end
@@ -817,8 +1140,8 @@ set Expression = macro(kind:, left:, right:, print:)
 				let d = $ makeExpression(cd)
 				return $ Expression(kind: "div", left: n, right: d, print: self.print?).pretty()
 			end
-			// Rebuild both sides: the coefficient first, then the symbol
-			// factors.
+			// Rebuild both sides: the coefficient, then the symbol factors,
+			// then the impure factors kept whole (x(y + 1)/2, 2(x + 1)).
 			let num = $empty
 			if cn != 1
 				set num = $ makeExpression(cn)
@@ -829,6 +1152,16 @@ set Expression = macro(kind:, left:, right:, print:)
 					set num = $ num * f
 				else
 					set num = $f
+				end
+			end
+			if len(impureN) > 0
+				if num
+					set num = $ num * impureN[1]
+				else
+					set num = $impureN[1]
+				end
+				for i in seq(2, len(impureN))
+					set num = $ num * impureN[i]
 				end
 			end
 			if not num
@@ -846,6 +1179,16 @@ set Expression = macro(kind:, left:, right:, print:)
 					set den = $f
 				end
 			end
+			if len(impureD) > 0
+				if den
+					set den = $ den * impureD[1]
+				else
+					set den = $impureD[1]
+				end
+				for i in seq(2, len(impureD))
+					set den = $ den * impureD[i]
+				end
+			end
 			if not den
 				set den = $makeExpression(1)
 			end
@@ -856,6 +1199,35 @@ set Expression = macro(kind:, left:, right:, print:)
 				return $num.pretty()
 			end
 			return $ Expression(kind: "div", left: num, right: den, print: self.print?).pretty()
+		elseif self.kind == "pow"
+			// A number power that computes to a number is computed:
+			// sqrt(9) -> 3, sqrt(4/9) -> 2/3 (a fraction of perfect
+			// squares), 5^2 -> 25. Anything else (sqrt(2), x^2, x^1.5)
+			// keeps its reduced children.
+			let e = $ powExp(right)
+			if e
+				if isExpression(left) and left.kind == "number"
+					if e == 0.5
+						let r = $ sqrtInt(left.left)
+						if r
+							return $ makeExpression(r)
+						end
+					elseif e >= 1 and e % 1 == 0
+						return $ makeExpression(intPow(left.left, e))
+					end
+				elseif isExpression(left) and left.kind == "div"
+					if e == 0.5
+						let rl = $ sqrtInt(left.left.left)
+						let rr = $ sqrtInt(left.right.left)
+						if rl and rr
+							let nl = $ makeExpression(rl)
+							let dl = $ makeExpression(rr)
+							return $ Expression(kind: "div", left: nl, right: dl, print: self.print?)
+						end
+					end
+				end
+			end
+			return $ Expression(kind: "pow", left: left, right: right, print: self.print?).pretty()
 		else
 			// Carry the print flags (root: the reduced node must keep
 			// rendering \sqrt, not x^{0.5}).
