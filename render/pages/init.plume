@@ -36,7 +36,7 @@ let ardoise = $import(ardoise) // TODO: Replace by contextual variables (#47)
 				gap: 1
 				indent: 0
 				marker: $ (batch.styleOptn.m? or "%a")
-				columns: $ batch.styleOptn.c? or guessColumnsNumber(len(batch.items))
+				columns: $ batch.styleOptn.r?[mode]?.c? or batch.styleOptn.c? or guessColumnsNumber(len(batch.items))
 				...batch.styleOptn
 				// Content
 				for item in batch.items
