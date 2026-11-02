@@ -204,7 +204,7 @@ reduceBoth: do
 		end
 	end
 	solution: macro(question)
-		@pages.EqnAlign
+		@pages.EqnAlign(?display)
 			for step in question.steps
 				- do
 					- $ String(step.l)
