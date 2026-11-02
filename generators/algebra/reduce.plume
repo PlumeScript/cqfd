@@ -255,7 +255,7 @@ reduceSum: macro(Number terms: 2, Number variables: 1, Number orphans: 1, termTe
 					if sign == "+"
 						set expr = $term
 					else
-						set expr = $ (-1*term).pretty()
+						set expr = $ (-term).pretty()
 					end
 				end
 			end

@@ -139,7 +139,7 @@ ref eqn: macro(opps:, style: classic, solution: integer)
 							- do
 								l:  $ s(name)
 								r:  $ (members.r.root()).reduce()
-								r2: $ (-1*members.r.root()).reduce()
+								r2: $ (-(members.r.root())).reduce()
 							end
 						elseif opps[i] == "^2c"
 							finalLabel: Pas de solutions.

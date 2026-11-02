@@ -50,7 +50,7 @@ macro flattensum(x)
 	if isExpression(x) and x.kind == "add"
 		return (...flattensum($x.left), ...flattensum($x.right))
 	elseif isExpression(x) and x.kind == "sub"
-		return (...flattensum($x.left), ...flattensum($(-1*x.right).reduce()))
+		return (...flattensum($x.left), ...flattensum($(-x.right).reduce()))
 	else
 		return $Table($x)
 	end
@@ -388,7 +388,12 @@ set Expression = macro(kind:, left:, right:, print:)
 			end
 			let f1 = $flat[1]
 			let f2 = $ len(flat) > 1 and flat[2]
-			let leadMinus = $ simple and isExpression(f1) and f1.kind == "number" and f1.left == -1 and not (isExpression(f2) and f2.kind == "number")
+			// The -1 is the sign of the product, rendered bare (-x, -x²,
+			// -(x + 1), -\frac{1}{2}, -\frac{1}{2} \times x): the second
+			// factor glues to it (its own braces group it) and the rest of
+			// the product follows. A -1 next to a number is not a sign
+			// (that is pretty's -1 folding): -1 \times 2 stays faithful.
+			let leadMinus = $ isExpression(f1) and f1.kind == "number" and f1.left == -1 and not (isExpression(f2) and f2.kind == "number")
 			let prevSy = $false
 			let prevPow = $false
 			let prevLabel = $empty
@@ -400,7 +405,9 @@ set Expression = macro(kind:, left:, right:, print:)
 				let isPow = $ isExpression(f) and f.kind == "pow"
 				let powBase = $ isPow and isExpression(f.left) and f.left.kind == "symbol" and f.left.left or empty
 				let tightNow = $ simple and i > 1 and not isNum and not (prevSy and isPow and prevLabel == powBase) and not (prevPow and isSy and prevPowBase == f.left) and not (prevSy and isSy and prevLabel == f.left)
-				if i > 1 and not tightNow
+				// The second factor glues to the lead sign (-(1/2), not
+				// -\times\frac{1}{2}).
+				if i > 1 and not tightNow and not (leadMinus and i == 2)
 					\s\\times\s
 				end
 				if leadMinus and i == 1
@@ -489,9 +496,11 @@ set Expression = macro(kind:, left:, right:, print:)
 		end
 	end
 
-	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1, reorient x·3 to 3x, and
+	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1, reorient x·3 to 3x,
 	// rewrite a negative addend into a sub: x + -5 -> x - 5, -3 + x -> x - 3
-	// (tostring stays faithful and would render "x + -5" as is).
+	// (tostring stays faithful and would render "x + -5" as is), and hoist a
+	// fraction's sign out of it: (-1)/2 -> -(1/2), 1/(-2) -> -(1/2),
+	// (-1)/(-2) -> 1/2 (two signs cancel).
 	pretty: macro()
 		if not isExpression(self.left)
 			return $self
@@ -517,6 +526,11 @@ set Expression = macro(kind:, left:, right:, print:)
 		if self.kind == "sub"
 			if right == 0
 				return $left
+			end
+			// The symmetric of the add rewrite: a double sign is a plus
+			// (x - -(1/2) -> x + (1/2), x - -5 -> x + 5).
+			if isNegativeTerm(right)
+				return $ Expression(kind: "add", left: left, right: positivePart(right))
 			end
 		end
 		if self.kind == "mul"
@@ -576,7 +590,36 @@ set Expression = macro(kind:, left:, right:, print:)
 				return $left
 			end
 		end
-		
+		if self.kind == "div"
+			// A sign inside a fraction is inelegant: hoist it out. The
+			// numerator's sign leads the fraction ((-1)/2 -> -(1/2),
+			// (-3x)/4 -> -(3x/4)), the denominator's sign does the same
+			// (1/(-2) -> -(1/2)), and two signs cancel ((-1)/(-2) -> 1/2).
+			// The sign rides on the fraction as a leading -1 factor (meta
+			// minus), rendered -\frac{1}{2}.
+			let numNeg = $ isNegativeTerm(left)
+			let denNeg = $ isNegativeTerm(right)
+			if numNeg or denNeg
+				let n
+				let d
+				if numNeg
+					set n = $ positivePart(left)
+				else
+					set n = $left
+				end
+				if denNeg
+					set d = $ positivePart(right)
+				else
+					set d = $right
+				end
+				let fr = $ Expression(kind: "div", left: n, right: d, print: self.print?)
+				if numNeg and denNeg
+					return $fr
+				end
+				return $ -fr
+			end
+		end
+
 		// Carry the print flags (root: the rebuilt node must keep rendering
 		// \sqrt, not x^{0.5}).
 		return $ Expression(kind: self.kind, left: left, right: right, print: self.print?)
@@ -1326,6 +1369,16 @@ set Expression = macro(kind:, left:, right:, print:)
 			left: $makeExpression($x)
 			right: $self
 		end
+	end
+	meta minus: macro()
+		// Unary minus (the `-x` operator): the opposite of the expression.
+		// A number is negated in place (-s(3) → -3); anything else carries
+		// the sign as a leading -1 factor, the product's lead-minus
+		// convention (rendered -x, -x², -(x + 1), -\frac{1}{2}).
+		if self.kind == "number"
+			return $ makeExpression(-self.left)
+		end
+		return $ makeExpression(-1) * self
 	end
 	meta eq: macro(x, y)
 		set x = $ makeExpression(x)
