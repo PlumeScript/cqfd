@@ -41,7 +41,7 @@ An unknown operation, or a $code(^2) operation that is not first, raises an erro
 
 Todo\: irrationnal distractor & solutions
 */
-ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution)
+ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch)
 	if not opps
 		set opps = $Table(+)
 	end
@@ -139,6 +139,10 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution)
 				set members[k] = $members[k].reduce()
 			end
 
+			if switch
+				set members.l, members.r = ($members.r, $members.l)
+			end
+
 			let solveSteps = $Table()
 			@Question(eqn)
 				lightSolution: $lightSolution
@@ -199,6 +203,9 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution)
 							end
 							for k, member in items(members)
 								set members[k] = $members[k].reduce()
+							end
+							if switch and i==1
+								set members.l, members.r = ($members.r, $members.l)
 							end
 							- do
 								l: $members.l
