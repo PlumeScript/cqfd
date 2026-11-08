@@ -201,7 +201,11 @@ powDivN2: macro(minDelta:1, maxDelta: 10, ?frac, ?negativeExposant, ...args)
 				solution: $calc.solution
 				id: $delta-$calc.id-direction
 				compute: $calc.compute
-				usualTrap: $ (-x)^y
+				usualTrap: if y%2 == 0
+					$ - calc.solution
+				else
+					$ (-x)^y
+				end
 			end
 		end
 	end

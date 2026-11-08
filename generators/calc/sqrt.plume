@@ -154,7 +154,11 @@ sqrtEasy: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Num
 				end
 				solution: $x
 				id: sqrt($x^2)
-				usualTrap: $Node(^, $x, 2)
+				usualTrap: if (x - 1).abs() < 10^-9
+					2
+				else
+					$Node(^, $x, 2)
+				end
 				compute: 0
 			end
 		end

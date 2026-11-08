@@ -308,7 +308,19 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 						- $ bottom.value / k.value
 					end
 				end
-				usualTrap: if b.value != d.value and (a.value + c.value)/(b.value + d.value) != top.value/bottom.value
+				usualTrap: if b.value != d.value
+					if (a.value + c.value)/(b.value + d.value) != top.value/bottom.value
+						@prettyFrac
+							- $ a.value + c.value
+							- $ b.value + d.value
+						end
+					else
+						@prettyFrac
+							- $ a.value + c.value
+							- $ b.value
+						end
+					end
+				elseif opp == "+"
 					@prettyFrac
 						- $ a.value + c.value
 						- $ b.value + d.value
@@ -463,9 +475,16 @@ divRationnal: macro(...args)
 					- $calc.instruction
 					...calc.steps
 				end
-				usualTrap: @prettyFrac
-					- $ calc.infos.a.value*calc.infos.b.value
-					- $ calc.infos.c.value*calc.infos.d.value
+				usualTrap: if calc.infos.b.value != calc.infos.c.value
+					@prettyFrac
+						- $ calc.infos.a.value*calc.infos.b.value
+						- $ calc.infos.c.value*calc.infos.d.value
+					end
+				else
+					@prettyFrac
+						- $ calc.infos.a.value*calc.infos.b.value
+						- $ calc.infos.c.value*calc.infos.d.value + 1
+					end
 				end
 			end
 		end

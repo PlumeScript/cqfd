@@ -29,12 +29,17 @@ composeAdd: macro(left, right, minCompute:, maxCompute:, compute:)
 			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
 				return
 			end
+			let trap = $ (left.usualTrap? or left.solution+1) + (right.usualTrap? or right.solution+1)
 			return @Question(calcul)
 				instruction: $Node(+, $left.instruction, $right.instruction)
 				solution: $ left.solution + right.solution
 				compute: $realCompute
 				id: ($left.id)+($right.id)
-				usualTrap: $ (left.usualTrap? or left.solution+1) + (right.usualTrap? or right.solution+1)
+				usualTrap: if (trap - (left.solution + right.solution)).abs() < 10^-9 * (left.solution.abs() + right.solution.abs() + 1)
+					$ left.solution + right.solution + 1
+				else
+					$trap
+				end
 			end
 		end
 	end
@@ -59,12 +64,17 @@ composeSub: macro(left, right, minCompute:, maxCompute:, compute:)
 			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
 				return
 			end
+			let trap = $ (left.usualTrap? or left.solution+1) - (right.usualTrap? or right.solution+1)
 			return @Question(calcul)
 				instruction: $Node(-, $left.instruction, $right.instruction)
 				solution: $ left.solution - right.solution
 				compute: $realCompute
 				id: ($left.id)-($right.id)
-				usualTrap: $ (left.usualTrap? or left.solution+1) - (right.usualTrap? or right.solution+1)
+				usualTrap: if (trap - (left.solution - right.solution)).abs() < 10^-9 * (left.solution.abs() + right.solution.abs() + 1)
+					$ left.solution - right.solution + 1
+				else
+					$trap
+				end
 			end
 		end
 	end
@@ -89,12 +99,17 @@ composeMul: macro(left, right, minCompute:, maxCompute:, compute:)
 			if (minCompute and minCompute > realCompute) or (maxCompute and maxCompute < realCompute)
 				return
 			end
+			let trap = $ (left.usualTrap? or left.solution+1) * (right.usualTrap? or right.solution+1)
 			return @Question(calcul)
 				instruction: $Node(*, $left.instruction, $right.instruction)
 				solution: $ left.solution * right.solution
 				compute: $realCompute
 				id: ($left.id)*($right.id)
-				usualTrap: $ (left.usualTrap? or left.solution+1) * (right.usualTrap? or right.solution+1)
+				usualTrap: if (trap - (left.solution * right.solution)).abs() < 10^-9 * (left.solution.abs() * right.solution.abs() + 1)
+					$ left.solution * right.solution + 1
+				else
+					$trap
+				end
 			end
 		end
 	end
@@ -126,7 +141,11 @@ composeSqrtN: macro(calc, minCompute:, maxCompute:, compute:)
 				solution: $ calc.solution^0.5
 				compute: $realCompute
 				id: sqrt($calc.id)
-				usualTrap: $ calc.solution/2
+				usualTrap: if (calc.solution - 4).abs() < 10^-9
+					$ calc.solution^0.5 + 1
+				else
+					$ calc.solution/2
+				end
 			end
 		end
 	end
