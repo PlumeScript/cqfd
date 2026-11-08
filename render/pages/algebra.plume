@@ -188,7 +188,7 @@ reduceBoth: do
 		if opp=="*" and value<0
 			set value = ($value)
 		end
-		Faîtes $pages.hspace(1)$pages.box($pages.underline($pages.formula($opp$value, ?inlineDisplay))) à chaque membre de
+		Faites $pages.hspace(1)$pages.box($pages.underline($pages.formula($opp$value, ?inlineDisplay))) à chaque membre de
 		$pages.hspace(2)
 		@pages.box @pages.formula(?inlineDisplay)
 			$question.instruction.eqn.l
