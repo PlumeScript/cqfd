@@ -9,9 +9,9 @@ ref renderLatexAST: macro(node, ?mayPar)
 	
 	let tnode = $ type(node) == "table" and node.type? or type(node)
 	if tnode == "treeNode"
-		if mayPar and node.label == "-" and len(node.children) == 1
-			set mayPar = $false
-		end
+		// if mayPar and node.label == "-" and len(node.children) == 1
+		// 	set mayPar = $false
+		// end
 		// a power never needs grouping in an operand slot: exponentiation
 		// has the highest precedence (the base wraps itself when needed)
 		if mayPar and node.label != "number" and node.label != "bold" and node.label != "sqrt" and node.label != "*" and node.label != "/" and node.label != "^" and node.label != "var"
