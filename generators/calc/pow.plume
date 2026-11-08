@@ -58,7 +58,7 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 				else
 					$Node(^, $x, $y)
 				end
-				solution: if negativeExposant
+				ref solution: if negativeExposant
 					$(x^(-y))
 				else
 					$(x^y)
@@ -84,13 +84,21 @@ ref powN2: macro(Number minIndex:0, Number maxIndex:0, Number minFigures: 1, Num
 						end
 					end
 				end
-				id: $x^$y
+				id: if negativeExposant
+					$x^(-$y)
+				else
+					$x^$y
+				end
 				compute: if negativeExposant
 					$ getCompute.pow(x, -y)
 				else
 					$ getCompute.pow(x, y)
 				end
-				usualTrap: $ x*y
+				usualTrap: if y != 1 and x != 0 and (x != 2 or y!=2)
+					$ x*y
+				else
+					$ - x*y
+				end
 			end
 		end
 	end
@@ -133,7 +141,12 @@ powZ2: macro(?fullSign, ...args)
 						- $mul
 					end
 				end
-				usualTrap: $ -(-x)^y
+				
+				usualTrap: if x != 0
+					$ -((-x)^y)
+				else
+					$calc.usualTrap
+				end
 			end
 		end
 	end

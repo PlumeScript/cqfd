@@ -54,7 +54,11 @@ sqrtN: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Number
 				id: sqrt($(x^2))
 				square: $x
 				compute: $realCompute
-				usualTrap: $(x^2/2)
+				usualTrap: if x.abs() != 2
+					$(x^2/2)
+				else
+					$ x-1
+				end
 			end
 		end
 	end

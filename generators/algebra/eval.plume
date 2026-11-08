@@ -128,9 +128,14 @@ ref evalCheckSimpleFalse: macro(source, style: classic, filters:, ?alt)
 
 			let right = if source.usualTrap?
 				$source.usualTrap
+				if repr(source.usualTrap) == repr(source.solution)
+					raise Source return `$source.usualTrap` as trap, but it is the solution. Source: $repr($source.instruction)
+				end
 			else
 				$ source.solution + delta
 			end
+
+			
 
 			@Question(evalCheck)
 				instruction: do

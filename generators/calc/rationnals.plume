@@ -308,9 +308,16 @@ addSubRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK: 2, maxK: 10, ?sa
 						- $ bottom.value / k.value
 					end
 				end
-				usualTrap: @prettyFrac
-					- $ a.value + c.value
-					- $ b.value + d.value
+				usualTrap: if b.value != d.value and (a.value + c.value)/(b.value + d.value) != top.value/bottom.value
+					@prettyFrac
+						- $ a.value + c.value
+						- $ b.value + d.value
+					end
+				else
+					@prettyFrac
+						- $ a.value + c.value
+						- $ b.value
+					end
 				end
 			end
 		end
@@ -410,9 +417,21 @@ ref mulRationnal: macro(minP:, maxP:, maxE:, minN:, maxN:, minK:, maxK:, ?percen
 						- $ bottom.value / k.value
 					end
 				end
-				usualTrap: @prettyFrac
-					- $ a.value*b.value
-					- $ c.value
+				usualTrap: if d.value != 1
+					@prettyFrac
+						- $ a.value*b.value
+						- $ c.value
+					end
+				elseif c.value != 1
+					@prettyFrac
+						- $ a.value*b.value
+						- $ d.value
+					end
+				else
+					@prettyFrac
+						- $ a.value*b.value
+						- $ (d.value+1)
+					end
 				end
 			end
 		end
