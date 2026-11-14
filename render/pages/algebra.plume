@@ -68,7 +68,7 @@ eqn: do
 		@pages.EqnAlign(boxLast: $(not question.steps.finalLabel?), ?display)
 			for i, step in enumerate(question.steps)
 				let current =  $(String(step.l))=$(String(step.r))
-				if current != last and (i>1 or not question.lightSolution?)
+				if current != last
 					set last = $current
 					- do
 						- do
