@@ -372,10 +372,10 @@ eqnPythagorea: macro(solution: easy, ?lightSolution, ?onlyPositive)
 		hyperParameters: do
 			- $variableNames.length
 		end
-		get: macro(a, b, c, f, pos, x)
-			set a *= $ f
-			set b *= $ f
-			set c *= $ f
+		get: macro(a, b, c, f1, f2, pos, x)
+			set a *= $ f1*f2
+			set b *= $ f1*f2
+			set c *= $ f1*f2
 
 			@Question(eqn)
 				lightSolution: $lightSolution
