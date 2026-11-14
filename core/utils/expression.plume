@@ -403,6 +403,36 @@ macro rebuildTerm(cnum, cden, unit)
 	return $ Expression(kind: "div", left: num, right: makeExpression(cden))
 end
 
+// Distribute the product of the factors flat[1..n] over its sum factors:
+// a sum factor (add/sub) unfolds into its flattened terms, a whole factor
+// multiplies as is; one product per combination of one term per sum
+// factor, collected in out. The first factor seeds the accumulator (it
+// unfolds when it is a sum, it is kept whole otherwise). No sum factor:
+// a single combination, the product rebuilt in factor order.
+macro expandProd(flat, i, acc, out)
+	if i > len(flat)
+		run $ Table.append(out, acc)
+		return
+	end
+	let f = $flat[i]
+	if isExpression(f) and (f.kind == "add" or f.kind == "sub")
+		let parts = $ flattensum(f)
+		for k in seq(1, len(parts))
+			if i == 1
+				run $ expandProd(flat, 2, parts[k], out)
+			else
+				run $ expandProd(flat, i + 1, acc * parts[k], out)
+			end
+		end
+	else
+		if i == 1
+			run $ expandProd(flat, 2, f, out)
+		else
+			run $ expandProd(flat, i + 1, acc * f, out)
+		end
+	end
+end
+
 
 set Expression = macro(kind:, left:, right:, print:)
 	type: Expression
@@ -1404,6 +1434,54 @@ set Expression = macro(kind:, left:, right:, print:)
 			// rendering \sqrt, not x^{0.5}).
 			return $ Expression(kind: self.kind, left: left, right: right, print: self.print?).pretty()
 		end
+	end
+
+	// Distribute products over sums, recursively: 5·(x+1) -> 5·x + 5·1,
+	// and a sum over a denominator term by term: (x+1)/2 -> x/2 + 1/2.
+	// No reduce, no pretty — the expansion is literal: 5·1 stays a
+	// product, a -c term stays a negative addend (the result is a plain
+	// add chain of the distributed terms, in factor order).
+	expand: macro()
+		if self.kind == "symbol" or self.kind == "number"
+			return $self
+		end
+		let left = $ self.left
+		let right = $ self.right
+		if isExpression(left)
+			set left = $ left.expand()
+		end
+		if isExpression(right)
+			set right = $ right.expand()
+		end
+		if self.kind == "mul"
+			let node = $ Expression(kind: "mul", left: left, right: right, print: self.print?)
+			let flat = $ flattenprod(node)
+			let out = $Table()
+			run $ expandProd(flat, 1, empty, out)
+			// One combination: no sum factor, the product rebuilt in
+			// factor order. Several: the distributed sum, left to right.
+			if len(out) == 1
+				return $out[1]
+			end
+			let res = $out[1]
+			for i in seq(2, len(out))
+				set res = $ res + out[i]
+			end
+			return $res
+		end
+		if self.kind == "div"
+			// A sum over a denominator distributes term by term
+			// ((x+1)/2 -> x/2 + 1/2); the denominator stays as is.
+			if isExpression(left) and (left.kind == "add" or left.kind == "sub")
+				let terms = $ flattensum(left)
+				let res = $ Expression(kind: "div", left: terms[1], right: right, print: self.print?)
+				for i in seq(2, len(terms))
+					set res = $ res + Expression(kind: "div", left: terms[i], right: right, print: self.print?)
+				end
+				return $res
+			end
+		end
+		return $ Expression(kind: self.kind, left: left, right: right, print: self.print?)
 	end
 
 	root: macro(n: 2)
