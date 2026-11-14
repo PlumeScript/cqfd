@@ -31,8 +31,8 @@ simpleExpand: macro(sum, opps: (/, *))
 					- $ sum.steps[1] / factor
 					- $ (sum.steps[1] / factor).expand()
 				elseif opp=="-:"
-					- $ sum.steps[1].div(factor)
-					- $ (sum.steps[1].div(factor)).expand()
+					- $ sum.steps[1].divOp(factor)
+					- $ (sum.steps[1].divOp(factor)).expand()
 				else
 					- $ factor * sum.steps[1]
 					- $ (factor * sum.steps[1]).expand()
