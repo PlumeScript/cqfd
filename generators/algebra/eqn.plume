@@ -220,3 +220,134 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 		end
 	end
 end
+
+sumAngleTriangleEqn: macro(?lightSolution)
+	@QuestionFactory
+		parameters: do
+			- $Range(1, 100)
+			- $Range(1, 100)
+			- $Range(1, 100)
+		end
+		hyperParameters: do
+			- $variableNames.angle
+			- $Choice(1, 2, 3)
+		end
+		get: macro(a, b, c, x, pos)
+			let t = $ a+b+c
+			set a = $ (180*a/t).floor()
+			set b = $ (180*b/t).floor()
+			set c = $ 180-b-a
+
+
+			@Question(eqn)
+				lightSolution: $lightSolution
+				steps: do
+					- do
+						l: if pos==1
+							$ s(x)+a+b
+						elseif pos==2
+							$ a+s(x)+b
+						else
+							$ a+(b+s(x))
+						end
+						r: $s(180)
+					end
+					if not lightSolution
+						- do
+						l: if pos==1
+								$ s(x)+(a+b)
+							else
+								$ (a+b)+s(x)
+							end
+							r: $s(180)
+						end
+						- do
+							l: if pos==1
+								$ s(x)+(a+b)-(a+b)
+							else
+								$ (a+b)+s(x)-(a+b)
+							end
+							r: $ s(180) - (a+b)
+						end
+					end
+					- do
+						l: $ s(x)
+						r: $ s(c)
+					end
+				end
+				id: angle-$a-$b-$c-$x
+			end
+		end
+	end
+end
+
+sumAngleIsoscelesTriangleEqn: macro(?lightSolution)
+	@QuestionFactory
+		parameters: do
+			- $Range(1, 100)
+			- $Range(1, 100)
+		end
+		hyperParameters: do
+			- $variableNames.angle
+			- $Choice(1, 2, 3)
+		end
+		get: macro(a, b, x, pos)
+			let t = $ a+b
+			set a = $ (180*a/t).floor()
+			if a%2==1
+				set a+=1
+			end
+			set b = $ 180-a
+
+
+			@Question(eqn)
+				lightSolution: $lightSolution
+				steps: do
+					- do
+						l: if pos==1
+							$ a+s(x)+s(x)
+						elseif pos==2
+							$ s(x)+a+s(x)
+						else
+							$ s(x)+s(x)+a
+						end
+						r: 180
+					end
+					if not lightSolution
+						- do
+						l: if pos==1
+								$ a+2*s(x)
+							else
+								$ 2*s(x)+a
+							end
+							r: $ s(180)
+						end
+						- do
+							l: if pos==1
+								$ a+2*s(x)-a
+							else
+								$ 2*s(x)+a-a
+							end
+							r: $ s(180) - a
+						end
+					end
+					- do
+						l: $ 2*s(x)
+						r: $ b
+					end
+					if not lightSolution
+						- do
+							l: $ 2*s(x)/2
+							r: $ s(b)/2
+						end
+					end
+					- do
+						l: $ s(x)
+						r: $ s(b/2)
+					end
+				end
+				id: angle-$a-$b-$x
+			end
+		end
+	end
+end
