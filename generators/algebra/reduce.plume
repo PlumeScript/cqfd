@@ -335,3 +335,36 @@ reduceBoth: macro(source, step)
 		end
 	end
 end
+
+/*
+Cannonical x/a * a
+*/
+reduceSimpleDiv: macro(style: classic)
+	@QuestionFactory
+		parameters: do
+			- $Range(2, 10)
+			- $Choice(+, -)
+			- $Choice(0, 1)
+		end
+		hyperParameters: do
+			- $variableNames[style]
+		end
+		get: macro(n, sign, order, x)
+			if sign == "-"
+				set n *= -1
+			end
+			let expr = if order == 0
+				$ s(x)/n * n
+			else
+				$ n * (s(x)/n)
+			end
+			return @Question(eq)
+				steps: do
+					- $expr
+					- $expr.reduce()
+				end
+				vars: $Table($x)
+			end
+		end
+	end
+end
