@@ -1,0 +1,43 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Choice from $import(../../core/parameters/set)
+let Range from $import(../../core/parameters/range)
+let Question from $import(../../core/cls/question)
+let QuestionFactory from $import(../../core/cls/questionFactory)
+
+let s from $import(../../core/utils/expression)
+let variableNames from $import(./utils)
+
+
+/*
+wip
+sum must be a reduceSum object
+*/
+simpleExpand: macro(sum, opps: (/, *))
+	@QuestionFactory
+		parameters: do
+			- $sum
+			- $Range(2, 10)
+			- $Choice(...opps)
+		end
+		get: macro(sum, factor, opp)
+			return @Question(eq)
+				steps: if opp=="/"
+					- $ sum.steps[1] / factor
+					- $ (sum.steps[1] / factor).expand()
+				elseif opp=="-:"
+					- $ sum.steps[1].div(factor)
+					- $ (sum.steps[1].div(factor)).expand()
+				else
+					- $ factor * sum.steps[1]
+					- $ (factor * sum.steps[1]).expand()
+				end
+			end
+		end
+	end
+end

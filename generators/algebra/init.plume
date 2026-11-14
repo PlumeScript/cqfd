@@ -19,3 +19,4 @@ end
 ...import(./reduce)
 ...import(./eval)
 ...import(./eqn)
+...import(./expand)
