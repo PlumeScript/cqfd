@@ -544,11 +544,20 @@ set Expression = macro(kind:, left:, right:, print:)
 				set prevPowBase = $powBase
 			end
 		elseif kind == "div"
-			\\frac{
-				$ String(left)
-			}{
-				$ String(right)
-			}
+			// The (div:) print flag (set by .div) renders the division as the
+			// \div operator (1 \div 2) instead of the fraction \frac{1}{2};
+			// parens keep a sum operand grouped ((x + 1) \div 2).
+			if self.print?.div?
+				$ paren(left)
+				\s\\div\s
+				$ paren(right)
+			else
+				\\frac{
+					$ String(left)
+				}{
+					$ String(right)
+				}
+			end
 		elseif kind == "pow"
 			// right may be a raw number (root()) or a number expression
 			// (pretty/eval rebuilt it): compare its value, and take the
@@ -1504,6 +1513,20 @@ set Expression = macro(kind:, left:, right:, print:)
 
 	isNumber: macro
 		return $ self.reduce().kind == "number"
+	end
+
+	// The division self / x with the (div:) print flag: algebraically the
+	// same node as divr (self / x), but String renders the \div operator
+	// (1 \div 2) instead of the fraction \frac{1}{2}. A plain method field
+	// (like root / isNumber), not a meta: `div` is the reserved binary `/`
+	// operator and the meta names are a closed set.
+	divOp: macro(x)
+		@Expression
+			kind: div
+			left: $self
+			right: $makeExpression($x)
+			print: (div: $true)
+		end
 	end
 
 	meta addr: macro(x)
