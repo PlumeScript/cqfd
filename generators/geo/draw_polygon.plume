@@ -19,6 +19,15 @@ macro angleTip(A, B, C)
     $ ((A-B).normalize() + (C-B).normalize()).normalize().angle() + Math.pi
 end
 
+macro lineLabel(A, B, label)
+	let angle = $ (B-A).angle()
+	if angle < -Math.pi/4 or angle > 5*Math.pi/4
+		set angle += $ Math.pi
+	end
+
+	$ Dot((A+B)/2, label: label, angle: (B-A).normal().angle(), direction: angle)
+end
+
 // Todo: names isocele, rectangle...
 
 /*
@@ -68,7 +77,7 @@ drawTriangle2angles: macro(Number precision: 1)
 					- $ Dot(C, label: _C, angle: angleTip(A, C, B))
 					- $ Angle(A, B, C, fill: "#ddd", ?noline)
 					- $ Angle(C, A, B, fill: "#ddd", ?noline)
-					- $ Dot((A+B)/2, label: l.."cm", direction:(B-A).angle())
+					- $ lineLabel(A, B, l.."cm")
 				end
 				tip: Si vous avez été précis, vous aurez $pages.formula(\\widehat{$_A$_C$_B}=$(180-a1-a2)°)
 			end
@@ -121,8 +130,8 @@ drawTriangle2lengths: macro(Number precision: 1)
 					- $ Dot(B, label: _B, angle: angleTip(C, B, A))
 					- $ Dot(C, label: _C, angle: angleTip(A, C, B))
 					- $ Angle(C, B, A, fill: "#ddd", ?noline)
-					- $ Dot((A+B)/2, label: l1.."cm", direction:(B-A).angle())
-					- $ Dot((B+C)/2, label: l2.."cm", direction:(B-C).angle())
+					- $ lineLabel(B, A, l1.."cm")
+					- $ lineLabel(C, B, l2.."cm")
 				end
 			end
 		end
