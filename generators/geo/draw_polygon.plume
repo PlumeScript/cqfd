@@ -37,8 +37,8 @@ Angle will be a multiple of $Param(Number, precision, 1)
 drawTriangle2angles: macro(Number precision: 1)
 	@QuestionFactory
 		parameters: do
-			- $Range(20, 140)
-			- $Range(1, 100)
+			- $Range(20, 120)
+			- $Range(1, 80)
 			- $Range(2, 8)
 		end
 
@@ -92,7 +92,7 @@ Angle will be a multiple of $Param(Number, precision, 1)
 drawTriangle2lengths: macro(Number precision: 1)
 	@QuestionFactory
 		parameters: do
-			- $Range(20, 100)
+			- $Range(20, 70)
 			- $Range(5, 15)
 			- $Range(2, 8)
 		end
