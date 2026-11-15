@@ -26,9 +26,10 @@ There are shortcut:
 	- $code(\0?obtuse) for $formula(91-179°)
 	- $code(\0?straight) for $formula(180°)
 end
-$code(\0?indirect) to indirect instruction.
+$code(\0?indirect) to indirect instruction.$newline
+$code(\0?alt) to alternative instruction for zero, right and straight.
 */
-ref drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision: 1, ?zero, ?acute, ?right, ?obtuse, ?straight, ?indirect)
+ref drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision: 1, ?zero, ?acute, ?right, ?obtuse, ?straight, ?indirect, ?alt)
 	if zero
 		set minAngle = 0
 		set maxAngle = 0
@@ -77,9 +78,27 @@ ref drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision:
 			let _A, _B, _C = $letters
 			@Question(draw)
 				description: if indirect
-					Placer $pages.formula($_A\, $_B\, $_C) tel que $pages.formula(\\widehat{$_A$_B$_C} = $angle°).
+					Placer $pages.formula($_A\, $_B\, $_C) tel que\s
+					if alt and zero
+						$pages.formula(\\widehat{$_A$_B$_C}) soit nul.
+					elseif alt and right
+						$pages.formula(\\widehat{$_A$_B$_C}) soit droit.
+					elseif alt and straight
+						$pages.formula(\\widehat{$_A$_B$_C}) soit plat.
+					else
+						$pages.formula(\\widehat{$_A$_B$_C} = $angle°)
+					end
 				else
-					Tracer $pages.formula(\\widehat{$_A$_B$_C} = $angle°)
+					if alt and zero
+						Tracer l'angle nul $pages.formula(\\widehat{$_A$_B$_C}).
+					elseif alt and right
+						Tracer l'angle droit $pages.formula(\\widehat{$_A$_B$_C}).
+					elseif alt and straight
+						Tracer l'angle plat $pages.formula(\\widehat{$_A$_B$_C}).
+					else
+						Tracer $pages.formula(\\widehat{$_A$_B$_C} = $angle°)
+					end
+					
 				end
 				name: $_A$_B$_C
 				measure: $angle
