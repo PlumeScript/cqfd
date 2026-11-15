@@ -436,7 +436,7 @@ drawPerpendicularLines: macro(?indirect, ?noDots)
 					- $ Dot(B, label: _B, angle: 5*Math.pi/4 + (B-A).normal().angle(), ?cross)
 					- $ Dot(C, label: _C, angle: Math.pi/4+(B-A).normal().angle(), ?cross)
 					- $ RightAngleSector(A, Cp, C)
-					if indirect
+					if indirect or noDots
 						- $ Dot(D, label: _D, angle: -Math.pi/4+(B-A).normal().angle(), ?cross)
 					end
 				end
