@@ -137,3 +137,58 @@ drawTriangle2lengths: macro(Number precision: 1)
 		end
 	end
 end
+
+drawRegularPolygon: macro(minSide: 3, maxSide: 8)
+	@QuestionFactory
+		parameters: do
+			- @Choice
+				for i in seq(minSide, maxSide)
+					if 360/i == (360/i).floor()
+						- $i
+					end
+				end
+			end
+		end
+		hyperParameters: do
+			- $Range(3, 6)
+			- $Range(1, 180)
+		end
+		get: macro(n, l, offset)
+			@Question(draw)
+				description: do
+					Tracer un\s
+					if n==3
+						triangle équilatéral
+					elseif n==4
+						carré
+					elseif n==5
+						pentagone régulier
+					elseif n==6
+						hexagone régulier
+					elseif n==7
+						heptagone régulier
+					elseif n==8
+						octogone régulier
+					elseif n==9
+						énéagone régulier
+					elseif n==10
+						décagone régulier
+					end
+					\sde côté $pages.formula($l\0cm).
+				end
+				tip: Il s'agit un polygone à $pages.formula($n) côté de longueur $pages.formula($l\0cm). Tous ses angles mesurent $pages.formula($(180-360/n)°).
+				figure: do
+					for i in seq(n)
+						let A = $ Vect2D(r: 1, a: offset + (i-1)*360/n, ?deg)
+						let B = $ Vect2D(r: 1, a: offset + i*360/n, ?deg)
+						- $ Segment(A, B)
+						- $ SegmentTickMark(A, B)
+						if i==1
+							- $ lineLabel(A, B, l.."cm")
+						end
+					end
+				end
+			end
+		end
+	end
+end
