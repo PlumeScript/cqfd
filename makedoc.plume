@@ -46,7 +46,7 @@ let doclib = raw[
 	let deprecated = $bold(Deprecated). $newline
 ]end
 
-let version = v0.8.0
+let version = v0.9.0
 
 @Document(filename: $os.Path(./doc), title: CQFD Documentation, pagination: 3)
     @Style
