@@ -82,6 +82,11 @@ eval: macro(source, style: classic, filters:)
 	end
 end
 
+/*
+Create a true equality check in the form $code(a+1=4).$newline
+$posParam(QuestionFactory, source, 1) maybe any calc exercice.$newline
+$code(\0?alt) to use $code(a+1=2 si a=1) instead of $code(1 est solution de l'équation a+1=2).
+*/
 ref evalCheckSimpleTrue: macro(source, style: classic, filters:, ?alt)
 	@QuestionFactory
 		parameters: do
@@ -112,6 +117,11 @@ ref evalCheckSimpleTrue: macro(source, style: classic, filters:, ?alt)
 	end
 end
 
+/*
+Create a false equality check in the form $code(a+1=4).$newline
+$posParam(QuestionFactory, source, 1) maybe any calc exercice — the displayed result is the $code(usualTrap) of $code(source) when it has one (raises if it is the solution), otherwise the solution shifted by a value drawn between $formula(-3) and $formula(3).$newline
+$code(\0?alt) to use $code(a+1=2 si a=1) instead of $code(1 est solution de l'équation a+1=2).
+*/
 ref evalCheckSimpleFalse: macro(source, style: classic, filters:, ?alt)
 	@QuestionFactory
 		parameters: do

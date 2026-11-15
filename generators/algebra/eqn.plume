@@ -37,7 +37,9 @@ $Param(String[], opps, Table(+)) the operations applied, in order, to both sides
 end
 
 The question also carries $code(solveSteps)\: the inverse operations applied to the left side only, in solving order — consumed by $ParamSet(reduceBoth).$newline
-An unknown operation, or a $code(^2) operation that is not first, raises an error.
+An unknown operation, or a $code(^2) operation that is not first, raises an error.$newline
+$code(\0?lightSolution) to display one line per operation instead of two.$newline
+$code(\0?switch) to display the equation with its sides swapped.
 
 Todo\: irrationnal distractor & solutions
 */
@@ -221,6 +223,10 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 	end
 end
 
+/*
+Generate an equation from the sum of the angles of a triangle: $formula(x + a + b = 180°) with $formula(a) and $formula(b) two known angles, drawn so that their sum is less than $formula(180°).$newline
+$code(\0?lightSolution) to display one line per operation instead of two.
+*/
 sumAngleTriangleEqn: macro(?lightSolution)
 	@QuestionFactory
 		parameters: do
@@ -281,6 +287,10 @@ sumAngleTriangleEqn: macro(?lightSolution)
 	end
 end
 
+/*
+Generate an equation from the sum of the angles of an isosceles triangle: $formula(2x + a = 180°) with $formula(a) the known angle, drawn even, and $formula(x) the two equal base angles.$newline
+$code(\0?lightSolution) to display one line per operation instead of two.
+*/
 sumAngleIsoscelesTriangleEqn: macro(?lightSolution)
 	@QuestionFactory
 		parameters: do
@@ -352,8 +362,18 @@ sumAngleIsoscelesTriangleEqn: macro(?lightSolution)
 	end
 end
 
-// Custom number generator - a good idea?
+/*
+Generate a Pythagorean equation to solve — the unknown side is drawn among the two legs and the hypotenuse (e.g. $formula(x^2 + 16 = 25)).$newline
+$Param(String, solution, easy) the scale of the $code(3-4-5) triple.
+@InfosList
+	- $code(easy)\: scale drawn between $formula(1) and $formula(2).
+	- $code(medium)\: scale drawn among $formula(10), $formula(0.1), $formula(3), $formula(4), $formula(20), $formula(0.2).
+end
+$code(\0?lightSolution) to display one line per operation instead of two.$newline
+$code(\0?onlyPositive) to keep the positive solution only — without it, the solution is double ($formula(x = 3) and $formula(x = -3)).
+*/
 eqnPythagorea: macro(solution: easy, ?lightSolution, ?onlyPositive)
+	// Custom number generator - a good idea?
 	@QuestionFactory
 		parameters: do
 			if solution=="easy"

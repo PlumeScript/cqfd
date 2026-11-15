@@ -337,7 +337,8 @@ reduceBoth: macro(source, step)
 end
 
 /*
-Cannonical x/a * a
+Generate a $formula(x/a \\times a) reduction exercice — a fraction multiplied by its denominator, or the denominator multiplied by the fraction, with $formula(a) drawn between $formula(2) and $formula(10).$newline
+The sign and the order of the two factors are random — the reduction is $formula(x).
 */
 reduceSimpleDiv: macro(style: classic)
 	@QuestionFactory

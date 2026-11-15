@@ -138,6 +138,11 @@ drawTriangle2lengths: macro(Number precision: 1)
 	end
 end
 
+/*
+Generate a regular polygon to draw.$newline
+The number of sides is drawn between $Param(Number, minSide, 3) and $Param(Number, maxSide, 8) — only the values that divide $formula(360) are possible.$newline
+The side is drawn between $formula(3) and $formula(6)\0cm.
+*/
 drawRegularPolygon: macro(minSide: 3, maxSide: 8)
 	@QuestionFactory
 		parameters: do

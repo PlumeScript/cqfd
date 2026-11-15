@@ -15,8 +15,14 @@ let variableNames from $import(./utils)
 
 
 /*
-wip
-sum must be a reduceSum object
+Generate an expansion exercice from the first step of a $code(reduceSum) question — the sum is combined with a number between $formula(2) and $formula(10), then expanded term by term (no reduction).$newline
+$posParam(QuestionFactory, sum, 1) a $code(reduceSum) object.$newline
+$code(opps) the operations the first combination is drawn from (default $code(/) and $code(*)).
+@InfosList
+	- $code(*)\: the sum is multiplied by the number.
+	- $code(/)\: the sum is divided by the number.
+	- $code(-:)\: like $code(/), but the division is rendered with the $code(\\div) operator.
+end
 */
 simpleExpand: macro(sum, opps: (/, *))
 	@QuestionFactory
