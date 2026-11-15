@@ -19,6 +19,8 @@ macro angleTip(A, B, C)
     $ ((A-B).normalize() + (C-B).normalize()).normalize().angle() + Math.pi
 end
 
+// Todo: names isocele, rectangle...
+
 /*
 Generate a triangle to draw from two angles.$newpar
 Angle will be a multiple of $Param(Number, precision, 1)
