@@ -281,7 +281,7 @@ reduceBoth: macro(source, step)
 			- $source
 		end
 		validate: macro(source)
-			return $ len(source.solveSteps) > 0
+			return $ source.solveSteps? and len(source.solveSteps) > 0
 		end
 		get: macro(source)
 			set step = $ 1 + (step-1) % len(source.solveSteps)
