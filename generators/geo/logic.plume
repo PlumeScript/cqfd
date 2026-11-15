@@ -935,7 +935,7 @@ let ifThenPool = do
 		valid: do
 			- macro(A, B, C, l, s)
 				sentence: do
-					Si $f($A) et $f($C) sont au même en droit, alors\s
+					Si $f($A) et $f($C) sont au même endroit, alors\s
 					@sw($s)
 						- $f(hat($A$B$C) = 0°)
 						- $f(hat($A$B$C)) est nul
@@ -966,7 +966,7 @@ let ifThenPool = do
 						- $f(hat($A$B$C) = 0°)
 						- $f(hat($A$B$C)) est nul
 					end
-					\salors $f($A) et $f($C) sont au même en droit
+					\salors $f($A) et $f($C) sont au même endroit
 				end
 				figure: do
 					- $HalfLine((0, 0), (2, 0))
@@ -1003,14 +1003,14 @@ let ifThenPool = do
 			end
 			- macro(A, B, C, l, s)
 				sentence: do
-					Si $f($B) et $f($C) sont au même en droit, alors\s
+					Si $f($B) et $f($C) sont au même endroit, alors\s
 					@sw($s)
 						- $f(hat($A$B$C) = 0°)
 						- $f(hat($A$B$C)) est nul
 					end
 				end
 				explanation: do
-					Si $f($B) et $f($C) sont au même en droit, alors $f(hat($A$B$C)) n'existe pas.
+					Si $f($B) et $f($C) sont au même endroit, alors $f(hat($A$B$C)) n'existe pas.
 				end
 			end
 		end
