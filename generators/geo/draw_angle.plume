@@ -107,7 +107,10 @@ ref drawAngle: macro(Number minAngle: 0, Number maxAngle: 180, Number precision:
 					let B = $ Vect2D(0, 0)
 					let C = $ Vect2D(a: angle+rotation, r: position, ?deg)
 					
-					if not indirect
+					if indirect
+						- $ Segment(A, B, style: (stroke: (strokeDasharray: 5)))
+						- $ Segment(C, B, style: (stroke: (strokeDasharray: 5)))
+					else
 						- $ Angle(A, B, C, fill: "#ddd")
 					end
 					- $ Dot(A, label: _A, angle: (B-A).normal().angle() ,?cross, ?deg)
