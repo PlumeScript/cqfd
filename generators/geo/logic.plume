@@ -310,43 +310,43 @@ let ifThenPool = do
 		number: 0
 		valid: do
 			- macro(A, B, C)
-				sentence: si $f($A) est le centre du disque $f(\\mathscr D), alors $f($A \\in \\mathscr D)
+				sentence: si $f($A) est le centre du disque $f(cc D), alors $f($A \\in cc D)
 				explanation: le centre est bien à moins d'un rayon... Du centre!
 			end
 			- macro(A, B, C)
-				sentence: si $f([$A$B]) est un diamètre du cercle $f(\\mathscr C) de centre $f($C), alors $f($C \\in [$A$B])
+				sentence: si $f([$A$B]) est un diamètre du cercle $f(cc C) de centre $f($C), alors $f($C \\in [$A$B])
 				explanation: par définition
 			end
 			- macro(A, B, C)
-				sentence: si $f([$A$B]) est un diamètre du cercle $f(\\mathscr C) de centre $f($C), alors $f( $A$C=$C$B)
+				sentence: si $f([$A$B]) est un diamètre du cercle $f(cc C) de centre $f($C), alors $f( $A$C=$C$B)
 				explanation: le centre du cercle est le milieu de tout diamètre
 			end
 			- macro(A, B, C)
-				sentence: si $f([$A$B]) est un diamètre du cercle $f(\\mathscr C) de centre $f($C), alors $f($C) est le milieu de $f([$A$B])
+				sentence: si $f([$A$B]) est un diamètre du cercle $f(cc C) de centre $f($C), alors $f($C) est le milieu de $f([$A$B])
 				explanation: le centre du cercle est le milieu de tout diamètre
 			end
 			- macro(A, B, C)
-				sentence: Si $f([$A$C]) est un rayon du cercle $f(\\mathscr C), alors   le centre de $f(\\mathscr C) est $f($A) ou $f($C)
+				sentence: Si $f([$A$C]) est un rayon du cercle $f(cc C), alors   le centre de $f(cc C) est $f($A) ou $f($C)
 				explanation: un rayon est le segment qui relie le centre du cercle à un point du cercle
 			end
 		end
 		invalid: do
 			- macro(A, B, C)
-				sentence: si $f($A) est le centre du cercle $f(\\mathscr C), alors $f($A \\in \\mathscr C)
+				sentence: si $f($A) est le centre du cercle $f(cc C), alors $f($A \\in cc C)
 				figure: do
 					- $figure2D.Circle((0, 0), (1, 0))
 					- $figure2D.Dot((0, 0), label: $A, ?cross)
 				end
 			end
 			- macro(A, B, C)
-				sentence: Soit $f(\\mathscr D) un disque. Si $f($A \\in \\mathscr D), alors $f($A) est le centre de $f(\\mathscr D)
+				sentence: Soit $f(cc D) un disque. Si $f($A \\in cc D), alors $f($A) est le centre de $f(cc D)
 				figure: do
 					- $figure2D.Circle((0, 0), (1, 0), fill: #aaa5)
 					- $figure2D.Dot((0.5, 0.5), label: $A, ?cross)
 				end
 			end
 			- macro(A, B, C)
-				sentence: Si $f([$A$C]) est un rayon du cercle $f(\\mathscr C), alors  le centre de $f(\\mathscr C)  est $f($A)
+				sentence: Si $f([$A$C]) est un rayon du cercle $f(cc C), alors  le centre de $f(cc C)  est $f($A)
 				figure: do
 					- $figure2D.Circle((0, 0), (1, 0))
 					- $figure2D.Segment((0, 0), (1, 0))
@@ -361,15 +361,15 @@ let ifThenPool = do
 		number: 0
 		valid: do
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si $f($O) est le centre de $f(\\mathscr C) et $f($A \\in \\mathscr C), alors $f([$O$A]) est un rayon de $f(\\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si $f($O) est le centre de $f(cc C) et $f($A \\in cc C), alors $f([$O$A]) est un rayon de $f(cc C)
 				explanation: par définition
 			end
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si $f($O \\in \\mathscr C) et $f($A \\in \\mathscr C), alors $f([$O$A]) est une corde de $f(\\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si $f($O \\in cc C) et $f($A \\in cc C), alors $f([$O$A]) est une corde de $f(cc C)
 				explanation: par définition
 			end
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si $f([$O$A]) est une corde de $f(\\mathscr C) passant par son centre, alors $f([$O$A]) est un diamètre de $f(\\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si $f([$O$A]) est une corde de $f(cc C) passant par son centre, alors $f([$O$A]) est un diamètre de $f(cc C)
 				explanation: par définition
 			end
 			- macro(A, B, C)
@@ -378,25 +378,25 @@ let ifThenPool = do
 			end
 			// Reciproques
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si  $f([$O$A]) est une corde de $f(\\mathscr C), alors $f($O \\in \\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si  $f([$O$A]) est une corde de $f(cc C), alors $f($O \\in cc C)
 				explanation: par définition
 			end
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si  $f([$O$A]) est une corde de $f(\\mathscr C), alors $f($A \\in \\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si  $f([$O$A]) est une corde de $f(cc C), alors $f($A \\in cc C)
 				explanation: par définition
 			end
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si $f([$O$A]) est un diamètre de $f(\\mathscr C), alors $f([$O$A]) est une corde de $f(\\mathscr C) passant par son centre
+				sentence: Soit $f(cc C) un cercle. Si $f([$O$A]) est un diamètre de $f(cc C), alors $f([$O$A]) est une corde de $f(cc C) passant par son centre
 				explanation: par définition
 			end
 			- macro(O, A, B)
-				sentence: Soit $f(\\mathscr D) un disque de diamètre $f([$O$A]). Si $f($B \\in  [$O$A]) alors $f($B \\in \\mathscr D)
+				sentence: Soit $f(cc D) un disque de diamètre $f([$O$A]). Si $f($B \\in  [$O$A]) alors $f($B \\in cc D)
 				explanation: un disque contient tous les points de son diamètre
 			end
 		end
 		invalid: do
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si $f($O \\in \\mathscr C) et $f($A \\in \\mathscr C), alors $f([$O$A]) est un rayon de $f(\\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si $f($O \\in cc C) et $f($A \\in cc C), alors $f([$O$A]) est un rayon de $f(cc C)
 				figure: do
 					- $figure2D.Circle((0, 0), (1, 0))
 					- $figure2D.Dot((0, 0), ?cross)
@@ -406,7 +406,7 @@ let ifThenPool = do
 				end
 			end
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si $f($O) est le centre de $f(\\mathscr C) et $f($A \\in \\mathscr C), alors $f([$O$A]) est une corde de $f(\\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si $f($O) est le centre de $f(cc C) et $f($A \\in cc C), alors $f([$O$A]) est une corde de $f(cc C)
 				figure: do
 					- $figure2D.Circle((0, 0), (1, 0))
 					- $figure2D.Segment((0, 0), (1, 0))
@@ -415,7 +415,7 @@ let ifThenPool = do
 				end
 			end
 			- macro(O, A, _)
-				sentence: Soit $f(\\mathscr C) un cercle. Si $f([$O$A]) passe par le centre de $f(\\mathscr C), alors $f([$O$A]) est un diamètre de $f(\\mathscr C)
+				sentence: Soit $f(cc C) un cercle. Si $f([$O$A]) passe par le centre de $f(cc C), alors $f([$O$A]) est un diamètre de $f(cc C)
 				figure: do
 					- $figure2D.Circle((0, 0), (1, 0))
 					- $figure2D.Dot((0, 0), ?cross)
@@ -452,7 +452,7 @@ let ifThenPool = do
 				end
 			end
 			- macro(O, A, B)
-				sentence: Soit $f(\\mathscr C) un cercle de diamètre $f([$O$A]). Si $f($B \\in  [$O$A]) alors $f($B \\in \\mathscr C)
+				sentence: Soit $f(cc C) un cercle de diamètre $f([$O$A]). Si $f($B \\in  [$O$A]) alors $f($B \\in cc C)
 				figure: do
 					- $figure2D.Circle((0, 0), (1, 0))
 					- $figure2D.Segment((-1, 0), (1, 0))
