@@ -36,7 +36,7 @@ end
 
 logic: do
 	instruction:macro(question)
-		$question.instruction
+		$question.instruction.
 	end
 	solutionShort: macro(question)
 		if question.solution.isTruth
