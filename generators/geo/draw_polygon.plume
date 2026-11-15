@@ -70,6 +70,7 @@ drawTriangle2angles: macro(Number precision: 1)
 					- $ Angle(C, A, B, fill: "#ddd", ?noline)
 					- $ Dot((A+B)/2, label: l.."cm", direction:(B-A).angle())
 				end
+				tip: Si vous avez été précis, vous aurez $pages.formula(\\widehat{$_A$_C$_B}=$(180-a1-a2)°)
 			end
 		end
 	end

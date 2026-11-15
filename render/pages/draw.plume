@@ -4,12 +4,15 @@ This file is part of CQFD - A Plume🪶 exercice generator
 Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
-
+use ardoise
 let figure2D = $import(figure2D)
 
 draw: do
 	instruction:macro(question)
 		$question.description
+		if question.tip?
+			\s$hint(($question.tip))
+		end
 	end
 	solution: macro(question)
 		@figure2D.Canva2D(width: 200, height: 100)
