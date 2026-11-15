@@ -347,9 +347,10 @@ end
 
 /*
 Generate two parallels lines to draw.$newline
-$code(\0?indirect) to indirect instruction.
+$code(\0?indirect) to indirect instruction.$newline
+$code(\0?noDots) to simple instruction without dots.
 */
-drawParallelLines: macro(?indirect)
+drawParallelLines: macro(?indirect, ?noDots)
 	@QuestionFactory
 		parameters: do
 			- $letters(4)
@@ -362,7 +363,9 @@ drawParallelLines: macro(?indirect)
 		get: macro(letters, rotation, position1, position2, position3)
 			let _A, _B, _C, _D = $letters
 			@Question(draw)
-				description: if indirect
+				description: if noDots
+					Tracer deux droites parallèles $pages.formula(($_A$_B)) et $pages.formula(($_C$_D))
+				elseif indirect
 					Placer $pages.formula($_A\, $_B\, $_C\, $_D) distincts tel que $pages.formula(($_A$_B) /\/  ($_C$_D)).
 				else
 					Placer $pages.formula($_A\, $_B\, $_C) distincts non alignés, puis tracer la parallèle à $pages.formula(($_A$_B)) passant par $pages.formula($_C).
@@ -383,7 +386,7 @@ drawParallelLines: macro(?indirect)
 					- $ Dot(C, label: _C, angle: Math.pi/4+(B-A).normal().angle(), ?cross)
 					- $ RightAngleSector(Cp, C, D)
 					- $ RightAngleSector(C, Cp, A)
-					if indirect
+					if indirect or noDots
 						- $ Dot(D, label: _D, angle: -Math.pi/4+(B-A).normal().angle(), ?cross)
 					end
 				end
@@ -395,8 +398,9 @@ end
 /*
 Generate two perpendicular lines to draw.$newline
 $code(\0?indirect) to indirect instruction.
+$code(\0?noDots) to simple instruction without dots.
 */
-drawPerpendicularLines: macro(?indirect)
+drawPerpendicularLines: macro(?indirect, ?noDots)
 	@QuestionFactory
 		parameters: do
 			- $letters(4)
@@ -409,7 +413,9 @@ drawPerpendicularLines: macro(?indirect)
 		get: macro(letters, rotation, position1, position2, position3)
 			let _A, _B, _C, _D = $letters
 			@Question(draw)
-				description: if indirect
+				description: if noDots
+					Tracer deux droites perpendiculaires $pages.formula(($_A$_B)) et $pages.formula(($_C$_D))
+				elseif indirect
 					Placer $pages.formula($_A\, $_B\, $_C\, $_D) distincts tel que $pages.formula(($_A$_B)  \\perp ($_C$_D)).
 				else
 					Placer $pages.formula($_A\, $_B\, $_C) distincts non alignés, puis tracer la perpendiculaire à $pages.formula(($_A$_B)) passant par $pages.formula($_C).
