@@ -1047,7 +1047,7 @@ let ifThenPool = do
 						- $f(hat($A$B$C) = 180°)
 						- $f(hat($A$B$C)) est plat
 					end
-					\saalors\s
+					\salors\s
 					@sw($s)
 						- $f(hat($B$A$C) = 0°)
 						- $f(hat($B$A$C)) est nul
