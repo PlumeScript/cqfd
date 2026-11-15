@@ -102,7 +102,6 @@ drawTriangle2lengths: macro(Number precision: 1)
 				description: do
 					Sachant que\s
 					$pages.formula(\\widehat{$_A$_B$_C}=$a°),\s
-					,\s
 					$pages.formula($_A$_B=$l1\0cm)\s
 					et\s
 					$pages.formula($_A$_C=$l2\0cm),\s
