@@ -735,7 +735,6 @@ let ifThenPool = do
 			end
 			- macro(A, B, n)
 				sentence: Si $f($A) n'appartient pas au disque de centre $f($B) de rayon $f($n\0cm), alors $f($A) n'appartient pas au cercle de centre $f($B) de rayon $f($n\0cm)
-				explanation: par contraposée
 			end
 		end
 		invalid: do
