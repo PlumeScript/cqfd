@@ -73,7 +73,7 @@ anglePool: do
 		- macro(n, A, B, C, ...letters) un angle nul
 	end
 	- do
-		- macro(n, A, B, C, ...letters) L'angle $f(hat($A$B$C)=$(1+n*89/10).floor()°)
+		- macro(n, A, B, C, ...letters) L'angle $f(hat($A$B$C)=$(1+n*88/10).floor()°)
 		- macro(n, A, B, C, ...letters) un angle aigu
 	end
 	- do
@@ -81,7 +81,7 @@ anglePool: do
 		- macro(n, A, B, C, ...letters) un angle droit
 	end
 	- do
-		- macro(n, A, B, C, ...letters) L'angle $f(hat($A$B$C)=$(90+n*89/10).floor()°)
+		- macro(n, A, B, C, ...letters) L'angle $f(hat($A$B$C)=$(90+n*88/10).floor()°)
 		- macro(n, A, B, C, ...letters) un angle obtus
 	end
 
