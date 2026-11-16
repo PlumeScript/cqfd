@@ -810,27 +810,27 @@ let ifThenPool = do
 		number: 0
 		valid: do
 			- macro(A, B, C, D, E, F)
-				sentence: Si  $f(($A$B)_|_($C$D)) et  $f(($A$B)_|_($D$E)) alors  $f(($C$D) $par ($D$E))
+				sentence: Si  $f(($A$B)_|_($C$D)) et  $f(($A$B)_|_($F$E)) alors  $f(($C$D) $par ($F$E))
 			end
 			- macro(A, B, C, D, E, F)
-				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)  $par ($D$E)) alors  $f(($C$D) $par ($D$E))
+				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)  $par ($F$E)) alors  $f(($C$D) $par ($F$E))
 			end
 			- macro(A, B, C, D, E, F)
-				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)_|_($D$E)) alors  $f(($C$D) $par ($D$E))
+				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)_|_($F$E)) alors  $f(($C$D) $par ($F$E))
 			end
 		end
 		invalid: do
 			- macro(A, B, C, D, E, F)
-				sentence: Si  $f(($A$B)_|_($C$D)) et  $f(($A$B)_|_($D$E)) alors  $f(($C$D) _|_ ($D$E))
-				explanation: Si  $f(($A$B)_|_($C$D)) et  $f(($A$B)_|_($D$E)) alors  $f(($C$D) $par ($D$E))
+				sentence: Si  $f(($A$B)_|_($C$D)) et  $f(($A$B)_|_($F$E)) alors  $f(($C$D) _|_ ($F$E))
+				explanation: Si  $f(($A$B)_|_($C$D)) et  $f(($A$B)_|_($F$E)) alors  $f(($C$D) $par ($F$E))
 			end
 			- macro(A, B, C, D, E, F)
-				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)  $par ($D$E)) alors  $f(($C$D) _|_ ($D$E))
-				explanation: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)  $par ($D$E)) alors  $f(($C$D) $par ($D$E))
+				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)  $par ($F$E)) alors  $f(($C$D) _|_ ($F$E))
+				explanation: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)  $par ($F$E)) alors  $f(($C$D) $par ($F$E))
 			end
 			- macro(A, B, C, D, E, F)
-				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)_|_($D$E)) alors  $f(($C$D) _|_ ($D$E))
-				explanation: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)_|_($D$E)) alors  $f(($C$D) $par ($D$E))
+				sentence: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)_|_($F$E)) alors  $f(($C$D) _|_ ($F$E))
+				explanation: Si  $f(($A$B) $par ($C$D)) et  $f(($A$B)_|_($F$E)) alors  $f(($C$D) $par ($F$E))
 			end
 		end
 	end
@@ -984,7 +984,7 @@ let ifThenPool = do
 					end
 					\salors $f($A notin [$B$C\))
 				end
-				sentence: do
+				explanation: do
 					Si\s
 					@sw($s)
 						- $f(hat($A$B$C) = 0°)
