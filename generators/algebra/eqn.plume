@@ -43,7 +43,7 @@ $code(\0?switch) to display the equation with its sides swapped.
 
 Todo\: irrationnal distractor & solutions
 */
-ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch)
+ref eqn: macro(opps:, style: classic, solution: integer, oppsSwitch: (+, -), ?lightSolution, ?switch)
 	if not opps
 		set opps = $Table(+)
 	end
@@ -70,7 +70,11 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 				- $Range(2, 10)
 			end
 			for i in seq(len(opps))
-				- $Range(0, 1)
+				if Table.find(oppsSwitch, opps[i])
+					- $Choice(0, 1)
+				else
+					- $Choice(0)
+				end
 			end
 		end
 		hyperParameters: do
@@ -123,7 +127,7 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 
 			let members = (l:$left, r:$right)
 			for i in seq(len(opps))
-				let order=values[len(opps)+i]
+				let order = $values[len(opps)+i]
 				for k, member in items(members)
 					if opps[i] == "+"
 						if order == 1
@@ -135,7 +139,7 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 						if order == 1
 							set members[k] = $ members[k] + values[i] * left
 						else
-							set members[k] = $ values[i] * left + members[k]
+							set members[k] = $ (values[i] * left + members[k]).reduce()
 						end
 					elseif opps[i] == "-"
 						if order == 1
@@ -147,7 +151,7 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 						if order == 1
 							set members[k] = $ members[k] - values[i] * left
 						else
-							set members[k] = $ -values[i] * left + members[k]
+							set members[k] = $ (-values[i] * left + members[k]).reduce()
 						end
 					elseif opps[i] == "*"
 						if order == 1
@@ -161,9 +165,7 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 				end
 			end
 
-			for k, member in items(members)
-				set members[k] = $members[k].reduce()
-			end
+			set members.r = $members.r.reduce()
 
 			if switch
 				set members.l, members.r = ($members.r, $members.l)
@@ -174,8 +176,8 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 				lightSolution: $lightSolution
 				steps: do
 					- do
-						l: $members.l.reduce()
-						r: $members.r.reduce()
+						l: $members.l
+						r: $members.r
 					end
 					for i in seq(len(opps), 1, -1)
 						for k, member in items(members)
