@@ -104,12 +104,12 @@ ref renderLatexAST: macro(node, ?mayPar)
 			end
 		elseif node.label == "^"
 			// a power base needs its own grouping: (x^d)^(y/d)
-			if type(node.children[1]) == "table" and node.children[1].label == "^"
-				(
+			if type(node.children[1]) == "table" and (node.children[1].label == "^" or node.children[1].label == "sqrt")
+				\\left(
 			end
 			$ renderLatexAST(node.children[1], ?mayPar)
-			if type(node.children[1]) == "table" and node.children[1].label == "^"
-				)
+			if type(node.children[1]) == "table" and (node.children[1].label == "^" or node.children[1].label == "sqrt")
+				\\right)
 			end
 			^{
 				$ renderLatexAST(node.children[2])

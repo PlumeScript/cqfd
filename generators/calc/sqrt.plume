@@ -8,6 +8,7 @@ Licensed under the MIT License — see LICENSE for details.
 let Question from $import(../../core/cls/question)
 let QuestionFactory from $import(../../core/cls/questionFactory)
 let Node from $import(../../core/utils/tree)
+let Choice from $import(../../core/parameters/set)
 let Decimal from $import(../../core/parameters/range)
 let getCompute from $import(./utils)
 
@@ -141,16 +142,30 @@ sqrtEasy: macro(Number minIndex:-3, Number maxIndex:0, Number minFigures: 2, Num
 	@QuestionFactory
 		parameters: do
 			- $ Decimal(minFigures, maxFigures, minIndex, maxIndex)
+			- $ Choice(0, 1)
 		end
-		get: macro(x)
+		get: macro(x, var)
 			@Question(calcul)
-				instruction: @Node(sqrt) @Node(^)
-					- if negative
-						$Node(-, $x)
-					else
-						$x
+				instruction: if var==1
+					@Node(sqrt) @Node(^)
+						- if negative
+								$Node(-, $x)
+						else
+							$x
+						end
+						- 2
 					end
-					- 2
+				else
+					@Node(^)
+						- @Node(sqrt)
+							- if negative
+								$Node(-, $x)
+							else
+								$x
+							end
+						end
+						- 2
+					end
 				end
 				solution: $x
 				id: sqrt($x^2)
