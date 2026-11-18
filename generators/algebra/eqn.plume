@@ -69,6 +69,9 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 			for i in seq(len(opps))
 				- $Range(2, 10)
 			end
+			for i in seq(len(opps))
+				- $Range(0, 1)
+			end
 		end
 		hyperParameters: do
 			- $variableNames[style]
@@ -120,17 +123,38 @@ ref eqn: macro(opps:, style: classic, solution: integer, ?lightSolution, ?switch
 
 			let members = (l:$left, r:$right)
 			for i in seq(len(opps))
+				let order=values[len(opps)+i]
 				for k, member in items(members)
 					if opps[i] == "+"
-						set members[k] += $values[i]
+						if order == 1
+							set members[k] = $ members[k] + values[i]
+						else
+							set members[k] = $ values[i] + members[k]
+						end
 					elseif opps[i] == "+x"
-						set members[k] += $ values[i] * left
+						if order == 1
+							set members[k] = $ members[k] + values[i] * left
+						else
+							set members[k] = $ values[i] * left + members[k]
+						end
 					elseif opps[i] == "-"
-						set members[k] -= $values[i]
+						if order == 1
+							set members[k] = $ members[k] - values[i]
+						else
+							set members[k] = $ -values[i] + members[k]
+						end
 					elseif opps[i] == "-x"
-						set members[k] -= $ values[i] * left
+						if order == 1
+							set members[k] = $ members[k] - values[i] * left
+						else
+							set members[k] = $ -values[i] * left + members[k]
+						end
 					elseif opps[i] == "*"
-						set members[k] *= $values[i]
+						if order == 1
+							set members[k] = $ members[k] * values[i]
+						else
+							set members[k] = $ values[i] * members[k]
+						end
 					elseif opps[i] == "/" or opps[i] == "%"
 						set members[k] /= $values[i]
 					end
