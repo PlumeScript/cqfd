@@ -67,7 +67,7 @@ circlePool: do
 	end
 end
 
-anglePool: do
+angleKindPool: do
 	- do
 		- macro(n, A, B, C, ...letters) L'angle $f(hat($A$B$C)=0°)
 		- macro(n, A, B, C, ...letters) un angle nul
@@ -84,7 +84,17 @@ anglePool: do
 		- macro(n, A, B, C, ...letters) L'angle $f(hat($A$B$C)=$(90+n*88/10).floor()°)
 		- macro(n, A, B, C, ...letters) un angle obtus
 	end
+end
 
+anglePool: do
+	- do
+		- macro(n, A, B, C, ...letters) $f(hat($A$B$C))
+		- macro(n, A, B, C, ...letters) un angle
+	end
+	- do
+		- macro(n, A, B, C, ...letters) $f($A$B$C)
+		- macro(n, A, B, C, ...letters) un triangle
+	end
 end
 
 orthoParPool: do
