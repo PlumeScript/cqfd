@@ -97,7 +97,7 @@ PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal, ?hiddenIn)
 				approx: $approx
 				instruction: do
 					$tri.intro avec\s
-					if switch
+					if switch==0
 						$m($tri.leg1$tri.leg2=$BC$unit) et $m($tri.right$tri.leg1=$AB$unit)
 					else
 						$m($tri.right$tri.leg1=$AB$unit) et $m($tri.leg1$tri.leg2=$BC$unit)
