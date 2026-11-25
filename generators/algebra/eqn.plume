@@ -36,8 +36,7 @@ $Param(String[], opps, Table(+)) the operations applied, in order, to both sides
 	- $code(^2c)\: must be first. Square equation with a negative right side\: no real solution, the answer is $code(Pas de solutions.). Requires $code(integer) solutions.
 end
 
-$Param(String[], oppsSwitch, (+, -)) the operations whose term order is drawn\: for one of them the drawn term leads the side (e.g. $formula(5 + x), $formula(-5 + x)), for the other it trails (e.g. $formula(x + 5), $formula(x - 5)); the other operations keep a fixed form (their term leads, reduced right after $code(+x) and $code(-x)).
-end
+$Param(String[], oppsSwitch, \(+\, -\)) the operations whose term order is drawn\: for one of them the drawn term leads the side (e.g. $formula(5 + x), $formula(-5 + x)), for the other it trails (e.g. $formula(x + 5), $formula(x - 5)); the other operations keep a fixed form (their term leads, reduced right after $code(+x) and $code(-x)).
 
 The question also carries $code(solveSteps)\: the inverse operations applied to the left side only, in solving order — consumed by $ParamSet(reduceBoth).$newline
 An unknown operation, or a $code(^2) operation that is not first, raises an error.$newline
