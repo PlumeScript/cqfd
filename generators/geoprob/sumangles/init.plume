@@ -1,0 +1,55 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+let Range from $import(../../../core/parameters/range)
+let Choice from $import(../../../core/parameters/set)
+
+let letters from $import(../../geo/utils)
+
+let pages = $import(pages) // Should be in render
+let m = macro(x) $pages.formula($x, processor: ascii)
+let s from $import(../../../core/utils/expression)
+
+let solveSumAngles from $import(./utils)
+
+SumAnglesTriangle: macro(Number precision: 1)
+	@QuestionFactory
+		parameters: do
+			- $Range(20, 120)
+			- $Range(1, 80)
+			- $Range(2, 8)
+		end
+		hyperParameters: do
+			- $letters(3)
+		end
+		get: macro(a1, r, l, letters)
+			let A, B, C = $letters
+
+			set a1 = $ (a1 / precision).floor() * precision
+			let a2 = $ ((20 + (140 - a1) * r/100)/precision).floor()*precision
+			let a3 = $ 180-a1-a2
+
+			@Question(demonstration)
+				unit: °
+				instruction: Soit $m($A$B$C) un triangle avec $m(hat($B$A$C)=$a1°) et $m(hat($A$C$B)=$a2°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
+				steps: do
+					- $ solveSumAngles(A, B, C, a1, a3, a2)
+				end
+			end
+		end
+	end
+end

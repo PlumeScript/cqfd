@@ -21,7 +21,7 @@ demonstration: do
 					end
 				end
 			else
-				$ renderEqn(step, unit: question.unit, approx: question.approx)
+				$ renderEqn(step, unit: question.unit?, approx: question.approx?)
 			end
 		end
 	end
