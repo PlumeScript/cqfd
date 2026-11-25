@@ -19,10 +19,10 @@ let pages = $import(pages) // Should be in render
 let m = macro(x) $pages.formula($x, processor: ascii)
 let s from $import(../../../core/utils/expression)
 
-let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2 from $import(./utils)
+let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2, makeHiddenTriangle from $import(./utils)
 let makeApproxInstruction from $import(../utils)
 
-PythagoreaDirect1: macro(approx:, unit:, ?easy, ?medium, ?rationnal)
+PythagoreaDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 	@QuestionFactory
 		parameters: do
 			if rationnal
@@ -32,34 +32,40 @@ PythagoreaDirect1: macro(approx:, unit:, ?easy, ?medium, ?rationnal)
 			end
 		end
 		hyperParameters: do
-			- $letters(3)
+			- $letters(5)
 			- if type(unit) == "table"
 				$Choice(...unit)
 			else
 				$Choice($unit)
 			end
+			- if type(hiddenIn) == "table"
+				$Choice(...hiddenIn)
+			else
+				$Choice(triangle)
+			end
 		end
-		get: macro(pt, letters, unit)
+		get: macro(pt, letters, unit, hiddenIn)
 			let AB, AC, BC = $pt
-			let A, B, C = $letters
+			let L0, L1, L2, L3, L4 = $letters
+			let tri = $ makeHiddenTriangle(hiddenIn, L0, L1, L2, L3, L4)
 			@Question(demonstration)
 				unit: $unit
 				approx: $approx
-				instruction: Soit $m($A$B$C) un triangle rectangle en $m($A) avec $m($A$B=$AB$unit) et $m($A$C=$AC$unit). Déterminer la longueur $m($B$C) $makeApproxInstruction($BC, $approx, $unit).
+				instruction: $tri.intro avec $m($tri.right$tri.leg1=$AB$unit) et $m($tri.right$tri.leg2=$AC$unit). Déterminer la longueur $m($tri.leg1$tri.leg2) $makeApproxInstruction($BC, $approx, $unit).
 				steps: do
 					- do
 						type: sentence
-						- $m($A$B$C) est rectangle en $m($A).
+						- $tri.rightSentence
 						- D'après le théorème de Pythagore
 					end
-					- $ solveDirectPythagorea1(A, B, C, AB, AC, BC)
+					- $ solveDirectPythagorea1(tri.right, tri.leg1, tri.leg2, AB, AC, BC)
 				end
 			end
 		end
 	end
 end
 
-PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal)
+PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal, ?hiddenIn)
 	@QuestionFactory
 		parameters: do
 			if rationnal
@@ -69,38 +75,44 @@ PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal)
 			end
 		end
 		hyperParameters: do
-			- $letters(3)
+			- $letters(5)
 			- if type(unit) == "table"
 				$Choice(...unit)
 			else
 				$Choice($unit)
 			end
 			- $Choice(0, 1)
+			- if type(hiddenIn) == "table"
+				$Choice(...hiddenIn)
+			else
+				$Choice(triangle)
+			end
 		end
-		get: macro(pt, letters, unit, switch)
+		get: macro(pt, letters, unit, switch, hiddenIn)
 			let AB, AC, BC = $pt
-			let A, B, C = $letters
+			let L0, L1, L2, L3, L4 = $letters
+			let tri = $ makeHiddenTriangle(hiddenIn, L0, L1, L2, L3, L4)
 			@Question(demonstration)
 				unit: $unit
 				approx: $approx
 				instruction: do
-					Soit $m($A$B$C) un triangle rectangle en $m($A) avec\s
+					$tri.intro avec\s
 					if switch
-						$m($B$C=$BC$unit) et $m($A$B=$AB$unit)
+						$m($tri.leg1$tri.leg2=$BC$unit) et $m($tri.right$tri.leg1=$AB$unit)
 					else
-						$m($A$B=$AB$unit) et $m($B$C=$BC$unit)
+						$m($tri.right$tri.leg1=$AB$unit) et $m($tri.leg1$tri.leg2=$BC$unit)
 					end
 					.\s
-					Déterminer la longueur $m($A$C) $makeApproxInstruction($AC, $approx, $unit).
+					Déterminer la longueur $m($tri.right$tri.leg2) $makeApproxInstruction($AC, $approx, $unit).
 				end
 				
 				steps: do
 					- do
 						type: sentence
-						- $m($A$B$C) est rectangle en $m($A).
+						- $tri.rightSentence
 						- D'après le théorème de Pythagore
 					end
-					- $ solveDirectPythagorea2(A, B, C, AB, AC, BC)
+					- $ solveDirectPythagorea2(tri.right, tri.leg1, tri.leg2, AB, AC, BC)
 				end
 			end
 		end

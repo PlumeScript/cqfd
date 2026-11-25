@@ -14,6 +14,9 @@ let Range from $import(../../../core/parameters/range)
 let s from $import(../../../core/utils/expression)
 let FactNumberCls from $import(../../../core/utils/factNumber)
 
+let pages = $import(pages) // Should be in render
+let m = macro(x) $pages.formula($x, processor: ascii)
+
 rationnalPythagoreTriplets: macro(?easy, ?medium, ?hard)
 	@QuestionFactory
 		parameters: do
@@ -170,5 +173,51 @@ solveDirectPythagorea3: macro(A, B, C, AB, AC, BC)
 	- do
 		l: $A$C
 		r: $AC
+	end
+end
+
+makeHiddenTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
+	if hiddenIn == "rectangle"
+		// triangle L0L1L2 : right angle at corner L1 of rectangle L0L1L2L3
+		do
+			right: $L1
+			leg1: $L0
+			leg2: $L2
+			hyp: $L2
+			intro: Soit $m($L0$L1$L2$L3) un rectangle
+			rightSentence: $m($L0$L1$L2) est rectangle en $m($L1).
+		end
+	elseif hiddenIn == "losange"
+		// triangle L0L4L1 : the diagonals of losange L0L1L2L3 are perpendicular
+		do
+			right: $L4
+			leg1: $L0
+			leg2: $L1
+			hyp: $L1
+			intro: Soit $m($L0$L1$L2$L3) un losange et $m($L4) l'intersection de ses diagonales
+			rightSentence: $m($L0$L4$L1) est rectangle en $m($L4).
+		end
+	elseif hiddenIn == "hauteur"
+		// triangle L0L3L2 : L0L3 is the altitude of triangle L0L1L2
+		do
+			right: $L3
+			leg1: $L0
+			leg2: $L2
+			hyp: $L2
+			intro: Soit $m($L0$L1$L2) un triangle et $m($L0$L3) une hauteur
+			rightSentence: $m($L0$L3$L2) est rectangle en $m($L3).
+		end
+	elseif hiddenIn == "triangle" or not hiddenIn
+		// current behavior
+		do
+			right: $L0
+			leg1: $L1
+			leg2: $L2
+			hyp: $L2
+			intro: Soit $m($L0$L1$L2) un triangle rectangle en $m($L0)
+			rightSentence: $m($L0$L1$L2) est rectangle en $m($L0).
+		end
+	else
+		raise Unknown hiddenIn mode "$hiddenIn".
 	end
 end
