@@ -30,7 +30,7 @@ makeApproxInstruction: macro(x, approx, unit)
 				au milième
 			end
 			if unit
-				de $m(unit)
+				\sde $m($unit)
 			end
 		end
 	end
