@@ -622,6 +622,34 @@ set Expression = macro(kind:, left:, right:, print:)
 		end
 	end
 
+	value: macro()
+		macro getValue(x)
+			if type(x) == "number"
+				return $x
+			else
+				return $x.value()
+			end
+		end
+
+		if self.kind == "symbol"
+			raise Cannot get value of a litteral.
+		elseif self.kind == "number"
+			return $self.left
+		elseif self.kind == "add"
+			return $ getValue(self.left) + getValue(self.right)
+		elseif self.kind == "sub"
+			return $ getValue(self.left) - getValue(self.right)
+		elseif self.kind == "mul"
+			return $ getValue(self.left) * getValue(self.right)
+		elseif self.kind == "div"
+			return $ getValue(self.left) / getValue(self.right)
+		elseif self.kind == "pow"
+			return $ getValue(self.left) ^ getValue(self.right)
+		else
+			raise NYI $self.kind
+		end
+	end
+
 	// Remove x1, x0, +0, -0, 0^, 1^, ^0 and ^1, reorient x·3 to 3x,
 	// rewrite a negative addend into a sub: x + -5 -> x - 5, -3 + x -> x - 3
 	// (tostring stays faithful and would render "x + -5" as is), and hoist a
