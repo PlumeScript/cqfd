@@ -1,0 +1,174 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+
+let Choice from $import(../../../core/parameters/set)
+let Range from $import(../../../core/parameters/range)
+
+let s from $import(../../../core/utils/expression)
+let FactNumberCls from $import(../../../core/utils/factNumber)
+
+rationnalPythagoreTriplets: macro(?easy, ?medium, ?hard)
+	@QuestionFactory
+		parameters: do
+			- $Choice(3)
+			- $Choice(4)
+			- $Choice(5)
+			if easy
+				- $Choice(1, 2)
+			elseif medium
+				- $Choice(10, 0.1, 0.2, 20, 3, 4)
+			else
+				- $Choice(100, 0.01, 0.5, 5, 200, 0.02)
+			end
+		end
+		get: macro(a, b, c, f)
+			@Question(pythagoreTriplet)
+				- $(a*f)
+				- $(b*f)
+				- $(c*f)
+			end
+		end
+	end
+end
+
+irrationnal1PythagoreTriplets: macro(?easy, ?medium, ?hard)
+	@QuestionFactory
+		parameters: do
+			for i in seq(2)
+				if easy
+					- $Range(1, 5)
+				elseif medium
+					- $Range(6, 10)
+				else
+					- $Range(11, 20)
+				end
+			end
+		end
+		validate: macro(a, b)
+			$ not FactNumberCls.fromNumber(a^2+b^2).isRootRationnal(2)
+		end
+		get: macro(a, b)
+			@Question(pythagoreTriplet)
+				- $(a)
+				- $(b)
+				- $(s(a^2+b^2).root())
+			end
+		end
+	end
+end
+
+irrationnal2PythagoreTriplets: macro(?easy, ?medium, ?hard)
+	@QuestionFactory
+		parameters: do
+			for i in seq(2)
+				if easy
+					- $Range(1, 5)
+				elseif medium
+					- $Range(6, 10)
+				else
+					- $Range(11, 20)
+				end
+			end
+		end
+		validate: macro(a, b)
+			$ not FactNumberCls.fromNumber(a^2+b^2).isRootRationnal(2)
+		end
+		get: macro(a, b)
+			if a>b
+				set a, b = ($b, $a)
+			end
+			@Question(pythagoreTriplet)
+				- $(a)
+				- $(s(b^2-a^2).root())
+				- $(b)
+			end
+		end
+	end
+end
+
+solveDirectPythagorea1: macro(A, B, C, AB, AC, BC)
+	type: eqn
+	- do
+		l: $A$B^2+$A$C^2
+		r: $B$C^2
+	end
+	- do
+		l: $AB^2+$AC^2
+		r: $B$C^2
+	end
+	- do
+		l: $(AB^2)+$(AC^2)
+		r: $B$C^2
+	end
+	- do
+		l: $(AB^2+AC^2)
+		r: $B$C^2
+	end
+	- do
+		l: $B$C
+		r: $BC
+	end
+end
+
+solveDirectPythagorea2: macro(A, B, C, AB, AC, BC)
+	type: eqn
+	- do
+		l: $A$B^2+$A$C^2
+		r: $B$C^2
+	end
+	- do
+		l: $AB^2+$A$C^2
+		r: $BC^2
+	end
+	- do
+		l: $(AB^2)+$A$C^2
+		r: $(BC^2)
+	end
+	- do
+		l: $(AB^2)+$A$C^2-$(AB^2)
+		r: $(BC^2)-$(AB^2)
+	end
+	- do
+		l: $A$C^2
+		r: $(BC^2-AB^2)
+	end
+	- do
+		l: $A$C
+		r: $AC
+	end
+end
+
+solveDirectPythagorea3: macro(A, B, C, AB, AC, BC)
+	type: eqn
+	- do
+		l: $A$B^2+$A$C^2
+		r: $B$C^2
+	end
+	- do
+		l: $AB^2+$A$C^2
+		r: $BC^2
+	end
+	- do
+		l: $(AB^2)+$A$C^2
+		r: $(BC^2)
+	end
+	- do
+		l: $(AB^2)+$A$C^2-$(AB^2)
+		r: $(BC^2)-$(AB^2)
+	end
+	- do
+		l: $A$C^2
+		r: $(BC^2-AB^2)
+	end
+	- do
+		l: $A$C
+		r: $AC
+	end
+end

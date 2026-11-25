@@ -5,6 +5,10 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
+use pages
+
+let s from $import(../../core/utils/expression)
+
 ref renderLatexAST: macro(node, ?mayPar)
 	
 	let tnode = $ type(node) == "table" and node.type? or type(node)
@@ -188,4 +192,47 @@ ref renderLatexAST: macro(node, ?mayPar)
 		raise Unexpected type "$tnode" inside tree.
 	end
 	
+end
+
+macro makeApprox(x, digits)
+	let sx = $ s(x).value()
+	let ax = $ (sx*10^digits).floor()/10^digits
+	if ax != sx
+		\\approx
+		$ax
+	end
+end
+
+renderEqn: macro(steps, approx:, unit:)
+	let last
+	@EqnAlign(boxLast: $(not steps.finalLabel?), ?display)
+		for i, step in enumerate(steps)
+			let current =  $(String(step.l))=$(String(step.r))
+			if current != last
+				set last = $current
+				- do
+					- do
+						$ String(step.l)
+						=
+						$ String(step.r)
+						if i == len(steps) and approx
+							$ makeApprox(step.r, approx)
+						end
+						if i == len(steps) and unit
+							\\text{$unit}
+						end
+
+						if step.r2?
+							\\text{\sou\s}
+							$ String(step.l)
+							=
+							$ String(step.r2)
+						end
+						
+					end
+				end
+			end
+		end
+	end
+	@Align(?center) $steps.finalLabel?
 end

@@ -1,0 +1,108 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+
+// TODO: randomize triangle name
+
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+let Range from $import(../../../core/parameters/range)
+let Choice from $import(../../../core/parameters/set)
+
+let letters from $import(../../geo/utils)
+
+let pages = $import(pages) // Should be in render
+let m = macro(x) $pages.formula($x, processor: ascii)
+let s from $import(../../../core/utils/expression)
+
+let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2 from $import(./utils)
+let makeApproxInstruction from $import(../utils)
+
+PythagoreaDirect1: macro(approx:, unit:, ?easy, ?medium, ?rationnal)
+	@QuestionFactory
+		parameters: do
+			if rationnal
+				- $ rationnalPythagoreTriplets(easy: easy, medium: medium)
+			else
+				- $ irrationnal1PythagoreTriplets(easy: easy, medium: medium)
+			end
+		end
+		hyperParameters: do
+			- $letters(3)
+			- if type(unit) == "table"
+				$Choice(...unit)
+			else
+				$Choice($unit)
+			end
+		end
+		get: macro(pt, letters, unit)
+			let AB, AC, BC = $pt
+			let A, B, C = $letters
+			@Question(demonstration)
+				unit: $unit
+				approx: $approx
+				instruction: Soit $m($A$B$C) un triangle rectangle en $m($A) avec $m($A$B=$AB$unit) et $m($A$C=$AC$unit). Déterminer la longueur $m($B$C) $makeApproxInstruction($BC, $approx, $unit).
+				steps: do
+					- do
+						type: sentence
+						- $m($A$B$C) est rectangle en $m($A).
+						- D'après le théorème de Pythagore
+					end
+					- $ solveDirectPythagorea1(A, B, C, AB, AC, BC)
+				end
+			end
+		end
+	end
+end
+
+PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal)
+	@QuestionFactory
+		parameters: do
+			if rationnal
+				- $ rationnalPythagoreTriplets(easy: easy, medium: medium)
+			else
+				- $ irrationnal2PythagoreTriplets(easy: easy, medium: medium)
+			end
+		end
+		hyperParameters: do
+			- $letters(3)
+			- if type(unit) == "table"
+				$Choice(...unit)
+			else
+				$Choice($unit)
+			end
+			- $Choice(0, 1)
+		end
+		get: macro(pt, letters, unit, switch)
+			let AB, AC, BC = $pt
+			let A, B, C = $letters
+			@Question(demonstration)
+				unit: $unit
+				approx: $approx
+				instruction: do
+					Soit $m($A$B$C) un triangle rectangle en $m($A) avec\s
+					if switch
+						$m($B$C=$BC$unit) et $m($A$B=$AB$unit)
+					else
+						$m($A$B=$AB$unit) et $m($B$C=$BC$unit)
+					end
+					.\s
+					Déterminer la longueur $m($A$C) $makeApproxInstruction($AC, $approx, $unit).
+				end
+				
+				steps: do
+					- do
+						type: sentence
+						- $m($A$B$C) est rectangle en $m($A).
+						- D'après le théorème de Pythagore
+					end
+					- $ solveDirectPythagorea2(A, B, C, AB, AC, BC)
+				end
+			end
+		end
+	end
+end

@@ -55,4 +55,5 @@ let ardoise = $import(ardoise) // TODO: Replace by contextual variables (#47)
 	...import(./comp)
 	...import(./problem)
 	...import(./algebra)
+	...import(./demonstration)
 end

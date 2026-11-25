@@ -398,6 +398,8 @@ sumAngleIsoscelesTriangleEqn: macro(?lightSolution)
 	end
 end
 
+// Must be replaced with geoprob exploitation
+
 /*
 Generate a Pythagorean equation to solve — the unknown side is drawn among the two legs and the hypotenuse (e.g. $formula(x^2 + 16 = 25)).$newline
 $Param(String, solution, easy) the scale of the $code(3-4-5) triple.

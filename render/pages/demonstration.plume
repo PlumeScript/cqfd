@@ -1,0 +1,28 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+use pages
+let renderEqn from $import(./utils)
+
+demonstration: do
+	instruction:macro(question)
+		$ question.instruction
+	end
+	solution: macro(question)
+		for step in question.steps
+			if step.type == "sentence"
+				@plume.Table.join(sep: $newline)
+					for s in step
+						- $s
+					end
+				end
+			else
+				$ renderEqn(step, unit: question.unit, approx: question.approx)
+			end
+		end
+	end
+end
