@@ -28,7 +28,7 @@ $Param(String, hiddenIn, triangle) the shape that hides the right triangle\: $co
 $code(\0?easy) and $code(\0?medium) lower the range of the values.
 $code(\0?rationnal) to draw a Pythagorean triplet (a multiple of 3-4-5) instead of two integers.
 */
-PythagoreaDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
+PythagoreaDirect1: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium, ?rationnal)
 	@QuestionFactory
 		parameters: do
 			if rationnal
@@ -83,7 +83,7 @@ $Param(String, hiddenIn, triangle) the shape that hides the right triangle\: $co
 $code(\0?easy) and $code(\0?medium) lower the range of the values.
 $code(\0?rationnal) to draw a Pythagorean triplet (a multiple of 3-4-5) instead of two integers.
 */
-PythagoreaDirect2: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
+PythagoreaDirect2: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium, ?rationnal)
 	@QuestionFactory
 		parameters: do
 			if rationnal
@@ -148,7 +148,7 @@ $Param(String, unit, cm) the unit of the lengths (a list draws one).
 $Param(String, hiddenIn, triangle) the shape that hides the right isosceles triangle\: $code(triangle) or $code(square) (a list draws one).
 $code(\0?easy) and $code(\0?medium) lower the range of the values.
 */
-PythagoreaIsoscelesDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium)
+PythagoreaIsoscelesDirect1: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium)
 	@QuestionFactory
 		parameters: do
 			- $ irrationnalPythagoreIsoscelesTriplets(easy: easy, medium: medium)
@@ -202,7 +202,7 @@ $Param(String, unit, cm) the unit of the lengths (a list draws one).
 $Param(String, hiddenIn, triangle) the shape that hides the right isosceles triangle\: $code(triangle) or $code(square) (a list draws one).
 $code(\0?easy) and $code(\0?medium) lower the range of the values.
 */
-PythagoreaIsoscelesDirect2: macro(approx:, unit:, hiddenIn:, ?easy, ?medium)
+PythagoreaIsoscelesDirect2: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium)
 	@QuestionFactory
 		parameters: do
 			- $ irrationnal2PythagoreIsoscelesTriplets(easy: easy, medium: medium)
