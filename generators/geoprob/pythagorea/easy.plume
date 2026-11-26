@@ -1,0 +1,48 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+
+let PythagoreaDirect1 from $import(./standard)
+
+let pages = $import(pages) // Should be in render
+let m = macro(x) $pages.formula($x, processor: ascii)
+
+PythagoreaDirectFormula: macro(sourceGenerator)
+	@QuestionFactory
+		parameters: do
+			- $sourceGenerator
+		end
+		get: macro(source)
+			@Question(demonstration)
+				instruction: $source.triangle.intro. On cherche à déterminer la longueur $m($source.target) ; écrire l'égalité de Pythagore dans cette situation.
+				steps: do
+					- do
+					 	type: eqn
+						- $source.steps[2][1]
+					end
+				end
+			end
+		end
+	end
+end
+
+// More or less a copy of eqnPythagorea
+
+PythagoreaDirect1Solving: macro(sourceGenerator)
+	@QuestionFactory
+		parameters: do
+			- $sourceGenerator
+		end
+		get: macro(source)
+			@Question(eqn)
+				steps: $source.steps[2]
+			end
+		end
+	end
+end
