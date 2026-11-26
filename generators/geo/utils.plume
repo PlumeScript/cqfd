@@ -37,3 +37,12 @@ letters: macro(n)
 		end
 	end
 end
+
+newLetter: macro(seed, ...letters)
+	for i in seq(1, len(_letters))
+		let letter = $ Table.at(_letters, i+seed)
+		if not Table.find(letters, letter)
+			return $letter
+		end
+	end
+end

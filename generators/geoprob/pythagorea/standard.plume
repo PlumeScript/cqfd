@@ -13,7 +13,7 @@ let QuestionFactory from $import(../../../core/cls/questionFactory)
 let Choice from $import(../../../core/parameters/set)
 let Range from $import(../../../core/parameters/range)
 
-let letters from $import(../../geo/utils)
+let letters, newLetter from $import(../../geo/utils)
 
 let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2, makeHiddenTriangle, solveIsoscelesDirectPythagorea1, solveIsoscelesDirectPythagorea2, makeHiddenIsoscelesTriangle, irrationnalPythagoreIsoscelesTriplets, irrationnal2PythagoreIsoscelesTriplets from $import(./utils)
 let shuffleList from $import(../utils)
@@ -80,6 +80,7 @@ PythagoreaDirect1: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium, ?rationnal
 					type: length
 					value: $BC
 				end
+				letters: $letters
 				steps: do
 					- do
 						type: sentence
@@ -155,6 +156,7 @@ PythagoreaDirect2: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium, ?rationnal
 					type: length
 					value: $AC
 				end
+				letters: $letters
 				steps: do
 					- do
 						type: sentence
@@ -221,6 +223,7 @@ PythagoreaIsoscelesDirect1: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium)
 					type: length
 					value: $BC
 				end
+				letters: $letters
 				steps: do
 					- do
 						type: sentence
@@ -287,6 +290,7 @@ PythagoreaIsoscelesDirect2: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium)
 					type: length
 					value: $AB
 				end
+				letters: $letters
 				steps: do
 					- do
 						type: sentence

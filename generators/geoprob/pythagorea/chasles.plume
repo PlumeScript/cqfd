@@ -1,0 +1,124 @@
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+
+let newLetter from $import(../../geo/utils)
+let Range from $import(../../../core/parameters/range)
+
+let shuffleList from $import(../utils)
+
+let s from $import(../../../core/utils/expression)
+
+let pages = $import(pages) // Should be in render
+let m = macro(x) $pages.formula($x, processor: ascii)
+
+//  TODO: better handle of approx
+
+PythagoreaChaslesFirst: macro(sourceGenerator)
+	@QuestionFactory
+		parameters: do
+			- $sourceGenerator
+			- $Range(1, 3)
+		end
+		hyperParameters: do
+			- $Range(20, 80)
+			- $Range(1, 25)
+			- $Range(1, 100)
+		end
+		get: macro(source, removedLengthPos, pos, letterSeed, shuffleSeed)
+			let I = $ newLetter(letterSeed, source.letters)
+
+			let A, B, AI, IB
+
+			let hys0 = do
+				let removedLength
+				for i, h in enumerate(source.hypotheses)
+					if h.type == "length" and removedLengthPos==i
+						set removedLength = $h
+					else
+						- $h
+					end
+				end
+
+				set A = $ removedLength.name.sub(1)
+				set B = $ removedLength.name.sub(2)
+
+				let value = $ s(removedLength.value).value()
+				set AI = $ ((value * pos)/100).floor()
+				set IB = $ removedLength.value - AI
+
+				- do
+					name: $A$I
+					value: $AI
+					type: length
+				end
+				- do
+					name: $I$B
+					value: $IB
+					type: length
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
+
+			@Question(demonstration)
+				unit: $source.unit
+				approx: $source.approx
+				premise: $source.premise, $m($I in [$A$B])
+				hypotheses: $hys
+				target: $source.target
+				letters: (...source.letters, $I)
+				steps: do
+					...source.steps
+				end
+			end
+		end
+	end
+end
+
+PythagoreaChaslesLast: macro(sourceGenerator)
+	@QuestionFactory
+		parameters: do
+			- $sourceGenerator
+		end
+		hyperParameters: do
+			- $Range(20, 80)
+			- $Range(1, 25)
+			- $Range(1, 100)
+		end
+		get: macro(source, pos, letterSeed, shuffleSeed)
+			let I = $ newLetter(letterSeed, source.letters)
+
+			let A = $ source.target.name.sub(1)
+			let B = $ source.target.name.sub(2)
+
+			let value = $ s(source.target.value).value()
+			let AI = $ ((value * pos)/100).floor()
+			let IB = $ source.target.value - AI
+
+			let hys0 = do
+				...source.hypotheses
+				- do
+					name: $A$I
+					value: $AI
+					type: length
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
+
+			@Question(demonstration)
+				unit: $source.unit
+				approx: $source.approx
+				premise: $source.premise, $m($I in [$A$B])
+				hypotheses: $hys
+				target: do
+					name: $I$B
+					type: length
+					value: $IB
+				end
+				letters: (...source.letters, $I)
+				steps: do
+					...source.steps
+				end
+			end
+		end
+	end
+end

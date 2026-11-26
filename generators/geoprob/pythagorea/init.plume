@@ -7,3 +7,4 @@ Licensed under the MIT License — see LICENSE for details.
 
 ...import(./easy)
 ...import(./standard)
+...import(./chasles)
