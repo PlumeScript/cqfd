@@ -20,7 +20,10 @@ PythagoreaDirectFormula: macro(sourceGenerator)
 		end
 		get: macro(source)
 			@Question(demonstration)
-				instruction: $source.triangle.intro. On cherche à déterminer la longueur $m($source.target) ; écrire l'égalité de Pythagore dans cette situation.
+				premise: $source.premise
+				hypotheses: $Table()
+				target: $source.target
+				note: On cherche à déterminer la longueur $m($source.target.name) ; écrire l'égalité de Pythagore dans cette situation.
 				steps: do
 					- do
 					 	type: eqn

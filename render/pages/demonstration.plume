@@ -5,17 +5,123 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-use pages
+// A demonstration question carries structured data instead of a ready-made
+// `instruction` string:
+//   - premise    the opening sentence ("Soit ABC un triangle rectangle en A")
+//   - hypotheses the given values, a list of (name:, value:, type:) tables,
+//                already shuffled by the generator
+//   - target     the sought value, a (name:, type:, value:) table (value is
+//                the exact answer, used for the rounding note)
+//   - note       optional free text that replaces the default "Déterminer…"
+//                sentence (used by the formula-writing variant)
+//   - unit/approx/steps as before
+// The renderer rebuilds the instruction from these fields.
+
+let pages = $import(pages)
 let renderEqn from $import(./utils)
+let s from $import(../../core/utils/expression)
+
+let m = macro(x) $pages.formula($x, processor: ascii)
+
+// The unit suffix of a type: the length unit for a length, the degree sign
+// for an angle.
+macro typeSuffix(type, unit)
+	if type == "angle"
+		°
+	else
+		$unit
+	end
+end
+
+// The formula content of one hypothesis: name = value suffix
+macro hypContent(h, unit)
+	$h.name=$(String(h.value))$(typeSuffix(h.type, unit))
+end
+
+// Join the (already shuffled) hypotheses, separated by " et " (a comma
+// before the last one for more than two).
+macro joinHyps(hys, unit)
+	let n = $ len(hys)
+	if n == 1
+		$(m(hypContent(hys[1], unit)))
+	elseif n == 2
+		$(m(hypContent(hys[1], unit)))\set\s$(m(hypContent(hys[2], unit)))
+	else
+		for i in seq(n)
+			$(m(hypContent(hys[i], unit)))
+			if i < n-1
+				if i == n-2
+					\set\s
+				else
+					,\s
+				end
+			end
+		end
+	end
+end
+
+// The verb phrase introduced before the sought value.
+macro targetPhrase(type)
+	if type == "angle"
+		la mesure de l'angle
+	else
+		la longueur
+	end
+end
+
+// The "tronquée au …" note, moved here from the geoprob generator: it is
+// shown only when the exact answer is not already exact at the requested
+// precision.
+macro approxInstruction(value, approx, unit)
+	if approx
+		let sx = $ s(value).value()
+		let ax = $ (sx*10^approx).floor()/10^approx
+		if sx != ax
+			tronquée\s
+			if approx == 0
+				if unit
+					au $(m(unit))
+				else
+					à l'unité
+				end
+			else
+				if approx == 1
+					au dixième
+				elseif approx == 2
+					au centième
+				elseif approx == 3
+					au milième
+				end
+				if unit
+					\sde $(m(unit))
+				end
+			end
+		end
+	end
+end
 
 demonstration: do
-	instruction:macro(question)
-		$ question.instruction
+	instruction: macro(question)
+		$question.premise
+		if len(question.hypotheses) > 0
+			\savec $(joinHyps(question.hypotheses, question.unit?))
+		end
+		.\s
+		if question.note?
+			$question.note
+		else
+			Déterminer $(targetPhrase(question.target.type)) $(m(question.target.name))
+			if question.target.type == "angle"
+				.
+			else
+				\s$(approxInstruction(question.target.value, question.approx?, question.unit?)).
+			end
+		end
 	end
 	solution: macro(question)
 		for step in question.steps
 			if step.type == "sentence"
-				@plume.Table.join(sep: $newline)
+				@plume.Table.join(sep: $pages.newline)
 					for s in step
 						- $s
 					end

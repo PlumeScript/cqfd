@@ -11,14 +11,12 @@ Licensed under the MIT License — see LICENSE for details.
 let Question from $import(../../../core/cls/question)
 let QuestionFactory from $import(../../../core/cls/questionFactory)
 let Choice from $import(../../../core/parameters/set)
+let Range from $import(../../../core/parameters/range)
 
 let letters from $import(../../geo/utils)
 
-let pages = $import(pages) // Should be in render
-let m = macro(x) $pages.formula($x, processor: ascii)
-
 let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2, makeHiddenTriangle, solveIsoscelesDirectPythagorea1, solveIsoscelesDirectPythagorea2, makeHiddenIsoscelesTriangle, irrationnalPythagoreIsoscelesTriplets, irrationnal2PythagoreIsoscelesTriplets from $import(./utils)
-let makeApproxInstruction from $import(../utils)
+let shuffleList from $import(../utils)
 
 /*
 Generate a Pythagorean theorem proof\: the right triangle hidden in $code(hiddenIn) has its two legs given and the hypotenuse is asked.$newline
@@ -53,17 +51,35 @@ PythagoreaDirect1: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium, ?rationnal
 					$Choice(triangle)
 				end
 			end
+			- $Range(1, 100)
 		end
-		get: macro(pt, letters, unit, hiddenIn)
+		get: macro(pt, letters, unit, hiddenIn, shuffleSeed)
 			let AB, AC, BC = $pt
 			let L0, L1, L2, L3, L4 = $letters
 			let tri = $ makeHiddenTriangle(hiddenIn, L0, L1, L2, L3, L4)
+			let hys0 = do
+				- do
+					name: $tri.right$tri.leg1
+					value: $AB
+					type: length
+				end
+				- do
+					name: $tri.right$tri.leg2
+					value: $AC
+					type: length
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
 			@Question(demonstration)
 				unit: $unit
 				approx: $approx
-				triangle: $tri
-				target: $tri.leg1$tri.leg2
-				instruction: $tri.intro avec $m($tri.right$tri.leg1=$AB$unit) et $m($tri.right$tri.leg2=$AC$unit). Déterminer la longueur $m($tri.leg1$tri.leg2) $makeApproxInstruction($BC, $approx, $unit).
+				premise: $tri.intro
+				hypotheses: $hys
+				target: do
+					name: $tri.leg1$tri.leg2
+					type: length
+					value: $BC
+				end
 				steps: do
 					- do
 						type: sentence
@@ -101,7 +117,6 @@ PythagoreaDirect2: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium, ?rationnal
 			else
 				$Choice($unit)
 			end
-			- $Choice(0, 1)
 			- if type(hiddenIn) == "table"
 				$Choice(...hiddenIn)
 			else
@@ -111,27 +126,35 @@ PythagoreaDirect2: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium, ?rationnal
 					$Choice(triangle)
 				end
 			end
+			- $Range(1, 100)
 		end
-		get: macro(pt, letters, unit, switch, hiddenIn)
+		get: macro(pt, letters, unit, hiddenIn, shuffleSeed)
 			let AB, AC, BC = $pt
 			let L0, L1, L2, L3, L4 = $letters
 			let tri = $ makeHiddenTriangle(hiddenIn, L0, L1, L2, L3, L4)
+			let hys0 = do
+				- do
+					name: $tri.leg1$tri.leg2
+					value: $BC
+					type: length
+				end
+				- do
+					name: $tri.right$tri.leg1
+					value: $AB
+					type: length
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
 			@Question(demonstration)
 				unit: $unit
 				approx: $approx
-				triangle: $tri
-				target: $tri.right$tri.leg2
-				instruction: do
-					$tri.intro avec\s
-					if switch==0
-						$m($tri.leg1$tri.leg2=$BC$unit) et $m($tri.right$tri.leg1=$AB$unit)
-					else
-						$m($tri.right$tri.leg1=$AB$unit) et $m($tri.leg1$tri.leg2=$BC$unit)
-					end
-					.\s
-					Déterminer la longueur $m($tri.right$tri.leg2) $makeApproxInstruction($AC, $approx, $unit).
+				premise: $tri.intro
+				hypotheses: $hys
+				target: do
+					name: $tri.right$tri.leg2
+					type: length
+					value: $AC
 				end
-
 				steps: do
 					- do
 						type: sentence
@@ -173,18 +196,30 @@ PythagoreaIsoscelesDirect1: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium)
 					$Choice(triangle)
 				end
 			end
+			- $Range(1, 100)
 		end
-		get: macro(pt, letters, unit, hiddenIn)
+		get: macro(pt, letters, unit, hiddenIn, shuffleSeed)
 			let L0, L1, L2, L3, L4 = $letters
 			let tri = $ makeHiddenIsoscelesTriangle(hiddenIn, L0, L1, L2, L3, L4)
 			let AB, AC, BC = $pt
 			let BC2 = $ (BC^2).value()
+			let hys0 = do
+				- do
+					name: $tri.right$tri.leg1
+					value: $AB
+					type: length
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
 			@Question(demonstration)
 				unit: $unit
 				approx: $approx
-				instruction: do
-					$tri.intro, avec $m($tri.right$tri.leg1=$AB$unit).\s
-					Déterminer la longueur $m($tri.leg1$tri.leg2) $makeApproxInstruction($BC, $approx, $unit).
+				premise: $tri.intro,
+				hypotheses: $hys
+				target: do
+					name: $tri.leg1$tri.leg2
+					type: length
+					value: $BC
 				end
 				steps: do
 					- do
@@ -227,18 +262,30 @@ PythagoreaIsoscelesDirect2: macro(approx:, unit:\s, hiddenIn:, ?easy, ?medium)
 					$Choice(triangle)
 				end
 			end
+			- $Range(1, 100)
 		end
-		get: macro(pt, letters, unit, hiddenIn)
+		get: macro(pt, letters, unit, hiddenIn, shuffleSeed)
 			let L0, L1, L2, L3, L4 = $letters
 			let tri = $ makeHiddenIsoscelesTriangle(hiddenIn, L0, L1, L2, L3, L4)
 			let AB, AC, BC = $pt
 			let AB2 = $ (AC^2).value()
+			let hys0 = do
+				- do
+					name: $tri.leg1$tri.leg2
+					value: $BC
+					type: length
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
 			@Question(demonstration)
 				unit: $unit
 				approx: $approx
-				instruction: do
-					$tri.intro, avec $m($tri.leg1$tri.leg2=$BC$unit).\s
-					Déterminer la longueur $m($tri.right$tri.leg1) $makeApproxInstruction($AB, $approx, $unit).
+				premise: $tri.intro,
+				hypotheses: $hys
+				target: do
+					name: $tri.right$tri.leg1
+					type: length
+					value: $AB
 				end
 				steps: do
 					- do

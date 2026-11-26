@@ -5,36 +5,20 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-let pages = $import(pages) // Should be in render
-let m = macro(x) $pages.formula($x, processor: ascii)
-let s from $import(../../core/utils/expression)
+let PermFromRank from $import(../../core/utils/walkers)
 
-makeApproxInstruction: macro(x, approx, unit)
-	
-
-	if approx
-		let sx = $ s(x).value()
-		let ax = $ (sx*10^approx).floor()/10^approx
-		if sx != ax
-			tronquée\s
-			if approx == 0
-				if unit
-					au $m($unit)
-				else
-					à l'unité
-				end
-			else
-				if approx == 1
-					au dixième
-				elseif approx == 2
-					au centième
-				elseif approx == 3
-					au milième
-				end
-				if unit
-					\sde $m($unit)
-				end
-			end
-		end
+// Deterministic shuffle of a list, seeded: the seed selects one of the
+// n! permutations (rank -> permutation), so the same seed always yields the
+// same order. A list of less than two elements is returned as is.
+ref shuffleList: macro(lst, seed)
+	let n = $ len(lst)
+	if n < 2
+		return $lst
 	end
+	let perm = $ PermFromRank(n, seed)
+	let out = $Table()
+	for i in seq(1, n)
+		run $ Table.append(out, lst[perm[i]+1])
+	end
+	return $out
 end

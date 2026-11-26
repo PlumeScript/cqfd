@@ -16,6 +16,7 @@ let pages = $import(pages) // Should be in render
 let m = macro(x) $pages.formula($x, processor: ascii)
 
 let solveSumAngles, solveSumAnglesIsoscelesSummit, solveSumAnglesIsoscelesBase, solveSumAnglesEquilateral, hat from $import(./utils)
+let shuffleList from $import(../utils)
 
 /*
 Generate a sum of the angles of a triangle proof\: two angles are given and the third is asked.$newline
@@ -32,8 +33,9 @@ SumAnglesTriangle: macro(Number precision: 1, ?right)
 		end
 		hyperParameters: do
 			- $letters(3)
+			- $Range(1, 100)
 		end
-		get: macro(a1, r, l, rightPos, letters)
+		get: macro(a1, r, l, rightPos, letters, shuffleSeed)
 			let A, B, C = $letters
 
 			let x = $empty
@@ -56,18 +58,54 @@ SumAnglesTriangle: macro(Number precision: 1, ?right)
 				set a3 = $ 180-a1-a2
 			end
 
-			@Question(demonstration)
-				unit: °
-				instruction: do
-					if right
-						if rightPos == 1
-							Soit $m($A$B$C) un triangle rectangle en $m($A) avec $m(hat($A$C$B)=$x°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
-						else
-							Soit $m($A$B$C) un triangle rectangle en $m($C) avec $m(hat($B$A$C)=$x°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
+			let hys0 = do
+				if right
+					if rightPos == 1
+						- do
+							name: hat($A$C$B)
+							value: $x
+							type: angle
 						end
 					else
-						Soit $m($A$B$C) un triangle avec $m(hat($B$A$C)=$a1°) et $m(hat($A$C$B)=$a2°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
+						- do
+							name: hat($B$A$C)
+							value: $x
+							type: angle
+						end
 					end
+				else
+					- do
+						name: hat($B$A$C)
+						value: $a1
+						type: angle
+					end
+					- do
+						name: hat($A$C$B)
+						value: $a2
+						type: angle
+					end
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
+
+			@Question(demonstration)
+				unit: °
+				premise: do
+					if right
+						if rightPos == 1
+							Soit $m($A$B$C) un triangle rectangle en $m($A)
+						else
+							Soit $m($A$B$C) un triangle rectangle en $m($C)
+						end
+					else
+						Soit $m($A$B$C) un triangle
+					end
+				end
+				hypotheses: $hys
+				target: do
+					name: hat($A$B$C)
+					type: angle
+					value: $a3
 				end
 				steps: do
 					if right
@@ -103,15 +141,31 @@ SumAnglesTriangleIsoscelesSummit: macro(Number precision: 1)
 		end
 		hyperParameters: do
 			- $letters(3)
+			- $Range(1, 100)
 		end
-		get: macro(b, l, letters)
+		get: macro(b, l, letters, shuffleSeed)
 			let A, B, C = $letters
 			set b = $ (b / precision).floor() * precision
 			let a1 = $ 180-2*b
 
+			let hys0 = do
+				- do
+					name: hat($A$B$C)
+					value: $b
+					type: angle
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
+
 			@Question(demonstration)
 				unit: °
-				instruction: Soit $m($A$B$C) un triangle isocèle en $m($A) avec $m(hat($A$B$C)=$b°). Déterminer la mesure de l'angle $m(hat($B$A$C)).
+				premise: Soit $m($A$B$C) un triangle isocèle en $m($A)
+				hypotheses: $hys
+				target: do
+					name: hat($B$A$C)
+					type: angle
+					value: $a1
+				end
 				steps: do
 					- $ solveSumAnglesIsoscelesSummit(A, B, C, a1, b)
 				end
@@ -134,8 +188,9 @@ SumAnglesTriangleIsoscelesBase: macro(Number precision: 1, ?right)
 		end
 		hyperParameters: do
 			- $letters(3)
+			- $Range(1, 100)
 		end
-		get: macro(b, l, which, letters)
+		get: macro(b, l, which, letters, shuffleSeed)
 			let A, B, C = $letters
 			if right
 				set b = 45
@@ -144,24 +199,35 @@ SumAnglesTriangleIsoscelesBase: macro(Number precision: 1, ?right)
 			end
 			let a1 = $ 180-2*b
 
+			let hys0 = do
+				if not right
+					- do
+						name: hat($B$A$C)
+						value: $a1
+						type: angle
+					end
+				end
+			end
+			let hys = $ shuffleList(hys0, shuffleSeed)
+
 			@Question(demonstration)
 				unit: °
-				instruction: do
+				premise: do
 					if right
-						Soit $m($A$B$C) un triangle rectangle isocèle en $m($A). Déterminer la mesure de l'angle\s
+						Soit $m($A$B$C) un triangle rectangle isocèle en $m($A)
+					else
+						Soit $m($A$B$C) un triangle isocèle en $m($A)
+					end
+				end
+				hypotheses: $hys
+				target: do
 					if which == 1
-						$m(hat($A$B$C)).
+						name: hat($A$B$C)
 					else
-						$m(hat($A$C$B)).
+						name: hat($A$C$B)
 					end
-					else
-						Soit $m($A$B$C) un triangle isocèle en $m($A) avec $m(hat($B$A$C)=$a1°). Déterminer la mesure de l'angle\s
-					if which == 1
-						$m(hat($A$B$C)).
-					else
-						$m(hat($A$C$B)).
-					end
-					end
+					type: angle
+					value: $b
 				end
 				steps: do
 					if right
@@ -187,8 +253,9 @@ SumAnglesTriangleEquilateral: macro()
 		end
 		hyperParameters: do
 			- $letters(3)
+			- $Range(1, 100)
 		end
-		get: macro(p, letters)
+		get: macro(p, letters, shuffleSeed)
 			let A, B, C = $letters
 			let g1 = $empty
 			let g2 = $empty
@@ -225,7 +292,13 @@ SumAnglesTriangleEquilateral: macro()
 
 			@Question(demonstration)
 				unit: °
-				instruction: Soit $m($A$B$C) un triangle équilatéral. Déterminer la mesure de l'angle $m(hat($m1$m2$m3)).
+				premise: Soit $m($A$B$C) un triangle équilatéral
+				hypotheses: $Table()
+				target: do
+					name: hat($m1$m2$m3)
+					type: angle
+					value: 60
+				end
 				steps: do
 					- $ solveSumAnglesEquilateral(given, missing, third)
 				end
