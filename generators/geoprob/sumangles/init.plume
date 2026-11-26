@@ -14,10 +14,14 @@ let letters from $import(../../geo/utils)
 
 let pages = $import(pages) // Should be in render
 let m = macro(x) $pages.formula($x, processor: ascii)
-let s from $import(../../../core/utils/expression)
 
 let solveSumAngles, solveSumAnglesIsoscelesSummit, solveSumAnglesIsoscelesBase, solveSumAnglesEquilateral, hat from $import(./utils)
 
+/*
+Generate a sum of the angles of a triangle proof\: two angles are given and the third is asked.$newline
+$Param(Number, precision, 1) the angles are multiples of it (in degrees).
+$code(\0?right) to generate a right triangle (one angle is 90°).
+*/
 SumAnglesTriangle: macro(Number precision: 1, ?right)
 	@QuestionFactory
 		parameters: do
@@ -83,7 +87,11 @@ SumAnglesTriangle: macro(Number precision: 1, ?right)
 	end
 end
 
-// Triangle isocèle en A : l'angle cherché est l'angle au sommet (A)
+/*
+Generate a sum of the angles proof on an isosceles triangle\: the equal base angles are given and the summit angle is asked.$newline
+$Param(Number, precision, 1) the angles are multiples of it (in degrees).
+The equilateral case (the 60° base angles) is rejected.
+*/
 SumAnglesTriangleIsoscelesSummit: macro(Number precision: 1)
 	@QuestionFactory
 		parameters: do
@@ -112,7 +120,11 @@ SumAnglesTriangleIsoscelesSummit: macro(Number precision: 1)
 	end
 end
 
-// Triangle isocèle en A : l'angle cherché est un angle de la base
+/*
+Generate a sum of the angles proof on an isosceles triangle\: the summit angle is given and one of the two equal base angles is asked.$newline
+$Param(Number, precision, 1) the angles are multiples of it (in degrees).
+$code(\0?right) to generate a right isosceles triangle (summit angle 90°, base angles 45°).
+*/
 SumAnglesTriangleIsoscelesBase: macro(Number precision: 1, ?right)
 	@QuestionFactory
 		parameters: do
@@ -165,7 +177,9 @@ SumAnglesTriangleIsoscelesBase: macro(Number precision: 1, ?right)
 	end
 end
 
-// Triangle équilatéral : tous les angles valent 60°
+/*
+Generate a sum of the angles proof on an equilateral triangle\: one angle is given and one of the two others is asked (all the angles are 60°).
+*/
 SumAnglesTriangleEquilateral: macro()
 	@QuestionFactory
 		parameters: do
@@ -188,21 +202,18 @@ SumAnglesTriangleEquilateral: macro()
 			let g = $empty
 			let mm = $empty
 			if p == 1
-				// given angle at A, missing angle at B
 				set g = $Table($B, $A, $C)
 				set mm = $Table($A, $B, $C)
 				set given = $hat($B, $A, $C)
 				set missing = $hat($A, $B, $C)
 				set third = $hat($A, $C, $B)
 			elseif p == 2
-				// given angle at B, missing angle at A
 				set g = $Table($A, $B, $C)
 				set mm = $Table($B, $A, $C)
 				set given = $hat($A, $B, $C)
 				set missing = $hat($B, $A, $C)
 				set third = $hat($A, $C, $B)
 			else
-				// given angle at C, missing angle at B
 				set g = $Table($A, $C, $B)
 				set mm = $Table($A, $B, $C)
 				set given = $hat($A, $C, $B)

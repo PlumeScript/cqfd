@@ -34,7 +34,6 @@ solveSumAngles: macro(A, B, C, BAC, ABC, ACB)
 	end
 end
 
-// Triangle isosceles en A (apex A) : les angles de base (B et C) sont égaux
 solveSumAnglesIsoscelesSummit: macro(A, B, C, BAC, ABC)
 	type: eqn
 	- do
@@ -96,7 +95,6 @@ solveSumAnglesIsoscelesBase: macro(A, B, C, BAC, ABC, which)
 	end
 end
 
-// Triangle équilatéral : tous les angles valent 60°
 solveSumAnglesEquilateral: macro(given, missing, third)
 	type: eqn
 	- do

@@ -7,6 +7,18 @@ Licensed under the MIT License — see LICENSE for details.
 
 // TODO: transform "approx" into "floor/ceil/round"
 
+commondoc: raw[
+Geometry proof exercises: the question describes a figure in text and asks for a missing length (Pythagorean theorem) or angle (sum of the angles of a triangle); the solution is the step by step proof.$newline
+Common parameters:
+@InfosList
+	- $code(approx) is the number of digits the answer is rounded to (no rounding when empty).
+	- $code(unit) is the unit of the lengths: a value, or a list of values to draw one.
+	- $code(hiddenIn) is the shape that hides the right triangle\: $code(triangle), $code(rectangle), $code(losange), $code(hauteur) — and $code(square) for the isosceles generators. A list draws one of its values.
+	- $code(precision) is the step (in degrees) the angle measures are multiples of.
+	- $code(\0?easy) and $code(\0?medium) lower the range of the values (default is the widest range).
+end
+]end
+
 for folder in os.Path(".").walk()
 	if folder.isDirectory()
 		...folder.import()

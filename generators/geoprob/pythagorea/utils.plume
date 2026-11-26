@@ -189,34 +189,6 @@ solveDirectPythagorea2: macro(A, B, C, AB, AC, BC)
 	end
 end
 
-solveDirectPythagorea3: macro(A, B, C, AB, AC, BC)
-	type: eqn
-	- do
-		l: $A$B^2+$A$C^2
-		r: $B$C^2
-	end
-	- do
-		l: $AB^2+$A$C^2
-		r: $BC^2
-	end
-	- do
-		l: $(AB^2)+$A$C^2
-		r: $(BC^2)
-	end
-	- do
-		l: $(AB^2)+$A$C^2-$(AB^2)
-		r: $(BC^2)-$(AB^2)
-	end
-	- do
-		l: $A$C^2
-		r: $(BC^2-AB^2)
-	end
-	- do
-		l: $A$C
-		r: $AC
-	end
-end
-
 solveIsoscelesDirectPythagorea1: macro(A, B, C, AB, BC, BC2)
 	type: eqn
 	- do
@@ -268,8 +240,6 @@ end
 // A right isosceles triangle: the two legs are equal (right angle at `right`)
 makeHiddenIsoscelesTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
 	if hiddenIn == "square"
-		// triangle L0L1L2 : the corner L1 of square L0L1L2L3 is a right angle
-		// and L1L0 = L1L2 (square sides), so the triangle is right isosceles at L1
 		do
 			right: $L1
 			leg1: $L0
@@ -290,7 +260,6 @@ makeHiddenIsoscelesTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
 			isoSentence: $m($L0$L4$L2) est isocèle en $m($L4).
 		end
 	elseif hiddenIn == "triangle" or not hiddenIn
-		// plain right isosceles triangle
 		do
 			right: $L0
 			leg1: $L1
@@ -307,7 +276,6 @@ end
 
 makeHiddenTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
 	if hiddenIn == "rectangle"
-		// triangle L0L1L2 : right angle at corner L1 of rectangle L0L1L2L3
 		do
 			right: $L1
 			leg1: $L0
@@ -317,7 +285,6 @@ makeHiddenTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
 			rightSentence: $m($L0$L1$L2) est rectangle en $m($L1).
 		end
 	elseif hiddenIn == "losange"
-		// triangle L0L4L1 : the diagonals of losange L0L1L2L3 are perpendicular
 		do
 			right: $L4
 			leg1: $L0
@@ -327,7 +294,6 @@ makeHiddenTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
 			rightSentence: $m($L0$L4$L1) est rectangle en $m($L4).
 		end
 	elseif hiddenIn == "hauteur"
-		// triangle L0L3L2 : L0L3 is the altitude of triangle L0L1L2
 		do
 			right: $L3
 			leg1: $L0
@@ -337,7 +303,6 @@ makeHiddenTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
 			rightSentence: $m($L0$L3$L2) est rectangle en $m($L3).
 		end
 	elseif hiddenIn == "triangle" or not hiddenIn
-		// current behavior
 		do
 			right: $L0
 			leg1: $L1

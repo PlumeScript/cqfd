@@ -10,18 +10,24 @@ Licensed under the MIT License — see LICENSE for details.
 
 let Question from $import(../../../core/cls/question)
 let QuestionFactory from $import(../../../core/cls/questionFactory)
-let Range from $import(../../../core/parameters/range)
 let Choice from $import(../../../core/parameters/set)
 
 let letters from $import(../../geo/utils)
 
 let pages = $import(pages) // Should be in render
 let m = macro(x) $pages.formula($x, processor: ascii)
-let s from $import(../../../core/utils/expression)
 
 let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2, makeHiddenTriangle, solveIsoscelesDirectPythagorea1, solveIsoscelesDirectPythagorea2, makeHiddenIsoscelesTriangle, irrationnalPythagoreIsoscelesTriplets, irrationnal2PythagoreIsoscelesTriplets from $import(./utils)
 let makeApproxInstruction from $import(../utils)
 
+/*
+Generate a Pythagorean theorem proof\: the right triangle hidden in $code(hiddenIn) has its two legs given and the hypotenuse is asked.$newline
+$Param(Number, approx, empty) the number of digits the answer is rounded to (no rounding when empty).
+$Param(String, unit, cm) the unit of the lengths (a list draws one).
+$Param(String, hiddenIn, triangle) the shape that hides the right triangle\: $code(triangle), $code(rectangle), $code(losange), $code(hauteur) (a list draws one).
+$code(\0?easy) and $code(\0?medium) lower the range of the values.
+$code(\0?rationnal) to draw a Pythagorean triplet (a multiple of 3-4-5) instead of two integers.
+*/
 PythagoreaDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 	@QuestionFactory
 		parameters: do
@@ -69,6 +75,14 @@ PythagoreaDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 	end
 end
 
+/*
+Generate a Pythagorean theorem proof\: the right triangle hidden in $code(hiddenIn) has a leg and the hypotenuse given, the other leg is asked.$newline
+$Param(Number, approx, empty) the number of digits the answer is rounded to (no rounding when empty).
+$Param(String, unit, cm) the unit of the lengths (a list draws one).
+$Param(String, hiddenIn, triangle) the shape that hides the right triangle\: $code(triangle), $code(rectangle), $code(losange), $code(hauteur) (a list draws one).
+$code(\0?easy) and $code(\0?medium) lower the range of the values.
+$code(\0?rationnal) to draw a Pythagorean triplet (a multiple of 3-4-5) instead of two integers.
+*/
 PythagoreaDirect2: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 	@QuestionFactory
 		parameters: do
@@ -127,7 +141,13 @@ PythagoreaDirect2: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 	end
 end
 
-// Pythagorea in a right ISOSCELES triangle: the two legs are equal
+/*
+Generate a Pythagorean theorem proof on a right isosceles triangle hidden in $code(hiddenIn)\: a leg is given and the hypotenuse (an irrational length) is asked.$newline
+$Param(Number, approx, empty) the number of digits the answer is rounded to (no rounding when empty).
+$Param(String, unit, cm) the unit of the lengths (a list draws one).
+$Param(String, hiddenIn, triangle) the shape that hides the right isosceles triangle\: $code(triangle) or $code(square) (a list draws one).
+$code(\0?easy) and $code(\0?medium) lower the range of the values.
+*/
 PythagoreaIsoscelesDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium)
 	@QuestionFactory
 		parameters: do
@@ -175,6 +195,13 @@ PythagoreaIsoscelesDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium)
 	end
 end
 
+/*
+Generate a Pythagorean theorem proof on a right isosceles triangle hidden in $code(hiddenIn)\: the hypotenuse (an irrational length) is given and a leg is asked.$newline
+$Param(Number, approx, empty) the number of digits the answer is rounded to (no rounding when empty).
+$Param(String, unit, cm) the unit of the lengths (a list draws one).
+$Param(String, hiddenIn, triangle) the shape that hides the right isosceles triangle\: $code(triangle) or $code(square) (a list draws one).
+$code(\0?easy) and $code(\0?medium) lower the range of the values.
+*/
 PythagoreaIsoscelesDirect2: macro(approx:, unit:, hiddenIn:, ?easy, ?medium)
 	@QuestionFactory
 		parameters: do
