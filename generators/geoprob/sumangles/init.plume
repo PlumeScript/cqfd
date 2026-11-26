@@ -5,14 +5,6 @@ Copyright © Erwan Barbedor
 Licensed under the MIT License — see LICENSE for details.
 */
 
-/*
-This file is part of CQFD - A Plume🪶 exercice generator
-
-Copyright © Erwan Barbedor
-Licensed under the MIT License — see LICENSE for details.
-*/
-
-
 let Question from $import(../../../core/cls/question)
 let QuestionFactory from $import(../../../core/cls/questionFactory)
 let Range from $import(../../../core/parameters/range)
@@ -24,30 +16,207 @@ let pages = $import(pages) // Should be in render
 let m = macro(x) $pages.formula($x, processor: ascii)
 let s from $import(../../../core/utils/expression)
 
-let solveSumAngles from $import(./utils)
+let solveSumAngles, solveSumAnglesIsoscelesSummit, solveSumAnglesIsoscelesBase, solveSumAnglesEquilateral, hat from $import(./utils)
 
-SumAnglesTriangle: macro(Number precision: 1)
+SumAnglesTriangle: macro(Number precision: 1, ?right)
 	@QuestionFactory
 		parameters: do
 			- $Range(20, 120)
 			- $Range(1, 80)
 			- $Range(2, 8)
+			- $Choice(1, 2)
 		end
 		hyperParameters: do
 			- $letters(3)
 		end
-		get: macro(a1, r, l, letters)
+		get: macro(a1, r, l, rightPos, letters)
 			let A, B, C = $letters
 
-			set a1 = $ (a1 / precision).floor() * precision
-			let a2 = $ ((20 + (140 - a1) * r/100)/precision).floor()*precision
-			let a3 = $ 180-a1-a2
+			let x = $empty
+			let a2 = $empty
+			let a3 = $empty
+			if right
+				set x = $ (20 + 60*r/100)
+				set x = $ (x / precision).floor() * precision
+				if rightPos == 1
+					set a1 = 90
+					set a2 = $ x
+				else
+					set a1 = $ x
+					set a2 = 90
+				end
+				set a3 = $ 90-x
+			else
+				set a1 = $ (a1 / precision).floor() * precision
+				set a2 = $ ((20 + (140 - a1) * r/100)/precision).floor()*precision
+				set a3 = $ 180-a1-a2
+			end
 
 			@Question(demonstration)
 				unit: °
-				instruction: Soit $m($A$B$C) un triangle avec $m(hat($B$A$C)=$a1°) et $m(hat($A$C$B)=$a2°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
+				instruction: do
+					if right
+						if rightPos == 1
+							Soit $m($A$B$C) un triangle rectangle en $m($A) avec $m(hat($A$C$B)=$x°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
+						else
+							Soit $m($A$B$C) un triangle rectangle en $m($C) avec $m(hat($B$A$C)=$x°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
+						end
+					else
+						Soit $m($A$B$C) un triangle avec $m(hat($B$A$C)=$a1°) et $m(hat($A$C$B)=$a2°). Déterminer la mesure de l'angle $m(hat($A$B$C)).
+					end
+				end
 				steps: do
+					if right
+						- do
+							type: sentence
+							if rightPos == 1
+								- $m($A$B$C) est rectangle en $m($A).
+							else
+								- $m($A$B$C) est rectangle en $m($C).
+							end
+						end
+					end
 					- $ solveSumAngles(A, B, C, a1, a3, a2)
+				end
+			end
+		end
+	end
+end
+
+// Triangle isocèle en A : l'angle cherché est l'angle au sommet (A)
+SumAnglesTriangleIsoscelesSummit: macro(Number precision: 1)
+	@QuestionFactory
+		parameters: do
+			- $Range(20, 80)
+			- $Range(2, 8)
+		end
+		validate: macro(b, l)
+			return $ b != 60
+		end
+		hyperParameters: do
+			- $letters(3)
+		end
+		get: macro(b, l, letters)
+			let A, B, C = $letters
+			set b = $ (b / precision).floor() * precision
+			let a1 = $ 180-2*b
+
+			@Question(demonstration)
+				unit: °
+				instruction: Soit $m($A$B$C) un triangle isocèle en $m($A) avec $m(hat($A$B$C)=$b°). Déterminer la mesure de l'angle $m(hat($B$A$C)).
+				steps: do
+					- $ solveSumAnglesIsoscelesSummit(A, B, C, a1, b)
+				end
+			end
+		end
+	end
+end
+
+// Triangle isocèle en A : l'angle cherché est un angle de la base
+SumAnglesTriangleIsoscelesBase: macro(Number precision: 1, ?right)
+	@QuestionFactory
+		parameters: do
+			- $Range(20, 80)
+			- $Range(2, 8)
+			- $Choice(1, 2)
+		end
+		hyperParameters: do
+			- $letters(3)
+		end
+		get: macro(b, l, which, letters)
+			let A, B, C = $letters
+			if right
+				set b = 45
+			else
+				set b = $ (b / precision).floor() * precision
+			end
+			let a1 = $ 180-2*b
+
+			@Question(demonstration)
+				unit: °
+				instruction: do
+					if right
+						Soit $m($A$B$C) un triangle rectangle isocèle en $m($A). Déterminer la mesure de l'angle\s
+					if which == 1
+						$m(hat($A$B$C)).
+					else
+						$m(hat($A$C$B)).
+					end
+					else
+						Soit $m($A$B$C) un triangle isocèle en $m($A) avec $m(hat($B$A$C)=$a1°). Déterminer la mesure de l'angle\s
+					if which == 1
+						$m(hat($A$B$C)).
+					else
+						$m(hat($A$C$B)).
+					end
+					end
+				end
+				steps: do
+					if right
+						- do
+							type: sentence
+							- $m($A$B$C) est un triangle rectangle isocèle en $m($A).
+						end
+					end
+					- $ solveSumAnglesIsoscelesBase(A, B, C, a1, b, which)
+				end
+			end
+		end
+	end
+end
+
+// Triangle équilatéral : tous les angles valent 60°
+SumAnglesTriangleEquilateral: macro()
+	@QuestionFactory
+		parameters: do
+			- $Choice(1, 2, 3)
+		end
+		hyperParameters: do
+			- $letters(3)
+		end
+		get: macro(p, letters)
+			let A, B, C = $letters
+			let g1 = $empty
+			let g2 = $empty
+			let g3 = $empty
+			let m1 = $empty
+			let m2 = $empty
+			let m3 = $empty
+			let given = $empty
+			let missing = $empty
+			let third = $empty
+			let g = $empty
+			let mm = $empty
+			if p == 1
+				// given angle at A, missing angle at B
+				set g = $Table($B, $A, $C)
+				set mm = $Table($A, $B, $C)
+				set given = $hat($B, $A, $C)
+				set missing = $hat($A, $B, $C)
+				set third = $hat($A, $C, $B)
+			elseif p == 2
+				// given angle at B, missing angle at A
+				set g = $Table($A, $B, $C)
+				set mm = $Table($B, $A, $C)
+				set given = $hat($A, $B, $C)
+				set missing = $hat($B, $A, $C)
+				set third = $hat($A, $C, $B)
+			else
+				// given angle at C, missing angle at B
+				set g = $Table($A, $C, $B)
+				set mm = $Table($A, $B, $C)
+				set given = $hat($A, $C, $B)
+				set missing = $hat($A, $B, $C)
+				set third = $hat($B, $A, $C)
+			end
+			set g1, g2, g3 = $g
+			set m1, m2, m3 = $mm
+
+			@Question(demonstration)
+				unit: °
+				instruction: Soit $m($A$B$C) un triangle équilatéral. Déterminer la mesure de l'angle $m(hat($m1$m2$m3)).
+				steps: do
+					- $ solveSumAnglesEquilateral(given, missing, third)
 				end
 			end
 		end

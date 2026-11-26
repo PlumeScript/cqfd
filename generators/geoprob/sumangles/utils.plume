@@ -6,6 +6,10 @@ Licensed under the MIT License — see LICENSE for details.
 */
 
 
+ref hat: macro(A, B, C)
+	\\widehat{$A$B$C}
+end
+
 solveSumAngles: macro(A, B, C, BAC, ABC, ACB)
 	type: eqn
 	- do
@@ -27,5 +31,88 @@ solveSumAngles: macro(A, B, C, BAC, ABC, ACB)
 	- do
 		l: \\widehat{$A$B$C}
 		r: $ABC
+	end
+end
+
+// Triangle isosceles en A (apex A) : les angles de base (B et C) sont égaux
+solveSumAnglesIsoscelesSummit: macro(A, B, C, BAC, ABC)
+	type: eqn
+	- do
+		l: \\widehat{$B$A$C} + \\widehat{$A$B$C} + \\widehat{$A$C$B}
+		r: 180
+	end
+	- do
+		l: \\widehat{$B$A$C} + $ABC + $ABC
+		r: 180
+	end
+	- do
+		l: \\widehat{$B$A$C} + $(2*ABC)
+		r: 180
+	end
+	- do
+		l: \\widehat{$B$A$C} + $(2*ABC) - $(2*ABC)
+		r: 180 - $(2*ABC)
+	end
+	- do
+		l: \\widehat{$B$A$C}
+		r: $BAC
+	end
+end
+
+solveSumAnglesIsoscelesBase: macro(A, B, C, BAC, ABC, which)
+	type: eqn
+	let missing = $empty
+	let third = $empty
+	if which == 2
+		set missing = $hat($A, $C, $B)
+		set third = $hat($A, $B, $C)
+	else
+		set missing = $hat($A, $B, $C)
+		set third = $hat($A, $C, $B)
+	end
+	- do
+		l: \\widehat{$B$A$C} + $missing + $third
+		r: 180
+	end
+	- do
+		l: $BAC + $missing + $missing
+		r: 180
+	end
+	- do
+		l: $BAC + 2$missing
+		r: 180
+	end
+	- do
+		l: 2$missing
+		r: $(180-BAC)
+	end
+	- do
+		l: \\frac {2$missing} {2}
+		r: \\frac {$(180-BAC)} {2}
+	end
+	- do
+		l: $missing
+		r: $ABC
+	end
+end
+
+// Triangle équilatéral : tous les angles valent 60°
+solveSumAnglesEquilateral: macro(given, missing, third)
+	type: eqn
+	- do
+		l: $given + $missing + $third
+		r: 180
+	end
+	- do
+		l: 3$missing
+		r: 180
+	end
+	- do
+		l: \\frac {3$missing} {3}
+		r: \\frac {180} {3}
+	end
+	- do
+		l: $missing
+		r: 60
 	end
 end

@@ -96,6 +96,47 @@ irrationnal2PythagoreTriplets: macro(?easy, ?medium, ?hard)
 	end
 end
 
+irrationnalPythagoreIsoscelesTriplets: macro(?easy, ?medium, ?hard)
+	@QuestionFactory
+		parameters: do
+			if easy
+				- $Range(1, 5)
+			elseif medium
+				- $Range(6, 10)
+			else
+				- $Range(11, 20)
+			end
+		end
+		get: macro(a)
+			@Question(pythagoreTriplet)
+				- $(a)
+				- $(a)
+				- $(s(2*a^2).root())
+			end
+		end
+	end
+end
+irrationnal2PythagoreIsoscelesTriplets: macro(?easy, ?medium, ?hard)
+	@QuestionFactory
+		parameters: do
+			if easy
+				- $Range(1, 5)
+			elseif medium
+				- $Range(6, 10)
+			else
+				- $Range(11, 20)
+			end
+		end
+		get: macro(a)
+			@Question(pythagoreTriplet)
+				- $(s(a^2/2).root())
+				- $(s(a^2/2).root())
+				- $(a)
+			end
+		end
+	end
+end
+
 solveDirectPythagorea1: macro(A, B, C, AB, AC, BC)
 	type: eqn
 	- do
@@ -173,6 +214,94 @@ solveDirectPythagorea3: macro(A, B, C, AB, AC, BC)
 	- do
 		l: $A$C
 		r: $AC
+	end
+end
+
+solveIsoscelesDirectPythagorea1: macro(A, B, C, AB, BC, BC2)
+	type: eqn
+	- do
+		l: $A$B^2+$A$C^2
+		r: $B$C^2
+	end
+	- do
+		l: $AB^2+$AB^2
+		r: $B$C^2
+	end
+	- do
+		l: $(AB^2+AB^2)
+		r: $B$C^2
+	end
+	- do
+		l: $B$C
+		r: $BC
+	end
+end
+
+solveIsoscelesDirectPythagorea2: macro(A, B, C, AB, BC, AB2)
+	type: eqn
+	- do
+		l: $A$B^2+$A$C^2
+		r: $B$C^2
+	end
+	- do
+		l: $A$B^2+$A$B^2
+		r: $B$C^2
+	end
+	- do
+		l: 2$A$B^2
+		r: $B$C^2
+	end
+	- do
+		l: 2$A$B^2
+		r: $(BC^2)
+	end
+	- do
+		l: $A$B^2
+		r: $(BC^2/2)
+	end
+	- do
+		l: $A$B
+		r: $AB
+	end
+end
+
+// A right isosceles triangle: the two legs are equal (right angle at `right`)
+makeHiddenIsoscelesTriangle: macro(hiddenIn, L0, L1, L2, L3, L4)
+	if hiddenIn == "square"
+		// triangle L0L1L2 : the corner L1 of square L0L1L2L3 is a right angle
+		// and L1L0 = L1L2 (square sides), so the triangle is right isosceles at L1
+		do
+			right: $L1
+			leg1: $L0
+			leg2: $L2
+			hyp: $L2
+			intro: Soit $m($L0$L1$L2$L3) un carré
+			rightSentence: $m($L0$L1$L2) est rectangle en $m($L1).
+			isoSentence: $m($L0$L1$L2) est isocèle en $m($L1).
+		end
+	elseif hiddenIn == "squareDiag"
+		do
+			right: $L4
+			leg1: $L0
+			leg2: $L1
+			hyp: $L1
+			intro: Soit $m($L0$L1$L2$L3) un carré et $m($L4) l'intersection de ses diagonales
+			rightSentence: $m($L0$L4$L2) est rectangle en $m($L4).
+			isoSentence: $m($L0$L4$L2) est isocèle en $m($L4).
+		end
+	elseif hiddenIn == "triangle" or not hiddenIn
+		// plain right isosceles triangle
+		do
+			right: $L0
+			leg1: $L1
+			leg2: $L2
+			hyp: $L2
+			intro: Soit $m($L0$L1$L2) un triangle isocèle rectangle en $m($L0)
+			rightSentence: $m($L0$L1$L2) est rectangle en $m($L0).
+			isoSentence: $m($L0$L1$L2) est isocèle en $m($L0).
+		end
+	else
+		raise Unknown hiddenIn mode "$hiddenIn".
 	end
 end
 

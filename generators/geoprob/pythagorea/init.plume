@@ -19,7 +19,7 @@ let pages = $import(pages) // Should be in render
 let m = macro(x) $pages.formula($x, processor: ascii)
 let s from $import(../../../core/utils/expression)
 
-let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2, makeHiddenTriangle from $import(./utils)
+let rationnalPythagoreTriplets, irrationnal1PythagoreTriplets, irrationnal2PythagoreTriplets, solveDirectPythagorea1, solveDirectPythagorea2, makeHiddenTriangle, solveIsoscelesDirectPythagorea1, solveIsoscelesDirectPythagorea2, makeHiddenIsoscelesTriangle, irrationnalPythagoreIsoscelesTriplets, irrationnal2PythagoreIsoscelesTriplets from $import(./utils)
 let makeApproxInstruction from $import(../utils)
 
 PythagoreaDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
@@ -41,7 +41,11 @@ PythagoreaDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 			- if type(hiddenIn) == "table"
 				$Choice(...hiddenIn)
 			else
-				$Choice(triangle)
+				if hiddenIn
+					$Choice($hiddenIn)
+				else
+					$Choice(triangle)
+				end
 			end
 		end
 		get: macro(pt, letters, unit, hiddenIn)
@@ -65,7 +69,7 @@ PythagoreaDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 	end
 end
 
-PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal, ?hiddenIn)
+PythagoreaDirect2: macro(approx:, unit:, hiddenIn:, ?easy, ?medium, ?rationnal)
 	@QuestionFactory
 		parameters: do
 			if rationnal
@@ -85,7 +89,11 @@ PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal, ?hiddenIn)
 			- if type(hiddenIn) == "table"
 				$Choice(...hiddenIn)
 			else
-				$Choice(triangle)
+				if hiddenIn
+					$Choice($hiddenIn)
+				else
+					$Choice(triangle)
+				end
 			end
 		end
 		get: macro(pt, letters, unit, switch, hiddenIn)
@@ -105,7 +113,7 @@ PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal, ?hiddenIn)
 					.\s
 					Déterminer la longueur $m($tri.right$tri.leg2) $makeApproxInstruction($AC, $approx, $unit).
 				end
-				
+
 				steps: do
 					- do
 						type: sentence
@@ -113,6 +121,101 @@ PythagoreaDirect2: macro(approx:, unit:, ?easy, ?medium, ?rationnal, ?hiddenIn)
 						- D'après le théorème de Pythagore
 					end
 					- $ solveDirectPythagorea2(tri.right, tri.leg1, tri.leg2, AB, AC, BC)
+				end
+			end
+		end
+	end
+end
+
+// Pythagorea in a right ISOSCELES triangle: the two legs are equal
+PythagoreaIsoscelesDirect1: macro(approx:, unit:, hiddenIn:, ?easy, ?medium)
+	@QuestionFactory
+		parameters: do
+			- $ irrationnalPythagoreIsoscelesTriplets(easy: easy, medium: medium)
+		end
+		hyperParameters: do
+			- $letters(5)
+			- if type(unit) == "table"
+				$Choice(...unit)
+			else
+				$Choice($unit)
+			end
+			- if type(hiddenIn) == "table"
+				$Choice(...hiddenIn)
+			else
+				if hiddenIn
+					$Choice($hiddenIn)
+				else
+					$Choice(triangle)
+				end
+			end
+		end
+		get: macro(pt, letters, unit, hiddenIn)
+			let L0, L1, L2, L3, L4 = $letters
+			let tri = $ makeHiddenIsoscelesTriangle(hiddenIn, L0, L1, L2, L3, L4)
+			let AB, AC, BC = $pt
+			let BC2 = $ (BC^2).value()
+			@Question(demonstration)
+				unit: $unit
+				approx: $approx
+				instruction: do
+					$tri.intro, avec $m($tri.right$tri.leg1=$AB$unit).\s
+					Déterminer la longueur $m($tri.leg1$tri.leg2) $makeApproxInstruction($BC, $approx, $unit).
+				end
+				steps: do
+					- do
+						type: sentence
+						- $tri.rightSentence
+						- D'après le théorème de Pythagore
+					end
+					- $ solveIsoscelesDirectPythagorea1(tri.right, tri.leg1, tri.leg2, AB, BC, BC2)
+				end
+			end
+		end
+	end
+end
+
+PythagoreaIsoscelesDirect2: macro(approx:, unit:, hiddenIn:, ?easy, ?medium)
+	@QuestionFactory
+		parameters: do
+			- $ irrationnal2PythagoreIsoscelesTriplets(easy: easy, medium: medium)
+		end
+		hyperParameters: do
+			- $letters(5)
+			- if type(unit) == "table"
+				$Choice(...unit)
+			else
+				$Choice($unit)
+			end
+			- if type(hiddenIn) == "table"
+				$Choice(...hiddenIn)
+			else
+				if hiddenIn
+					$Choice($hiddenIn)
+				else
+					$Choice(triangle)
+				end
+			end
+		end
+		get: macro(pt, letters, unit, hiddenIn)
+			let L0, L1, L2, L3, L4 = $letters
+			let tri = $ makeHiddenIsoscelesTriangle(hiddenIn, L0, L1, L2, L3, L4)
+			let AB, AC, BC = $pt
+			let AB2 = $ (AC^2).value()
+			@Question(demonstration)
+				unit: $unit
+				approx: $approx
+				instruction: do
+					$tri.intro, avec $m($tri.leg1$tri.leg2=$BC$unit).\s
+					Déterminer la longueur $m($tri.right$tri.leg1) $makeApproxInstruction($AB, $approx, $unit).
+				end
+				steps: do
+					- do
+						type: sentence
+						- $tri.rightSentence
+						- D'après le théorème de Pythagore
+					end
+					- $ solveIsoscelesDirectPythagorea2(tri.right, tri.leg1, tri.leg2, AB, BC, AB2)
 				end
 			end
 		end
