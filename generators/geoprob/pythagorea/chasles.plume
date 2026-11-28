@@ -31,10 +31,14 @@ PythagoreaChaslesFirst: macro(sourceGenerator)
 
 			let hys0 = do
 				let removedLength
+				set removedLengthPos = $ removedLengthPos % len(source.hypotheses)
 				for i, h in enumerate(source.hypotheses)
-					if h.type == "length" and removedLengthPos==i
+					if h.type == "length" and removedLengthPos==0
 						set removedLength = $h
 					else
+						if  h.type == "length"
+							set removedLengthPos -= 1
+						end
 						- $h
 					end
 				end
