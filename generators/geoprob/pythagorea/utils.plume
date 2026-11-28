@@ -81,7 +81,7 @@ irrationnal2PythagoreTriplets: macro(?easy, ?medium, ?hard)
 			end
 		end
 		validate: macro(a, b)
-			$ not FactNumberCls.fromNumber(a^2+b^2).isRootRationnal(2)
+			$ not FactNumberCls.fromNumber(b^2-a^2).isRootRationnal(2) and a<b
 		end
 		get: macro(a, b)
 			if a>b
