@@ -18,18 +18,42 @@ let m = macro(x) $pages.formula($x, processor: ascii)
 let solveSumAngles, solveSumAnglesIsoscelesSummit, solveSumAnglesIsoscelesBase, solveSumAnglesEquilateral, hat from $import(./utils)
 let shuffleList from $import(../utils)
 
+...import(./enigm)
+
 /*
 Generate a sum of the angles of a triangle proof\: two angles are given and the third is asked.$newline
 $Param(Number, precision, 1) the angles are multiples of it (in degrees).
-$code(\0?right) to generate a right triangle (one angle is 90°).
+$code(\0?right) to generate a right triangle (the sought angle is 90°, the right angle is not stated).
+$code(\0?isosceles) to generate a non right isosceles triangle (the sought angle is the summit angle).
+$code(\0?right) and $code(\0?isosceles) together generate the right isosceles triangle (45°, 45°, 90°, the sought angle is 90°).
+$code(\0?quelconque) to generate a plain triangle (not right, not isosceles).
 */
-SumAnglesTriangle: macro(Number precision: 1, ?right)
+SumAnglesTriangle: macro(Number precision: 1, ?right, ?isosceles, ?quelconque)
 	@QuestionFactory
 		parameters: do
 			- $Range(20, 120)
 			- $Range(1, 80)
 			- $Range(2, 8)
 			- $Choice(1, 2)
+		end
+		validate: macro(a1, r, l, rightPos)
+			if quelconque and (right or isosceles)
+				raise quelconque is exclusive with right and isosceles.
+			end
+			if right
+				return $ true
+			end
+			if isosceles
+				let b = $ (a1 / precision).floor() * precision
+				return $ b <= 80 and b != 45 and b != 60
+			end
+			if quelconque
+				let a1f = $ (a1 / precision).floor() * precision
+				let a2f = $ ((20 + (140 - a1f) * r/100)/precision).floor()*precision
+				let a3f = $ 180-a1f-a2f
+				return $ a1f != 90 and a2f != 90 and a3f != 90 and a1f != a2f and a1f != a3f and a2f != a3f
+			end
+			return $ true
 		end
 		hyperParameters: do
 			- $letters(3)
@@ -41,17 +65,25 @@ SumAnglesTriangle: macro(Number precision: 1, ?right)
 			let x = $empty
 			let a2 = $empty
 			let a3 = $empty
-			if right
+			if right and isosceles
+				set a1 = 45
+				set a2 = 45
+				set a3 = 90
+			elseif right
 				set x = $ (20 + 60*r/100)
 				set x = $ (x / precision).floor() * precision
 				if rightPos == 1
-					set a1 = 90
-					set a2 = $ x
-				else
 					set a1 = $ x
-					set a2 = 90
+					set a2 = $ 90-x
+				else
+					set a1 = $ 90-x
+					set a2 = $ x
 				end
-				set a3 = $ 90-x
+				set a3 = 90
+			elseif isosceles
+				set a1 = $ (a1 / precision).floor() * precision
+				set a2 = $ a1
+				set a3 = $ 180-2*a1
 			else
 				set a1 = $ (a1 / precision).floor() * precision
 				set a2 = $ ((20 + (140 - a1) * r/100)/precision).floor()*precision
@@ -59,31 +91,15 @@ SumAnglesTriangle: macro(Number precision: 1, ?right)
 			end
 
 			let hys0 = do
-				if right
-					if rightPos == 1
-						- do
-							name: hat($A$C$B)
-							value: $x
-							type: angle
-						end
-					else
-						- do
-							name: hat($B$A$C)
-							value: $x
-							type: angle
-						end
-					end
-				else
-					- do
-						name: hat($B$A$C)
-						value: $a1
-						type: angle
-					end
-					- do
-						name: hat($A$C$B)
-						value: $a2
-						type: angle
-					end
+				- do
+					name: hat($B$A$C)
+					value: $a1
+					type: angle
+				end
+				- do
+					name: hat($A$C$B)
+					value: $a2
+					type: angle
 				end
 			end
 			let hys = $ shuffleList(hys0, shuffleSeed)
@@ -91,12 +107,8 @@ SumAnglesTriangle: macro(Number precision: 1, ?right)
 			@Question(demonstration)
 				unit: °
 				premise: do
-					if right
-						if rightPos == 1
-							Soit $m($A$B$C) un triangle rectangle en $m($A)
-						else
-							Soit $m($A$B$C) un triangle rectangle en $m($C)
-						end
+					if isosceles
+						Soit $m($A$B$C) un triangle isocèle en $m($B)
 					else
 						Soit $m($A$B$C) un triangle
 					end
@@ -107,17 +119,8 @@ SumAnglesTriangle: macro(Number precision: 1, ?right)
 					type: angle
 					value: $a3
 				end
+				letters: $letters
 				steps: do
-					if right
-						- do
-							type: sentence
-							if rightPos == 1
-								- $m($A$B$C) est rectangle en $m($A).
-							else
-								- $m($A$B$C) est rectangle en $m($C).
-							end
-						end
-					end
 					- $ solveSumAngles(A, B, C, a1, a3, a2)
 				end
 			end
@@ -166,6 +169,7 @@ SumAnglesTriangleIsoscelesSummit: macro(Number precision: 1)
 					type: angle
 					value: $a1
 				end
+				letters: $letters
 				steps: do
 					- $ solveSumAnglesIsoscelesSummit(A, B, C, a1, b)
 				end
@@ -229,6 +233,7 @@ SumAnglesTriangleIsoscelesBase: macro(Number precision: 1, ?right)
 					type: angle
 					value: $b
 				end
+				letters: $letters
 				steps: do
 					if right
 						- do
@@ -299,6 +304,7 @@ SumAnglesTriangleEquilateral: macro()
 					type: angle
 					value: 60
 				end
+				letters: $letters
 				steps: do
 					- $ solveSumAnglesEquilateral(given, missing, third)
 				end

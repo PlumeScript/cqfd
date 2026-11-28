@@ -1,0 +1,142 @@
+/*
+This file is part of CQFD - A Plume🪶 exercice generator
+
+Copyright © Erwan Barbedor
+Licensed under the MIT License — see LICENSE for details.
+*/
+
+let Question from $import(../../../core/cls/question)
+let QuestionFactory from $import(../../../core/cls/questionFactory)
+
+/*
+Turn a $code(SumAnglesTriangle) question into a yes/no one\: the same exercise, but the question asks whether the triangle is right-angled — the answer is given by the computed missing angle.$newline
+The source should be a plain triangle generator: $code(SumAnglesTriangle(?right)) yields the yes answer, $code(SumAnglesTriangle(?quelconque)) the no answer.
+A statement that already says the answer — a right angle in the premise or in the hypotheses, or two equal given angles (a visible isosceles triangle) — is rejected.
+*/
+SumAnglesTriangleRectangleEnigm: macro(sourceGenerator)
+	@QuestionFactory
+		parameters: do
+			- $sourceGenerator
+		end
+		validate: macro(source)
+			// a right angle in the statement, or two equal given angles
+			// (visible isosceles), makes the question trivial: the answer
+			// must come from the computed angle
+			if String.contains(source.premise, "rectangle")
+				return $false
+			end
+			let values = $Table()
+			for h in source.hypotheses
+				run $ Table.append(values, h.value)
+			end
+			for i in seq(len(values))
+				if values[i] == 90
+					return $false
+				end
+				for j in seq(i+1, len(values))
+					if values[i] == values[j]
+						return $false
+					end
+				end
+			end
+			return $ true
+		end
+		get: macro(source)
+			let A, B, C = $source.letters
+			let conclusion = $empty
+			if source.target.value == 90
+				set conclusion = Le triangle $A$B$C est rectangle.
+			else
+				set conclusion = Le triangle $A$B$C n'est pas rectangle.
+			end
+			@Question(demonstration)
+				unit: $source.unit
+				premise: $source.premise
+				hypotheses: $source.hypotheses
+				target: $source.target
+				letters: $source.letters
+				note: Le triangle $A$B$C est-il rectangle\s?
+				steps: do
+					...source.steps
+					- do
+						type: sentence
+						- $conclusion
+					end
+				end
+			end
+		end
+	end
+end
+
+/*
+Turn a $code(SumAnglesTriangle) question into a yes/no one\: the same exercise, but the question asks whether the triangle is isosceles — the answer is given by the computed missing angle.$newline
+The source should be a plain triangle generator: the yes answer comes from a third angle equal to one of the two given ones; $code(SumAnglesTriangle(?quelconque)) yields the no answer.
+A statement that already says the answer — an isosceles (or equilateral) triangle in the premise, or two equal given angles — is rejected.
+*/
+SumAnglesTriangleIsoscelesEnigm: macro(sourceGenerator)
+	@QuestionFactory
+		parameters: do
+			- $sourceGenerator
+		end
+		validate: macro(source)
+			// a visible isosceles triangle (stated in the premise, or by
+			// two equal given angles) makes the question trivial: the answer
+			// must come from the computed angle
+			if String.contains(source.premise, "isocèle")
+				return $false
+			end
+			if String.contains(source.premise, "équilatéral")
+				return $false
+			end
+			let values = $Table()
+			for h in source.hypotheses
+				run $ Table.append(values, h.value)
+			end
+			for i in seq(len(values))
+				for j in seq(i+1, len(values))
+					if values[i] == values[j]
+						return $false
+					end
+				end
+			end
+			return $ true
+		end
+		get: macro(source)
+			let A, B, C = $source.letters
+			let values = $Table()
+			for h in source.hypotheses
+				run $ Table.append(values, h.value)
+			end
+			run $ Table.append(values, source.target.value)
+			let isIso = $false
+			for i in seq(len(values))
+				for j in seq(i+1, len(values))
+					if values[i] == values[j]
+						set isIso = $true
+					end
+				end
+			end
+			let conclusion = $empty
+			if isIso
+				set conclusion = Le triangle $A$B$C est isocèle.
+			else
+				set conclusion = Le triangle $A$B$C n'est pas isocèle.
+			end
+			@Question(demonstration)
+				unit: $source.unit
+				premise: $source.premise
+				hypotheses: $source.hypotheses
+				target: $source.target
+				letters: $source.letters
+				note: Le triangle $A$B$C est-il isocèle\s?
+				steps: do
+					...source.steps
+					- do
+						type: sentence
+						- $conclusion
+					end
+				end
+			end
+		end
+	end
+end
