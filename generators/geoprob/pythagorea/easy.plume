@@ -44,7 +44,11 @@ PythagoreaDirect1Solving: macro(sourceGenerator)
 		end
 		get: macro(source)
 			@Question(eqn)
-				steps: $source.steps[2]
+				steps: do
+					for i in seq(2, len(source.steps[2]))
+						- $source.steps[2][i]
+					end
+				end
 			end
 		end
 	end
